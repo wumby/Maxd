@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# dotenv environment variables
+.env
+.env.*.local
+
+# TypeScript output
+dist/
+build/
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Mac system files
+.AppleDouble
+.LSOverride
+
+# DBeaver configs (if any)
+*.dbeaver-data-sources.xml
