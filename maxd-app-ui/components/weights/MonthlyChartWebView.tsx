@@ -28,7 +28,7 @@ export default function MonthlyChartWebView({
     years.map(String).includes(currentYear) ? currentYear : 'All Years'
   )
 
-  const [range, setRange] = useState< '6mo' | 'all'>('all')
+  const [range, setRange] = useState<'6mo' | 'all'>('all')
 
   const rangeCutoff = useMemo(() => {
     const selectedYearWeights = weights.filter(w => {
@@ -44,11 +44,10 @@ export default function MonthlyChartWebView({
 
     const cutoff = new Date(latestDate)
     if (range === '6mo') {
-    cutoff.setMonth(cutoff.getMonth() - 6)
-  }
+      cutoff.setMonth(cutoff.getMonth() - 6)
+    }
 
-  return cutoff
-    
+    return cutoff
   }, [weights, filter, range])
 
   const filteredWeights = useMemo(() => {
@@ -66,8 +65,8 @@ export default function MonthlyChartWebView({
     filteredWeights.forEach(w => {
       const date = new Date(w.created_at)
       const year = date.getFullYear()
-const month = String(date.getMonth() + 1).padStart(2, '0') // months are 0-based
-const key = `${year}-${month}`
+      const month = String(date.getMonth() + 1).padStart(2, '0') // months are 0-based
+      const key = `${year}-${month}`
 
       const value = Number(w.value)
       if (!isNaN(value)) {
@@ -186,7 +185,9 @@ const key = `${year}-${month}`
           <Pressable onPress={onBack} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
               <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">Back</Text>
+              <Text fontSize="$5" fontWeight="600">
+                Back
+              </Text>
             </XStack>
           </Pressable>
         </XStack>
@@ -197,7 +198,11 @@ const key = `${year}-${month}`
           </Text>
         </Animated.View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -211,9 +216,16 @@ const key = `${year}-${month}`
           </XStack>
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$4">
-            {[{ label: 'All Months', val: 'all' }, { label: 'Last 6 Months', val: '6mo' }].map(opt => (
+            {[
+              { label: 'All Months', val: 'all' },
+              { label: 'Last 6 Months', val: '6mo' },
+            ].map(opt => (
               <YearFilterItem
                 key={opt.val}
                 val={opt.label}
@@ -226,7 +238,8 @@ const key = `${year}-${month}`
         </ScrollView>
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$2">
-          Showing { range === '6mo' ? 'last 6 months' : 'all months'} of {filter === 'All Years' ? 'all years' : filter}
+          Showing {range === '6mo' ? 'last 6 months' : 'all months'} of{' '}
+          {filter === 'All Years' ? 'all years' : filter}
         </Text>
       </YStack>
 

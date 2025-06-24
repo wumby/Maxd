@@ -1,17 +1,17 @@
 import { Tabs } from 'expo-router'
-import { Home, BarChart3, Dumbbell, User } from '@tamagui/lucide-icons'
+import { Home, BarChart3, Dumbbell, User, Scale } from '@tamagui/lucide-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useColorScheme } from 'react-native'
+import { useThemeName } from 'tamagui'
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets()
-  const isDark = useColorScheme() === 'dark'
+  const isDark = useThemeName() === 'dark'
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: isDark ? '#F5F5F5' : '#1A1A1A',
-        tabBarInactiveTintColor: isDark ? '#7C7C7C' : '#A1A1AA',
+        tabBarActiveTintColor: isDark ? '#1A1A1A' : '#F5F5F5',
+        tabBarInactiveTintColor: isDark ? '#A1A1AA' : '#7C7C7C',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
@@ -21,7 +21,7 @@ export default function TabLayout() {
           marginTop: 6,
         },
         tabBarStyle: {
-          backgroundColor: isDark ? '#0D0D0D' : '#F9FAFB',
+          backgroundColor: isDark ? '#F9FAFB' : '#0D0D0D',
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
           borderTopWidth: 0,
@@ -41,13 +41,13 @@ export default function TabLayout() {
         name="weight"
         options={{
           title: 'Weight',
-          tabBarIcon: ({ color, focused }) => <BarChart3 color={color} size={focused ? 24 : 22} />,
+          tabBarIcon: ({ color, focused }) => <Scale color={color} size={focused ? 24 : 22} />,
         }}
       />
       <Tabs.Screen
-        name="exercises"
+        name="workouts"
         options={{
-          title: 'Exercises',
+          title: 'Workouts',
           tabBarIcon: ({ color, focused }) => <Dumbbell color={color} size={focused ? 24 : 22} />,
         }}
       />

@@ -1,20 +1,9 @@
-import React,{ useState, useMemo}  from 'react'
-import { YStack, Text, XStack, Card, Input, Button } from 'tamagui'
+import React, { useState, useMemo } from 'react'
+import { YStack, Text, XStack, Card, Input, Button, useThemeName } from 'tamagui'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Edit3, Trash2 } from '@tamagui/lucide-icons'
-import {
-  Pressable,
-  FlatList,
-  useColorScheme,
-  Dimensions,
-  Modal,
-  View,
-  ScrollView,
-} from 'react-native'
-import Animated, {
-  FadeInDown,
-  FadeInUp,
-} from 'react-native-reanimated'
+import { Pressable, FlatList, Dimensions, Modal, View, ScrollView } from 'react-native'
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { YearFilterItem } from './YearFilterItem'
@@ -56,15 +45,7 @@ const HistoryItem = React.memo(
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
-        <Card
-          p="$3"
-          mb="$2"
-          elevate
-          bordered
-          bg="white"
-          borderRadius={0}
-          width={screenWidth - 32}
-        >
+        <Card p="$3" mb="$2" elevate bordered bg="white" borderRadius={0} width={screenWidth - 32}>
           <XStack jc="space-between" ai="center">
             <YStack>
               <Text fontSize="$5" fontWeight="600">
@@ -101,11 +82,11 @@ const HistoryItem = React.memo(
     )
   }
 )
-HistoryItem.displayName = 'HistoryItem';
+HistoryItem.displayName = 'HistoryItem'
 
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
   const insets = useSafeAreaInsets()
-  const isDark = useColorScheme() !== 'dark'
+  const isDark = useThemeName() === 'dark'
   const bgColor = isDark ? '#0D0D0D' : '#F9FAFB'
   const currentYear = new Date().getFullYear().toString()
   const [filter, setFilter] = useState<'All Years' | string>(currentYear)
@@ -207,7 +188,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
 
   if (!visible) return null
 
-   return (
+  return (
     <YStack
       position="absolute"
       top={0}
@@ -223,12 +204,16 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
               <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">Back</Text>
+              <Text fontSize="$5" fontWeight="600">
+                Back
+              </Text>
             </XStack>
           </Pressable>
 
           <Pressable onPress={() => setEditMode(!editMode)} hitSlop={10}>
-            <Text fontSize="$5" fontWeight="600">{editMode ? 'Done' : 'Edit'}</Text>
+            <Text fontSize="$5" fontWeight="600">
+              {editMode ? 'Done' : 'Edit'}
+            </Text>
           </Pressable>
         </XStack>
 
@@ -238,7 +223,11 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </Text>
         </Animated.View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -252,10 +241,13 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </XStack>
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$4">
             {[
-              
               { label: 'All Days', val: 'all' },
               { label: 'Last 3 Months', val: '3mo' },
               { label: 'Last 30 Days', val: '30d' },
@@ -271,11 +263,9 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </XStack>
         </ScrollView>
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
-           Showing {range === '30d'
-            ? 'last 30 days'
-            : range === '3mo'
-            ? 'last 3 months'
-            : 'all days'} of {filter === 'all' ? 'all years' : filter}
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          {filter === 'all' ? 'all years' : filter}
         </Text>
       </YStack>
 
@@ -288,18 +278,18 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             No entries
           </Text>
         }
-      renderItem={({ item, index }) => (
-  <HistoryItem
-    item={item}
-    prev={filtered[index + 1]}
-    index={index}
-    editMode={editMode}
-    isDark={isDark}
-    onEdit={handleEditStart}
-    onDelete={confirmDelete}
-  />
-)}
-/>
+        renderItem={({ item, index }) => (
+          <HistoryItem
+            item={item}
+            prev={filtered[index + 1]}
+            index={index}
+            editMode={editMode}
+            isDark={isDark}
+            onEdit={handleEditStart}
+            onDelete={confirmDelete}
+          />
+        )}
+      />
 
       {/* Modal for editing */}
       <Modal
@@ -318,7 +308,9 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           }}
         >
           <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700">Edit Weight</Text>
+            <Text fontSize="$6" fontWeight="700">
+              Edit Weight
+            </Text>
             <Input
               keyboardType="numeric"
               placeholder="e.g. 175.5"
@@ -326,8 +318,12 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
               onChangeText={setEditInput}
             />
             <XStack gap="$2">
-              <Button flex={1} onPress={() => setEditingWeight(null)}>Cancel</Button>
-              <Button flex={1} onPress={handleEditSave} theme="active">Save</Button>
+              <Button flex={1} onPress={() => setEditingWeight(null)}>
+                Cancel
+              </Button>
+              <Button flex={1} onPress={handleEditSave} theme="active">
+                Save
+              </Button>
             </XStack>
           </YStack>
         </View>
@@ -350,10 +346,14 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           }}
         >
           <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700">Delete Weight</Text>
+            <Text fontSize="$6" fontWeight="700">
+              Delete Weight
+            </Text>
             <Text color="$gray10">Are you sure you want to delete this entry?</Text>
             <XStack gap="$2">
-              <Button flex={1} onPress={() => setConfirmId(null)}>Cancel</Button>
+              <Button flex={1} onPress={() => setConfirmId(null)}>
+                Cancel
+              </Button>
               <Button
                 theme="active"
                 flex={1}

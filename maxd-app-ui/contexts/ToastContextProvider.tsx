@@ -47,7 +47,7 @@ export function ToastContextProvider({ children }: { children: React.ReactNode }
               top: 60,
               alignSelf: 'center',
               width: Dimensions.get('window').width * 0.9,
-              zIndex: 9999,
+              zIndex: 99999,
             },
             animatedStyle,
           ]}

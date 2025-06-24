@@ -5,7 +5,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Missing token' });
-    return; // ✅ make sure to `return` early
+    return; 
   }
 
   const token = authHeader.split(' ')[1];

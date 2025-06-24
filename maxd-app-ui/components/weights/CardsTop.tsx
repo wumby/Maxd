@@ -14,39 +14,37 @@ interface Props {
 }
 
 export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }: Props) {
- const monthlyAverages = useMemo(() => {
-  const map: Record<string, number[]> = {}
+  const monthlyAverages = useMemo(() => {
+    const map: Record<string, number[]> = {}
 
-  for (const w of weights) {
-    const date = new Date(w.created_at)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const key = `${year}-${month}`
+    for (const w of weights) {
+      const date = new Date(w.created_at)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const key = `${year}-${month}`
 
-    const value = Number(w.value)
-    if (!isNaN(value)) {
-      if (!map[key]) map[key] = []
-      map[key].push(value)
+      const value = Number(w.value)
+      if (!isNaN(value)) {
+        if (!map[key]) map[key] = []
+        map[key].push(value)
+      }
     }
-  }
 
-  const sorted = Object.entries(map)
-    .map(([month, values]) => ({
-      month,
-      avg: values.reduce((sum, v) => sum + v, 0) / values.length,
-    }))
-    .sort((a, b) => new Date(a.month + '-01').getTime() - new Date(b.month + '-01').getTime())
-    .slice(-6) // only last 6 months
+    const sorted = Object.entries(map)
+      .map(([month, values]) => ({
+        month,
+        avg: values.reduce((sum, v) => sum + v, 0) / values.length,
+      }))
+      .sort((a, b) => new Date(a.month + '-01').getTime() - new Date(b.month + '-01').getTime())
+      .slice(-6) // only last 6 months
 
-  return sorted.map(item => ({ value: Number(item.avg.toFixed(1)) }))
-}, [weights])
-
-
+    return sorted.map(item => ({ value: Number(item.avg.toFixed(1)) }))
+  }, [weights])
 
   return (
     <XStack w="100%" gap="$4" jc="center" fw="wrap">
       {/* Chart Card */}
-       <Card
+      <Card
         elevate
         p="$4"
         width="45%"
@@ -63,7 +61,7 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
             </Text>
             <Expand size="$1" color="$gray9" />
           </XStack>
-         <MiniLineChart weights={weights} />
+          <MiniLineChart weights={weights} />
         </YStack>
       </Card>
       {/* History Card */}
@@ -85,7 +83,7 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
           </XStack>
 
           <YStack gap="$2" width="100%">
-           <MiniLineChart weights={monthlyAverages}/>
+            <MiniLineChart weights={monthlyAverages} />
           </YStack>
         </YStack>
       </Card>

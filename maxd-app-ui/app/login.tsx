@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { View, Text, TextInput, Button, StyleSheet, Alert, useColorScheme } from 'react-native'
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native'
 import { router } from 'expo-router'
 import { useAuth } from '@/contexts/AuthContext'
+import { useThemeName } from 'tamagui'
 
 export default function LoginScreen() {
   const { login } = useAuth()
-  const colorScheme = useColorScheme()
+  const colorScheme = useThemeName()
   const isDark = colorScheme === 'dark'
 
   const [email, setEmail] = useState('')

@@ -30,27 +30,26 @@ export default function ChartWebView({
 
   const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
- const rangeCutoff = useMemo(() => {
-  const selectedYearWeights = weights.filter(w => {
-    const date = new Date(w.created_at)
-    return filter === 'All Years' || date.getFullYear().toString() === filter
-  })
+  const rangeCutoff = useMemo(() => {
+    const selectedYearWeights = weights.filter(w => {
+      const date = new Date(w.created_at)
+      return filter === 'All Years' || date.getFullYear().toString() === filter
+    })
 
-  if (selectedYearWeights.length === 0 || range === 'all') return null
+    if (selectedYearWeights.length === 0 || range === 'all') return null
 
-  const latestDate = new Date(
-    Math.max(...selectedYearWeights.map(w => new Date(w.created_at).getTime()))
-  )
+    const latestDate = new Date(
+      Math.max(...selectedYearWeights.map(w => new Date(w.created_at).getTime()))
+    )
 
-  const cutoff = new Date(latestDate)
-  if (range === '30d') {
-    cutoff.setDate(cutoff.getDate() - 30)
-  } else if (range === '3mo') {
-    cutoff.setMonth(cutoff.getMonth() - 3)
-  }
-  return cutoff
-}, [weights, filter, range])
-
+    const cutoff = new Date(latestDate)
+    if (range === '30d') {
+      cutoff.setDate(cutoff.getDate() - 30)
+    } else if (range === '3mo') {
+      cutoff.setMonth(cutoff.getMonth() - 3)
+    }
+    return cutoff
+  }, [weights, filter, range])
 
   const filteredWeights = useMemo(() => {
     return weights.filter(w => {
@@ -71,8 +70,6 @@ export default function ChartWebView({
       return null
     })
     .filter(Boolean)
-
-    
 
   const chartHtml = `
   <!DOCTYPE html>
@@ -178,7 +175,9 @@ export default function ChartWebView({
           <Pressable onPress={onBack} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
               <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">Back</Text>
+              <Text fontSize="$5" fontWeight="600">
+                Back
+              </Text>
             </XStack>
           </Pressable>
         </XStack>
@@ -189,7 +188,11 @@ export default function ChartWebView({
           </Text>
         </Animated.View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -203,13 +206,16 @@ export default function ChartWebView({
           </XStack>
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$4">
             {[
               { label: 'All Days', val: 'all' },
               { label: 'Last 3 Months', val: '3mo' },
               { label: 'Last 30 Days', val: '30d' },
-              
             ].map(opt => (
               <YearFilterItem
                 key={opt.val}
@@ -222,12 +228,10 @@ export default function ChartWebView({
           </XStack>
         </ScrollView>
         <Text fontSize="$2" color="$gray10" ta="center" mt="$2">
-   Showing {range === '30d'
-    ? 'last 30 days'
-    : range === '3mo'
-    ? 'last 3 months'
-    : 'all days'} of {filter === 'all' ? 'all years' : filter}
-</Text>
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          {filter === 'all' ? 'all years' : filter}
+        </Text>
       </YStack>
 
       {loading && (

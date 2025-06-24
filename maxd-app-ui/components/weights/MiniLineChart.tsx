@@ -40,8 +40,22 @@ export function MiniLineChart({
           fill="rgba(0,0,0,0.05)"
           stroke="none"
         />
-        <Line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#ccc" strokeWidth="1" />
-        <Line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#ccc" strokeWidth="1" />
+        <Line
+          x1={padding}
+          y1={padding}
+          x2={padding}
+          y2={height - padding}
+          stroke="#ccc"
+          strokeWidth="1"
+        />
+        <Line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+          stroke="#ccc"
+          strokeWidth="1"
+        />
         <Polyline
           points={polylinePoints}
           fill="none"
@@ -51,13 +65,7 @@ export function MiniLineChart({
           strokeLinecap="round"
         />
         {points.map((p, idx) => (
-          <Circle
-            key={idx}
-            cx={p.x}
-            cy={p.y}
-            r={2.5}
-            fill="#000"
-          />
+          <Circle key={idx} cx={p.x} cy={p.y} r={2.5} fill="#000" />
         ))}
       </Svg>
     </View>

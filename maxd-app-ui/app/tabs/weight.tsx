@@ -1,23 +1,27 @@
-import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
 import { Button, YStack, Text, Input, XStack } from 'tamagui'
 import { Modal, View } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
-import { useFocusEffect } from 'expo-router'
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated'
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
+import Animated, { FadeIn } from 'react-native-reanimated'
 import { CardsBottom } from '@/components/weights/CardsBottom'
 import { useToast } from '@/contexts/ToastContextProvider'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { CardsTop } from '@/components/weights/CardsTop'
-import ChartWebView from '@/components/weights/ChartWebView'
-import MonthlyChartWebView from '@/components/weights/MonthlyChartWebView'
+import { useIsFocused } from '@react-navigation/native'
 
 const AnimatedYStack = Animated.createAnimatedComponent(YStack)
 const History = lazy(() => import('@/components/weights/History'))
 const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
+const ChartWebView = lazy(() => import('@/components/weights/ChartWebView'))
+const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChartWebView'))
 
 export default function WeightTab() {
   const { token } = useAuth()
+  const [duplicateWarning, setDuplicateWarning] = useState(false)
+
+  const router = useRouter()
   const { showToast } = useToast()
   const [weight, setWeight] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
@@ -26,52 +30,19 @@ export default function WeightTab() {
     'chart' | 'monthlyChart' | 'history' | 'monthlyHistory' | null
   >(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const isFocused = useIsFocused()
+  const params = useLocalSearchParams()
+  const shouldLog = params.log === '1'
 
-  // main container animation
-  const opacity = useSharedValue(0)
-  const translateY = useSharedValue(-20)
-
-  // row fade-in
-  const topOpacity = useSharedValue(0)
-  const midOpacity = useSharedValue(0)
-  const botOpacity = useSharedValue(0)
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }))
-  const topStyle = useAnimatedStyle(() => ({ opacity: topOpacity.value }))
-  const midStyle = useAnimatedStyle(() => ({ opacity: midOpacity.value }))
-  const botStyle = useAnimatedStyle(() => ({ opacity: botOpacity.value }))
-
+  useEffect(() => {
+    if (shouldLog) {
+      setModalVisible(true)
+      router.replace('/tabs/weight')
+    }
+  }, [shouldLog])
   useFocusEffect(
     useCallback(() => {
-      // Reset initial states
-      opacity.value = 0
-      translateY.value = -20
-      topOpacity.value = 0
-      midOpacity.value = 0
-      botOpacity.value = 0
-
-      // Animate main container
-      opacity.value = withTiming(1, { duration: 300 })
-      translateY.value = withTiming(0, { duration: 300 })
-
-      // Stagger manually
-      setTimeout(() => {
-        topOpacity.value = withTiming(1, { duration: 300 })
-      }, 100)
-
-      setTimeout(() => {
-        midOpacity.value = withTiming(1, { duration: 300 })
-      }, 250)
-
-      setTimeout(() => {
-        botOpacity.value = withTiming(1, { duration: 300 })
-      }, 400)
-
       setViewMode(null)
-
       const fetchWeights = async () => {
         try {
           const res = await fetch(`${API_URL}/weights`, {
@@ -87,32 +58,6 @@ export default function WeightTab() {
       fetchWeights()
     }, [token])
   )
-
-  useEffect(() => {
-    if (viewMode === null) {
-      opacity.value = 0
-      translateY.value = -20
-      topOpacity.value = 0
-      midOpacity.value = 0
-      botOpacity.value = 0
-      opacity.value = withTiming(1, { duration: 300 })
-      translateY.value = withTiming(0, { duration: 300 })
-      setTimeout(() => {
-        topOpacity.value = withTiming(1, { duration: 300 })
-      }, 50)
-
-      setTimeout(() => {
-        midOpacity.value = withTiming(1, { duration: 300 })
-      }, 150)
-
-      setTimeout(() => {
-        botOpacity.value = withTiming(1, { duration: 300 })
-      }, 250)
-    } else {
-      opacity.value = withTiming(0, { duration: 300 })
-      translateY.value = withTiming(20, { duration: 300 }) // slide down
-    }
-  }, [viewMode])
 
   const handleLogWeight = async () => {
     const numericWeight = parseFloat(weight)
@@ -137,26 +82,23 @@ export default function WeightTab() {
       const created = await res.json()
 
       if (res.status === 409) {
-        setModalVisible(false)
-        setTimeout(() => {
-          showToast('You’ve already logged a weight for this day!', 'warn')
-        }, 200)
+        setDuplicateWarning(true)
         return
       }
 
       if (!res.ok) throw new Error(created.error || 'Failed to log weight')
 
+      setDuplicateWarning(false)
       showToast('Weight added!')
       setWeight('')
       setSelectedDate(new Date())
       setModalVisible(false)
-     setWeights(prev =>
-  [...prev, created].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )
-)
-
-    } catch (err: any) {
+      setWeights(prev =>
+        [...prev, created].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+      )
+    } catch (_e) {
       showToast('Error logging weight', 'warn')
     }
   }
@@ -169,39 +111,38 @@ export default function WeightTab() {
 
   return (
     <>
-      <AnimatedYStack f={1} bg="$background" p="$4" style={animatedStyle}>
+      <AnimatedYStack
+        f={1}
+        bg="$background"
+        p="$4"
+        key={isFocused ? 'focused' : 'unfocused'}
+        entering={FadeIn.duration(500)}
+      >
         {viewMode === null && (
           <YStack f={1} jc="space-evenly" gap="$4">
-            <Animated.View style={topStyle}>
-              <CardsTop
-                onChartPress={() => setViewMode('chart')}
-                onMonthlyPress={() => setViewMode('monthlyChart')}
-                weights={weights}
-              />
-            </Animated.View>
+            <CardsTop
+              onChartPress={() => setViewMode('chart')}
+              onMonthlyPress={() => setViewMode('monthlyChart')}
+              weights={weights}
+            />
 
-            <Animated.View style={midStyle}>
-              <YStack ai="center" gap="$6">
-                <Text fontSize="$9" fontWeight="700">
-                  Current: {currentWeight}
-                </Text>
-                <Button size="$4" onPress={() => setModalVisible(true)}>
-                  Enter New Weight
-                </Button>
-              </YStack>
-            </Animated.View>
+            <YStack ai="center" gap="$6">
+              <Text fontSize="$9" fontWeight="700">
+                Current: {currentWeight}
+              </Text>
+              <Button size="$4" onPress={() => setModalVisible(true)}>
+                Enter New Weight
+              </Button>
+            </YStack>
 
-            <Animated.View style={botStyle}>
-              <CardsBottom
-                onHistoryPress={() => setViewMode('history')}
-                onMonthlyPress={() => setViewMode('monthlyHistory')}
-                weights={weights}
-              />
-            </Animated.View>
+            <CardsBottom
+              onHistoryPress={() => setViewMode('history')}
+              onMonthlyPress={() => setViewMode('monthlyHistory')}
+              weights={weights}
+            />
           </YStack>
         )}
       </AnimatedYStack>
-
       <Suspense fallback={null}>
         {viewMode === 'chart' && (
           <ChartWebView onBack={() => setViewMode(null)} weights={weights} />
@@ -259,6 +200,11 @@ export default function WeightTab() {
                 if (date) setSelectedDate(date)
               }}
             />
+            {duplicateWarning && (
+              <Text color="$red10" textAlign="center" fontSize="$4">
+                You’ve already logged a weight for this day!
+              </Text>
+            )}
 
             <XStack gap="$2">
               <Button flex={1} onPress={() => setModalVisible(false)}>
