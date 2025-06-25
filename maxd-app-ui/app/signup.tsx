@@ -1,8 +1,16 @@
 import { useState } from 'react'
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native'
-import { router } from 'expo-router'
+import { Alert } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
+import { router } from 'expo-router'
+import {
+  YStack,
+  Input,
+  Button,
+  Text,
+  Spinner,
+  Separator,
+} from 'tamagui'
 
 export default function SignupScreen() {
   const { login } = useAuth()
@@ -17,9 +25,7 @@ export default function SignupScreen() {
       return
     }
 
-    console.log('SIGNUP: button pressed')
     setLoading(true)
-
     try {
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
@@ -28,17 +34,13 @@ export default function SignupScreen() {
       })
 
       const data = await res.json()
-      console.log('Signup response body:', data)
-
       if (!res.ok) {
         throw new Error(data.error || 'Signup failed')
       }
 
-      await login(email, password) // reuses login() to get token + user
-      console.log('Login after signup successful')
+      await login(email, password)
       router.replace('/')
     } catch (err: any) {
-      console.error('Signup error:', err)
       Alert.alert('Signup Error', err.message || 'Unexpected error')
     } finally {
       setLoading(false)
@@ -46,65 +48,58 @@ export default function SignupScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create an Account</Text>
+    <YStack f={1} jc="center" ai="center" p="$4" bg="$background" gap="$4" w="100%">
+      <Text fontSize="$9" fontWeight="700">
+        Create Account
+      </Text>
 
-      <TextInput
+      <Input
         placeholder="Name"
-        placeholderTextColor="#888"
-        style={styles.input}
         value={name}
         onChangeText={setName}
+        maxLength={30}
+        size="$6"
+        autoCapitalize="words"
+        w={'100%'}
+         returnKeyType="done"
       />
-      <TextInput
+      <Input
         placeholder="Email"
-        placeholderTextColor="#888"
-        style={styles.input}
         value={email}
-        autoCapitalize="none"
         onChangeText={setEmail}
+        size="$6"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        w={'100%'}
+         returnKeyType="done"
       />
-      <TextInput
+      <Input
         placeholder="Password"
-        placeholderTextColor="#888"
-        style={styles.input}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        size="$6"
+        w={'100%'}
+         returnKeyType="done"
       />
 
-      <Button title={loading ? 'Signing up...' : 'Sign Up'} onPress={handleSignup} />
+      <Button
+        size="$4"
+        theme="active"
+        onPress={handleSignup}
+        disabled={loading}
+      >
+        {loading ? <Spinner size="small" color="$color" /> : 'Sign Up'}
+      </Button>
 
-      <Text style={styles.link} onPress={() => router.push('/login')}>
+      <Separator />
+      <Text
+        fontSize="$4"
+        color="$blue10"
+        onPress={() => router.push('/login')}
+      >
         Already have an account? Log in
       </Text>
-    </View>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: '#1a1a1a',
-    color: '#fff',
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 12,
-  },
-  link: {
-    color: '#0af',
-    marginTop: 12,
-    textAlign: 'center',
-  },
-})

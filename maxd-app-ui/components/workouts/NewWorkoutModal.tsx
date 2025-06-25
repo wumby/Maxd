@@ -161,7 +161,7 @@ export default function NewWorkoutModal({
               setTitle(text)
               if (text.trim()) setMissingTitle(false)
             }}
-            returnKeyType="done"
+             returnKeyType="done"
             onSubmitEditing={Keyboard.dismiss}
           />
 
@@ -186,7 +186,7 @@ export default function NewWorkoutModal({
                     placeholder="Exercise name"
                     value={exercise.name}
                     onChangeText={text => handleChangeName(exerciseIndex, text)}
-                    returnKeyType="next"
+                     returnKeyType="done"
                   />
 
                   <YStack>

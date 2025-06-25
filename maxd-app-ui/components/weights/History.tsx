@@ -316,6 +316,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
               placeholder="e.g. 175.5"
               value={editInput}
               onChangeText={setEditInput}
+               returnKeyType="done"
             />
             <XStack gap="$2">
               <Button flex={1} onPress={() => setEditingWeight(null)}>

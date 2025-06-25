@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native'
-import { router } from 'expo-router'
+import { Alert } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
-import { useThemeName } from 'tamagui'
+import { useThemeName, YStack, Input, Text, Button, Spinner } from 'tamagui'
+import { router } from 'expo-router'
 
 export default function LoginScreen() {
   const { login } = useAuth()
-  const colorScheme = useThemeName()
-  const isDark = colorScheme === 'dark'
+  const theme = useThemeName()
+  const isDark = theme === 'dark'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,60 +26,59 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
-      <Text style={[styles.title, isDark && styles.titleDark]}>Log In</Text>
+    <YStack
+      f={1}
+      jc="center"
+      ai="center"
+      p="$4"
+      bg="$background"
+      gap="$4"
+      w="100%"
+    >
+      <Text fontSize="$9" fontWeight="700">
+        Log In
+      </Text>
 
-      <TextInput
-        style={[styles.input, isDark && styles.inputDark]}
+      <Input
         placeholder="Email"
-        placeholderTextColor={isDark ? '#aaa' : '#888'}
+        value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
-        value={email}
+        keyboardType="email-address"
+        size="$6"
+        fontSize="$5"
+        w="100%"
+         returnKeyType="done"
       />
-
-      <TextInput
-        style={[styles.input, isDark && styles.inputDark]}
+      <Input
         placeholder="Password"
-        placeholderTextColor={isDark ? '#aaa' : '#888'}
-        secureTextEntry
-        onChangeText={setPassword}
         value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        size="$6"
+        fontSize="$5"
+        w="100%"
+         returnKeyType="done"
       />
 
-      <Button title={loading ? 'Logging in...' : 'Login'} onPress={handleLogin} />
-    </View>
+      <Button
+        size="$4"
+        theme="active"
+        onPress={handleLogin}
+        disabled={loading}
+        w="100%"
+      >
+        {loading ? <Spinner size="small" color="$color" /> : 'Login'}
+      </Button>
+
+      <Text
+        fontSize="$4"
+        color="$blue10"
+        mt="$2"
+        onPress={() => router.push('/signup')}
+      >
+        Don’t have an account? Sign up
+      </Text>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
-  containerDark: {
-    backgroundColor: '#000',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 24,
-    textAlign: 'center',
-    color: '#111',
-  },
-  titleDark: {
-    color: '#fff',
-  },
-  input: {
-    backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 12,
-    color: '#000',
-  },
-  inputDark: {
-    backgroundColor: '#1a1a1a',
-    color: '#fff',
-  },
-})
