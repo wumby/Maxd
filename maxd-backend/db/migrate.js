@@ -1,10 +1,14 @@
-// db/migrate.js
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const DB_URL = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/maxd'
-const MIGRATIONS_DIR = path.resolve('./db/migrations')
+const MIGRATIONS_DIR = path.join(__dirname, 'migrations')
+const TEMP_SQL_PATH = path.join(__dirname, '_ensure_migration_table.sql')
 
 function run(command) {
   console.log(`🔹 ${command}`)
@@ -25,9 +29,9 @@ function ensureMigrationTable() {
       run_at TIMESTAMP DEFAULT NOW()
     );
   `
-  fs.writeFileSync('./db/_ensure_migration_table.sql', sql)
-  run(`psql "${DB_URL}" -f ./db/_ensure_migration_table.sql`)
-  fs.unlinkSync('./db/_ensure_migration_table.sql')
+  fs.writeFileSync(TEMP_SQL_PATH, sql)
+  run(`psql "${DB_URL}" -f "${TEMP_SQL_PATH}"`)
+  fs.unlinkSync(TEMP_SQL_PATH)
 }
 
 function getAppliedMigrations() {

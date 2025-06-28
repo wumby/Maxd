@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react'
-import { YStack, Text, XStack, Card, Input, Button, useThemeName } from 'tamagui'
+import {
+  YStack, Text, XStack, Card, Input, Button,
+  useThemeName, useTheme
+} from 'tamagui'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Edit3, Trash2 } from '@tamagui/lucide-icons'
 import { Pressable, FlatList, Dimensions, Modal, View, ScrollView } from 'react-native'
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'
+import Animated, { FadeInUp } from 'react-native-reanimated'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { YearFilterItem } from './YearFilterItem'
@@ -29,6 +32,7 @@ const HistoryItem = React.memo(
     index,
     editMode,
     isDark,
+    theme,
     onEdit,
     onDelete,
   }: {
@@ -37,6 +41,7 @@ const HistoryItem = React.memo(
     index: number
     editMode: boolean
     isDark: boolean
+    theme: ReturnType<typeof useTheme>
     onEdit: (w: WeightEntry) => void
     onDelete: (id: number) => void
   }) => {
@@ -45,10 +50,18 @@ const HistoryItem = React.memo(
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
-        <Card p="$3" mb="$2" elevate bordered bg="white" borderRadius={0} width={screenWidth - 32}>
+        <Card
+          p="$3"
+          mb="$2"
+          elevate
+          bordered
+          bg="$background"
+          borderRadius={0}
+          width={screenWidth - 32}
+        >
           <XStack jc="space-between" ai="center">
             <YStack>
-              <Text fontSize="$5" fontWeight="600">
+              <Text fontSize="$5" fontWeight="600" color="$color">
                 {item.value} lb
               </Text>
               <Text fontSize="$2" color="$gray10">
@@ -64,7 +77,7 @@ const HistoryItem = React.memo(
             {editMode ? (
               <XStack gap="$5">
                 <Pressable onPress={() => onEdit(item)}>
-                  <Edit3 size={20} color={isDark ? 'white' : 'black'} />
+                  <Edit3 size={20} color={theme.color.val} />
                 </Pressable>
                 <Pressable onPress={() => onDelete(item.id)}>
                   <Trash2 size={20} color="red" />
@@ -87,7 +100,8 @@ HistoryItem.displayName = 'HistoryItem'
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
-  const bgColor = isDark ? '#0D0D0D' : '#F9FAFB'
+  const theme = useTheme()
+  const bgColor = theme.background.val
   const currentYear = new Date().getFullYear().toString()
   const [filter, setFilter] = useState<'All Years' | string>(currentYear)
   const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
@@ -203,31 +217,27 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">
+              <ChevronLeft size={20} color={theme.color.val} />
+              <Text fontSize="$5" fontWeight="600" color="$color">
                 Back
               </Text>
             </XStack>
           </Pressable>
 
           <Pressable onPress={() => setEditMode(!editMode)} hitSlop={10}>
-            <Text fontSize="$5" fontWeight="600">
+            <Text fontSize="$5" fontWeight="600" color="$color">
               {editMode ? 'Done' : 'Edit'}
             </Text>
           </Pressable>
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(400)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3">
+          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
             Weight History
           </Text>
         </Animated.View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -241,11 +251,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </XStack>
         </ScrollView>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <XStack gap="$2" mb="$4">
             {[
               { label: 'All Days', val: 'all' },
@@ -262,9 +268,9 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             ))}
           </XStack>
         </ScrollView>
+
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
-          Showing{' '}
-          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filter === 'all' ? 'all years' : filter}
         </Text>
       </YStack>
@@ -285,30 +291,26 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             index={index}
             editMode={editMode}
             isDark={isDark}
+            theme={theme}
             onEdit={handleEditStart}
             onDelete={confirmDelete}
           />
         )}
       />
 
-      {/* Modal for editing */}
-      <Modal
-        animationType="fade"
-        transparent
-        visible={!!editingWeight}
-        onRequestClose={() => setEditingWeight(null)}
-      >
+      {/* Edit Modal */}
+      <Modal animationType="fade" transparent visible={!!editingWeight} onRequestClose={() => setEditingWeight(null)}>
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
           }}
         >
           <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700">
+            <Text fontSize="$6" fontWeight="700" color="$color">
               Edit Weight
             </Text>
             <Input
@@ -316,7 +318,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
               placeholder="e.g. 175.5"
               value={editInput}
               onChangeText={setEditInput}
-               returnKeyType="done"
+              returnKeyType="done"
             />
             <XStack gap="$2">
               <Button flex={1} onPress={() => setEditingWeight(null)}>
@@ -330,24 +332,19 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
         </View>
       </Modal>
 
-      {/* Modal for confirming delete */}
-      <Modal
-        animationType="fade"
-        transparent
-        visible={confirmId !== null}
-        onRequestClose={() => setConfirmId(null)}
-      >
+      {/* Confirm Delete Modal */}
+      <Modal animationType="fade" transparent visible={confirmId !== null} onRequestClose={() => setConfirmId(null)}>
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
           }}
         >
           <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700">
+            <Text fontSize="$6" fontWeight="700" color="$color">
               Delete Weight
             </Text>
             <Text color="$gray10">Are you sure you want to delete this entry?</Text>

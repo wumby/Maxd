@@ -1,5 +1,5 @@
 import { useState, useCallback, lazy, Suspense, useEffect } from 'react'
-import { YStack, Text, Button, XStack } from 'tamagui'
+import { YStack, Text, Button, XStack, Card } from 'tamagui'
 import Animated, { FadeIn } from 'react-native-reanimated'
 import { Plus, History } from '@tamagui/lucide-icons'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
@@ -26,6 +26,7 @@ export default function WorkoutsTab() {
       router.replace('/tabs/workouts')
     }
   }, [shouldLog])
+
   useFocusEffect(
     useCallback(() => {
       setViewMode(null)
@@ -46,6 +47,7 @@ export default function WorkoutsTab() {
 
   const lastWorkout = workouts[0]
   const isFocused = useIsFocused()
+
   return (
     <>
       {viewMode === null && (
@@ -58,15 +60,15 @@ export default function WorkoutsTab() {
           entering={FadeIn.duration(500)}
         >
           <XStack jc="space-between" ai="center">
-            <Text fontSize="$8" fontWeight="bold">
+            <Text fontSize="$9" fontWeight="900">
               Workouts
             </Text>
             <Button icon={Plus} size="$3" circular onPress={() => setViewMode('new')} />
           </XStack>
 
           {lastWorkout ? (
-            <YStack bg="$color2" p="$4" br="$4" gap="$3">
-              <XStack jc="space-between" ai="center">
+            <Card elevate p="$4" br="$6" bg="$color2" gap="$3">
+              <XStack jc="space-between" ai="center" mb="$2">
                 <Text fontSize="$6" fontWeight="700">
                   Last Workout
                 </Text>
@@ -75,48 +77,49 @@ export default function WorkoutsTab() {
                 </Text>
               </XStack>
 
-              <YStack gap="$3">
-                {lastWorkout.exercises.slice(0, 2).map((ex: any, idx: number) => (
-                  <YStack key={idx} gap="$1">
-                    <Text fontWeight="600" fontSize="$5">
-                      {ex.name}
-                    </Text>
-                    {ex.sets?.map((set: any, setIdx: number) => (
-                      <Text key={setIdx} color="$gray10" fontSize="$3">
-                        {set.reps || '--'} reps @ {set.weight || '--'} lbs
-                      </Text>
-                    ))}
-                  </YStack>
-                ))}
-                {lastWorkout.exercises.length > 2 && (
-                  <Text fontSize="$3" color="$gray10">
-                    + {lastWorkout.exercises.length - 2} more exercises
+              {lastWorkout.exercises.slice(0, 2).map((ex: any, idx: number) => (
+                <YStack key={idx} gap="$1">
+                  <Text fontWeight="600" fontSize="$5">
+                    {ex.name}
                   </Text>
-                )}
-              </YStack>
+                  {ex.sets?.map((set: any, i: number) => (
+                    <Text key={i} color="$gray10" fontSize="$3">
+                      {set.reps || '--'} reps @ {set.weight || '--'} lbs
+                    </Text>
+                  ))}
+                </YStack>
+              ))}
+
+              {lastWorkout.exercises.length > 2 && (
+                <Text fontSize="$3" color="$gray10">
+                  + {lastWorkout.exercises.length - 2} more exercise
+                  {lastWorkout.exercises.length - 2 > 1 ? 's' : ''}
+                </Text>
+              )}
 
               <Button
+                mt="$2"
                 size="$3"
                 chromeless
-                onPress={() => setViewMode('history')}
                 icon={History}
                 theme="alt2"
+                onPress={() => setViewMode('history')}
                 alignSelf="flex-end"
               >
-                View All Workouts
+                View All
               </Button>
-            </YStack>
+            </Card>
           ) : (
-            <Text color="$gray10" fontSize="$5" textAlign="center">
-              No workouts yet
-            </Text>
+            <YStack ai="center" jc="center" f={1}>
+              <Text color="$gray10" fontSize="$5" ta="center">
+                No workouts logged yet.
+              </Text>
+            </YStack>
           )}
 
-          <YStack gap="$2">
-            <Button icon={Plus} size="$4" onPress={() => setModalVisible(true)}>
-              Start New Workout
-            </Button>
-          </YStack>
+          <Button size="$4" icon={Plus} onPress={() => setModalVisible(true)}>
+            Start New Workout
+          </Button>
         </AnimatedYStack>
       )}
 

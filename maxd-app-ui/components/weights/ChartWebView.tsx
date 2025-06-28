@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, Pressable } from 'react-native'
 import { WebView } from 'react-native-webview'
-import { YStack, Text, XStack } from 'tamagui'
+import { YStack, Text, XStack, useThemeName } from 'tamagui'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
@@ -17,6 +17,13 @@ export default function ChartWebView({
 }) {
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
+  const themeName = useThemeName()
+  const isDark = themeName === 'dark'
+  const bgColor = isDark ? '#0D0D0D' : '#FFFFFF'
+  const textColor = isDark ? '#FFFFFF' : '#000000'
+  const gridColor = isDark ? '#333' : '#eee'
+  const borderColor = isDark ? '#FFFFFF' : '#000000'
+  const fillColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
 
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
@@ -27,7 +34,6 @@ export default function ChartWebView({
   const [filter, setFilter] = useState(
     years.map(String).includes(currentYear) ? currentYear : 'All Years'
   )
-
   const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
   const rangeCutoff = useMemo(() => {
@@ -43,11 +49,8 @@ export default function ChartWebView({
     )
 
     const cutoff = new Date(latestDate)
-    if (range === '30d') {
-      cutoff.setDate(cutoff.getDate() - 30)
-    } else if (range === '3mo') {
-      cutoff.setMonth(cutoff.getMonth() - 3)
-    }
+    if (range === '30d') cutoff.setDate(cutoff.getDate() - 30)
+    else if (range === '3mo') cutoff.setMonth(cutoff.getMonth() - 3)
     return cutoff
   }, [weights, filter, range])
 
@@ -82,8 +85,14 @@ export default function ChartWebView({
           padding: 0;
           height: 100%;
           width: 100%;
-          background: white;
+          background: ${bgColor};
         }
+          #container {
+  height: 100%;
+  overflow: hidden;
+  padding-bottom: 1px; /* hides anti-aliasing artifacts */
+}
+          
       </style>
     </head>
     <body>
@@ -95,15 +104,14 @@ export default function ChartWebView({
       <script>
         const ctx = document.getElementById('chart').getContext('2d');
         const data = ${JSON.stringify(safeWeights)};
-
         new Chart(ctx, {
           type: 'line',
           data: {
             datasets: [{
               label: 'Weight',
               data: data,
-              borderColor: '#000',
-              backgroundColor: 'rgba(0,0,0,0.05)',
+              borderColor: '${borderColor}',
+              backgroundColor: '${fillColor}',
               tension: 0.3,
               pointRadius: 4,
               pointHoverRadius: 6,
@@ -124,15 +132,15 @@ export default function ChartWebView({
                 ticks: {
                   autoSkip: true,
                   maxTicksLimit: 7,
-                  color: '#333'
+                  color: '${textColor}'
                 },
-                grid: { color: '#eee' },
-                title: { display: true, text: 'Date' }
+                grid: { color: '${gridColor}' },
+                title: { display: true, text: 'Date', color: '${textColor}' }
               },
               y: {
-                title: { display: true, text: 'Weight (lb)' },
-                grid: { color: '#eee' },
-                ticks: { color: '#333' }
+                title: { display: true, text: 'Weight (lb)', color: '${textColor}' },
+                grid: { color: '${gridColor}' },
+                ticks: { color: '${textColor}' }
               }
             },
             plugins: {
@@ -163,7 +171,7 @@ export default function ChartWebView({
       right={0}
       bottom={0}
       zIndex={100}
-      bg="white"
+      bg={bgColor}
       paddingRight={20}
       paddingBottom={10}
       paddingLeft={10}
@@ -174,8 +182,8 @@ export default function ChartWebView({
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onBack} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">
+              <ChevronLeft size={20} color={textColor} />
+              <Text fontSize="$5" fontWeight="600" color={textColor}>
                 Back
               </Text>
             </XStack>
@@ -183,16 +191,12 @@ export default function ChartWebView({
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(400)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3">
+          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color={textColor}>
             Weight Graph
           </Text>
         </Animated.View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -200,43 +204,35 @@ export default function ChartWebView({
                 val={val}
                 selected={filter === val}
                 onPress={() => setFilter(val)}
-                isDark={false}
+                isDark={isDark}
               />
             ))}
           </XStack>
         </ScrollView>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <XStack gap="$2" mb="$4">
-            {[
-              { label: 'All Days', val: 'all' },
-              { label: 'Last 3 Months', val: '3mo' },
-              { label: 'Last 30 Days', val: '30d' },
-            ].map(opt => (
+            {[{ label: 'All Days', val: 'all' }, { label: 'Last 3 Months', val: '3mo' }, { label: 'Last 30 Days', val: '30d' }].map(opt => (
               <YearFilterItem
                 key={opt.val}
                 val={opt.label}
                 selected={range === opt.val}
                 onPress={() => setRange(opt.val as any)}
-                isDark={false}
+                isDark={isDark}
               />
             ))}
           </XStack>
         </ScrollView>
+
         <Text fontSize="$2" color="$gray10" ta="center" mt="$2">
-          Showing{' '}
-          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filter === 'all' ? 'all years' : filter}
         </Text>
       </YStack>
 
       {loading && (
         <YStack f={1} jc="center" ai="center">
-          <ActivityIndicator size="large" color="#000" />
+          <ActivityIndicator size="large" color={textColor} />
         </YStack>
       )}
 
@@ -247,6 +243,8 @@ export default function ChartWebView({
         onLoadEnd={() => setLoading(false)}
         javaScriptEnabled
         scalesPageToFit
+        bounces={false}          // 👈 disable scroll bounce (especially on iOS)
+  overScrollMode="never"
       />
     </YStack>
   )

@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.deleteItemAsync('user')
     setToken(null)
     setUser(null)
-    router.replace('/')
+    router.replace('/signin')
   }
 
   return (

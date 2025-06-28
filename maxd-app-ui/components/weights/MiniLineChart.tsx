@@ -1,5 +1,6 @@
 import { View } from 'react-native'
-import { Svg, Polyline, Line, Text as SvgText, Circle } from 'react-native-svg'
+import { Svg, Polyline, Line, Circle } from 'react-native-svg'
+import { useTheme } from 'tamagui'
 
 interface MiniLineChartProps {
   weights: { value: number }[]
@@ -14,6 +15,8 @@ export function MiniLineChart({
   height = 85,
   padding = 8,
 }: MiniLineChartProps) {
+  const theme = useTheme()
+
   const data = weights.map(w => w.value).slice(-6)
   if (data.length < 2) return null
 
@@ -32,12 +35,18 @@ export function MiniLineChart({
 
   const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ')
 
+  // Colors from Tamagui theme
+  const axisColor = theme.gray8.val
+  const lineColor = theme.color.val
+  const areaFill = theme.gray6.val + '22'
+// soft filled shadow area
+
   return (
     <View style={{ width, height, borderRadius: 8 }}>
       <Svg width={width} height={height}>
         <Polyline
           points={`${polylinePoints} ${points.at(-1)?.x},${height - padding} ${points[0].x},${height - padding}`}
-          fill="rgba(0,0,0,0.05)"
+          fill={areaFill}
           stroke="none"
         />
         <Line
@@ -45,7 +54,7 @@ export function MiniLineChart({
           y1={padding}
           x2={padding}
           y2={height - padding}
-          stroke="#ccc"
+          stroke={axisColor}
           strokeWidth="1"
         />
         <Line
@@ -53,19 +62,19 @@ export function MiniLineChart({
           y1={height - padding}
           x2={width - padding}
           y2={height - padding}
-          stroke="#ccc"
+          stroke={axisColor}
           strokeWidth="1"
         />
         <Polyline
           points={polylinePoints}
           fill="none"
-          stroke="#000"
+          stroke={lineColor}
           strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"
         />
         {points.map((p, idx) => (
-          <Circle key={idx} cx={p.x} cy={p.y} r={2.5} fill="#000" />
+          <Circle key={idx} cx={p.x} cy={p.y} r={2.5} fill={lineColor} />
         ))}
       </Svg>
     </View>

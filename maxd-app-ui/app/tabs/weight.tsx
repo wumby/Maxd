@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
-import { Button, YStack, Text, Input, XStack } from 'tamagui'
+import { Button, YStack, Text, Input, XStack, useThemeName } from 'tamagui'
 import { Modal, View } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
@@ -121,16 +121,17 @@ export default function WeightTab() {
     return isNaN(val) ? '--' : `${val.toFixed(1)} lb`
   }, [weights])
 
-
+ const themeName = useThemeName();
+ if (!themeName) return null
   return (
     <>
-      <AnimatedYStack
-        f={1}
-        bg="$background"
-        p="$4"
-        key={isFocused ? 'focused' : 'unfocused'}
-        entering={FadeIn.duration(500)}
-      >
+     <AnimatedYStack
+  f={1}
+  backgroundColor="$background"
+  p="$4"
+  key={`weight-tab-${themeName}-${isFocused ? 'focused' : 'unfocused'}`}
+  entering={FadeIn.duration(500)}
+>
         {viewMode === null && (
           <YStack f={1} jc="space-evenly" gap="$4">
             <CardsTop

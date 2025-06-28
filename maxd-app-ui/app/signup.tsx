@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert } from 'react-native'
+import { Alert, Pressable } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
 import { router } from 'expo-router'
@@ -93,13 +93,11 @@ export default function SignupScreen() {
       </Button>
 
       <Separator />
-      <Text
-        fontSize="$4"
-        color="$blue10"
-        onPress={() => router.push('/login')}
-      >
-        Already have an account? Log in
-      </Text>
+      <Pressable hitSlop={15} onPress={() => router.push('/login')}>
+  <Text fontSize="$4" color="$blue10">
+    Already have an account? Log in
+  </Text>
+</Pressable>
     </YStack>
   )
 }

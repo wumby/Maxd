@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react'
-import { YStack, Text, XStack, Card } from 'tamagui'
+import {
+  YStack,
+  Text,
+  XStack,
+  Card,
+  useThemeName,
+  useTheme
+} from 'tamagui'
 import { Pressable, ScrollView, Dimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft } from '@tamagui/lucide-icons'
@@ -28,6 +35,9 @@ export default function MonthlySummary({
   weights: WeightEntry[]
 }) {
   const insets = useSafeAreaInsets()
+  const isDark = useThemeName() === 'dark'
+  const theme = useTheme()
+
   const allYears = useMemo(() => {
     const years = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(years).sort((a, b) => b - a)
@@ -90,6 +100,10 @@ export default function MonthlySummary({
       transform: [{ scale: scale.value }],
     }))
 
+    const bgColor = selected ? (isDark ? theme.gray5.val : '#e5e7eb') : 'transparent'
+    const textColor = selected ? (isDark ? '#fff' : '#000') : theme.gray10.val
+    const border = selected ? theme.gray8.val : theme.gray5.val
+
     return (
       <Pressable
         onPressIn={() => (scale.value = withTiming(0.95, { duration: 100 }))}
@@ -101,11 +115,11 @@ export default function MonthlySummary({
             px="$4"
             py="$2"
             br="$10"
-            bg={selected ? '#e5e7eb' : 'transparent'}
+            bg={bgColor}
             borderWidth={1}
-            borderColor={selected ? '$gray8' : '$gray5'}
+            borderColor={border}
           >
-            <Text fontWeight="600" fontSize="$3" color={selected ? 'black' : '$gray10'}>
+            <Text fontWeight="600" fontSize="$3" color={textColor}>
               {val === 'all' ? 'All' : val}
             </Text>
           </Card>
@@ -130,8 +144,8 @@ export default function MonthlySummary({
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} />
-              <Text fontSize="$5" fontWeight="600">
+              <ChevronLeft size={20} color={theme.color.val} />
+              <Text fontSize="$5" fontWeight="600" color="$color">
                 Back
               </Text>
             </XStack>
@@ -139,7 +153,7 @@ export default function MonthlySummary({
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(300)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3">
+          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
             Monthly Averages
           </Text>
         </Animated.View>
@@ -175,21 +189,22 @@ export default function MonthlySummary({
 
             return (
               <Animated.View
-                key={`month-${entry.year}-${entry.month}`}
-                entering={FadeInUp.duration(300)}
-              >
+  key={`month-${entry.year}-${entry.month}`}
+  entering={FadeInUp.duration(300).delay(index * 40)}
+>
+
                 <Card
                   p="$3"
                   mb="$2"
                   elevate
                   bordered
-                  bg="white"
+                  bg="$background"
                   borderRadius={0}
                   width={SCREEN_WIDTH - 32}
                 >
                   <XStack jc="space-between" ai="center">
                     <YStack>
-                      <Text fontSize="$5" fontWeight="700">
+                      <Text fontSize="$5" fontWeight="700" color="$color">
                         {entry.average.toFixed(1)} lb
                       </Text>
                       <Text fontSize="$2" color="$gray10">

@@ -1,16 +1,54 @@
-import { Text, Card, XStack, Separator, Progress } from 'tamagui'
-import { useAuth } from '@/contexts/AuthContext'
-import { useRouter, useFocusEffect } from 'expo-router'
-import { Dumbbell, Scale } from '@tamagui/lucide-icons'
-import Animated, { useSharedValue, withTiming, FadeIn } from 'react-native-reanimated'
-import { useCallback } from 'react'
+import {
+  Text,
+  XStack,
+  Card,
+  Separator,
+  Button,
+  View,
+  YStack,
+} from 'tamagui'
+import { useSharedValue, withTiming, useAnimatedStyle, withRepeat, withSequence } from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
+import { useFocusEffect } from '@react-navigation/native'
+import { useCallback, useState, useEffect } from 'react'
 import { ScreenContainer } from '@/components/ScreenContainer'
-import { useIsFocused } from '@react-navigation/native'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'expo-router'
+import { Dumbbell, Scale, Trash2, Plus, ArrowUpRight } from '@tamagui/lucide-icons'
+import { useUserWidgets } from '@/hooks/useUserWidgets'
+import { AddWidgetModal } from '@/components/AddWidgetModal'
+import { CurrentWeightWidget } from '@/components/widgets/CurrentWeightWidget'
+import { StreakWidget } from '@/components/widgets/StreakWidget'
+
+function JiggleWrapper({ children, isEditing }: { children: React.ReactNode; isEditing: boolean }) {
+  const rotate = useSharedValue(0)
+
+  useEffect(() => {
+    if (isEditing) {
+      rotate.value = withRepeat(
+        withSequence(
+          withTiming(-1, { duration: 100 }),
+          withTiming(1, { duration: 100 })
+        ),
+        -1,
+        true
+      )
+    } else {
+      rotate.value = withTiming(0, { duration: 150 })
+    }
+  }, [isEditing])
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ rotateZ: `${rotate.value}deg` }],
+  }))
+
+  return <Animated.View style={style}>{children}</Animated.View>
+}
 
 export default function HomeTab() {
-  const { token, user } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
-
+  const { layout, setLayout } = useUserWidgets()
   const opacity = useSharedValue(0)
   const translateY = useSharedValue(20)
 
@@ -23,35 +61,32 @@ export default function HomeTab() {
     }, [])
   )
 
-  const isFocused = useIsFocused()
-
   return (
     <ScreenContainer>
-      <Animated.View key={isFocused ? 'focused' : 'unfocused'} entering={FadeIn.duration(500)}>
-        <Text fontSize="$10" fontWeight="900" ta="center" mt="$4">
-          Maxd
-        </Text>
+      <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+        <XStack jc="center" ai="center" px="$4" mt="$4" mb="$3">
+          <Text fontSize="$10" fontWeight="900">Maxd</Text>
+        </XStack>
+
         <Text fontSize="$6" ta="center" color="$gray10" mt="$1" mb="$4">
           {user?.name ? `Welcome, ${user.name}` : 'Let’s get stronger.'}
         </Text>
 
-        {/* Weight Summary Card */}
-        <Card elevate p="$4" mb="$4" br="$5" gap="$3">
-          <Text fontSize="$6" fontWeight="700">
-            Current Weight
-          </Text>
-          <Text fontSize="$8" fontWeight="800">
-            181.2 lb
-          </Text>
-          <XStack jc="space-between">
-            <Text color="$gray10">Target: 175 lb</Text>
-            <Text color="$gray10">Streak: 4 days </Text>
-          </XStack>
-          <Progress value={70} w="100%" mt="$2" />
-        </Card>
+        <View
+          px="$4"
+          pb="$4"
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            rowGap: 16,
+          }}
+        >
+         <CurrentWeightWidget />
+         <StreakWidget />
+        </View>
 
-        {/* Quick Actions */}
-        <XStack jc="space-between" gap="$2" mb="$4">
+        <XStack jc="space-between" gap="$2" mt="$5" px="$4">
           <Card
             f={1}
             elevate
@@ -61,10 +96,11 @@ export default function HomeTab() {
             pressStyle={{ scale: 0.97 }}
             onPress={() => router.push('/tabs/weight?log=1')}
           >
-            <Scale size={22} />
-            <Text mt="$2" fontWeight="600">
-              Log New Weight
-            </Text>
+            <YStack position="absolute" top="$2" right="$2" opacity={0.3}>
+    <ArrowUpRight size={18} />
+  </YStack>
+  <Scale size={22} />
+  <Text mt="$2" fontWeight="600">Log New Weight</Text>
           </Card>
           <Card
             f={1}
@@ -75,26 +111,15 @@ export default function HomeTab() {
             pressStyle={{ scale: 0.97 }}
             onPress={() => router.push('/tabs/workouts?log=1')}
           >
-            <Dumbbell size={22} />
-            <Text mt="$2" fontWeight="600">
-              Log New Workout
-            </Text>
+            <YStack position="absolute" top="$2" right="$2" opacity={0.3}>
+              <ArrowUpRight size={18} />
+              </YStack>
+               <Dumbbell size={22} />
+            <Text mt="$2" fontWeight="600">Log New Workout</Text>
+            
+           
           </Card>
         </XStack>
-
-        {/* Streak Box */}
-        <Card elevate p="$4" br="$5" mb="$4" gap="$2">
-          <Text fontSize="$6" fontWeight="700">
-            Progress Streak
-          </Text>
-          <Text color="$gray10">You&apos;ve logged 4 days in a row. Keep going!</Text>
-        </Card>
-
-        {/* Footer or Quote */}
-        <Separator />
-        <Text ta="center" mt="$3" color="$gray9" fontSize="$2">
-          “Discipline is doing what needs to be done, even if you don’t want to.”
-        </Text>
       </Animated.View>
     </ScreenContainer>
   )

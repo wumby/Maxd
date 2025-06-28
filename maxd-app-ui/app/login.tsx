@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert } from 'react-native'
+import { Alert, Pressable } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { useThemeName, YStack, Input, Text, Button, Spinner } from 'tamagui'
 import { router } from 'expo-router'
@@ -70,15 +70,17 @@ export default function LoginScreen() {
       >
         {loading ? <Spinner size="small" color="$color" /> : 'Login'}
       </Button>
-
-      <Text
+    <Pressable onPress={() => router.push('/signup')} hitSlop={15}>
+<Text
         fontSize="$4"
         color="$blue10"
         mt="$2"
-        onPress={() => router.push('/signup')}
+        
       >
         Don’t have an account? Sign up
       </Text>
+    </Pressable>
+      
     </YStack>
   )
 }

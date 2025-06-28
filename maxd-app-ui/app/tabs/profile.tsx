@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext'
+import { useThemePreference } from '@/contexts/ThemeContext' // ✅ import your theme context
 import {
   YStack,
   Text,
@@ -11,13 +12,13 @@ import {
 } from 'tamagui'
 import { useState } from 'react'
 import { Alert, Pressable } from 'react-native'
-import { Sun, Moon, LogOut, Pencil, Trash2 } from '@tamagui/lucide-icons'
+import { Sun, Moon, LogOut, Trash2 } from '@tamagui/lucide-icons'
 import { API_URL } from '@/env'
 
 export default function ProfileTab() {
   const { user, token, logout } = useAuth()
+  const { theme, setTheme } = useThemePreference() // ✅ access current theme
   const [useKg, setUseKg] = useState(false)
-  const [darkMode, setDarkMode] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
@@ -46,32 +47,31 @@ export default function ProfileTab() {
     ])
   }
 
+  const handleThemeToggle = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
   return (
     <YStack f={1} bg="$background" p="$4" space="$4" jc="center" ai="center">
-     <XStack w="100%" maxWidth={400} ai="center" jc="space-between" px={4}>
+      <XStack w="100%" maxWidth={400} ai="center" jc="space-between" px={4}>
         <Text />
-    
-  <Text fontSize="$9" fontWeight="700">
-    Your Profile
-  </Text>
-
-  
-  
-  <Pressable onPress={() => setEditMode((v) => !v)} hitSlop={10}>
-             <XStack fd="row" ai="center" gap="$2">
-               <Text fontSize="$5" fontWeight="600">
-                 {editMode ? 'Cancel' : 'Edit'}
-               </Text>
-             </XStack>
-           </Pressable>
-</XStack>
-
+        <Text fontSize="$9" fontWeight="700">
+          Your Profile
+        </Text>
+        <Pressable onPress={() => setEditMode((v) => !v)} hitSlop={10}>
+          <XStack fd="row" ai="center" gap="$2">
+            <Text fontSize="$5" fontWeight="600">
+              {editMode ? 'Cancel' : 'Edit'}
+            </Text>
+          </XStack>
+        </Pressable>
+      </XStack>
 
       <Card elevate p="$4" w="100%" maxWidth={400} br="$6" bg="$gray2" gap="$3">
         {editMode ? (
           <>
-            <Input placeholder="Name" value={name} onChangeText={setName} maxLength={30}  returnKeyType="done" />
-            <Input placeholder="Email" value={email} onChangeText={setEmail}  returnKeyType="done" />
+            <Input placeholder="Name" value={name} onChangeText={setName} maxLength={30} returnKeyType="done" />
+            <Input placeholder="Email" value={email} onChangeText={setEmail} returnKeyType="done" />
           </>
         ) : (
           <>
@@ -83,8 +83,6 @@ export default function ProfileTab() {
             </Text>
           </>
         )}
-
-       
       </Card>
 
       <Separator />
@@ -103,9 +101,9 @@ export default function ProfileTab() {
           <Text fontSize="$5">Dark Mode</Text>
           <Switch
             size="$3"
-            checked={darkMode}
-            onCheckedChange={setDarkMode}
-            icon={darkMode ? <Moon size={16} /> : <Sun size={16} />}
+            checked={theme === 'dark'}
+            onCheckedChange={handleThemeToggle}
+            icon={theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
           />
         </XStack>
       </Card>
@@ -124,15 +122,17 @@ export default function ProfileTab() {
         </Button>
       )}
 
-      {!editMode && <Button
-        icon={LogOut}
-        size="$4"
-        mt="$4"
-        theme="active"
-        onPress={logout}
-      >
-        Log Out
-      </Button>}
+      {!editMode && (
+        <Button
+          icon={LogOut}
+          size="$4"
+          mt="$4"
+          theme="active"
+          onPress={logout}
+        >
+          Log Out
+        </Button>
+      )}
     </YStack>
   )
 }
