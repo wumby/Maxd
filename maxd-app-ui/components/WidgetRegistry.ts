@@ -1,5 +1,5 @@
-import { LastWorkoutWidget } from "./widgets/LastWorkoutWidget";
-import { StreakWidget } from "./widgets/StreakWidget";
+import { LastWorkoutWidget } from './widgets/LastWorkoutWidget'
+import { StreakWidget } from './widgets/StreakWidget'
 
 export const widgetRegistry = {
   weightChart: {

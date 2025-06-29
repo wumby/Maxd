@@ -10,7 +10,7 @@ type Props = {
 
 export function AddWidgetModal({ visible, onClose, onAdd, existingTypes }: Props) {
   const available = Object.keys(widgetRegistry).filter(
-    (type) => !existingTypes.includes(type as WidgetType)
+    type => !existingTypes.includes(type as WidgetType)
   ) as WidgetType[]
 
   return (
@@ -32,13 +32,8 @@ export function AddWidgetModal({ visible, onClose, onAdd, existingTypes }: Props
           {available.length === 0 && (
             <Text color="$gray10">All available widgets are already added.</Text>
           )}
-          {available.map((type) => (
-            <Button
-              key={type}
-              onPress={() => onAdd(type)}
-              size="$4"
-              br="$4"
-            >
+          {available.map(type => (
+            <Button key={type} onPress={() => onAdd(type)} size="$4" br="$4">
               Add {type}
             </Button>
           ))}

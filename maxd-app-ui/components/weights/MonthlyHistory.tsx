@@ -1,12 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  YStack,
-  Text,
-  XStack,
-  Card,
-  useThemeName,
-  useTheme
-} from 'tamagui'
+import { YStack, Text, XStack, Card, useThemeName, useTheme } from 'tamagui'
 import { Pressable, ScrollView, Dimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft } from '@tamagui/lucide-icons'
@@ -111,14 +104,7 @@ export default function MonthlySummary({
         onPress={onPress}
       >
         <Animated.View style={animatedStyle}>
-          <Card
-            px="$4"
-            py="$2"
-            br="$10"
-            bg={bgColor}
-            borderWidth={1}
-            borderColor={border}
-          >
+          <Card px="$4" py="$2" br="$10" bg={bgColor} borderWidth={1} borderColor={border}>
             <Text fontWeight="600" fontSize="$3" color={textColor}>
               {val === 'all' ? 'All' : val}
             </Text>
@@ -189,10 +175,9 @@ export default function MonthlySummary({
 
             return (
               <Animated.View
-  key={`month-${entry.year}-${entry.month}`}
-  entering={FadeInUp.duration(300).delay(index * 40)}
->
-
+                key={`month-${entry.year}-${entry.month}`}
+                entering={FadeInUp.duration(300).delay(index * 40)}
+              >
                 <Card
                   p="$3"
                   mb="$2"

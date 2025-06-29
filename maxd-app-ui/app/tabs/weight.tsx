@@ -43,30 +43,30 @@ export default function WeightTab() {
   useFocusEffect(
     useCallback(() => {
       setViewMode(null)
-    const fetchWeights = async () => {
-  try {
-    const res = await fetch(`${API_URL}/weights`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    const data = await res.json()
-    if (res.status === 401 || data.error === 'Invalid or expired token') {
-      console.warn('Token expired, logging out...')
-      router.replace('/login') 
-      return
-    }
+      const fetchWeights = async () => {
+        try {
+          const res = await fetch(`${API_URL}/weights`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          const data = await res.json()
+          if (res.status === 401 || data.error === 'Invalid or expired token') {
+            console.warn('Token expired, logging out...')
+            router.replace('/login')
+            return
+          }
 
-    if (!Array.isArray(data)) {
-      console.error('Bad weights response:', data)
-      setWeights([])
-      return
-    }
+          if (!Array.isArray(data)) {
+            console.error('Bad weights response:', data)
+            setWeights([])
+            return
+          }
 
-    setWeights(data)
-  } catch (err) {
-    console.error('Error fetching weights:', err)
-    setWeights([])
-  }
-}
+          setWeights(data)
+        } catch (err) {
+          console.error('Error fetching weights:', err)
+          setWeights([])
+        }
+      }
       fetchWeights()
     }, [token])
   )
@@ -121,17 +121,17 @@ export default function WeightTab() {
     return isNaN(val) ? '--' : `${val.toFixed(1)} lb`
   }, [weights])
 
- const themeName = useThemeName();
- if (!themeName) return null
+  const themeName = useThemeName()
+  if (!themeName) return null
   return (
     <>
-     <AnimatedYStack
-  f={1}
-  backgroundColor="$background"
-  p="$4"
-  key={`weight-tab-${themeName}-${isFocused ? 'focused' : 'unfocused'}`}
-  entering={FadeIn.duration(500)}
->
+      <AnimatedYStack
+        f={1}
+        backgroundColor="$background"
+        p="$4"
+        key={`weight-tab-${themeName}-${isFocused ? 'focused' : 'unfocused'}`}
+        entering={FadeIn.duration(500)}
+      >
         {viewMode === null && (
           <YStack f={1} jc="space-evenly" gap="$4">
             <CardsTop
@@ -203,7 +203,7 @@ export default function WeightTab() {
               placeholder="e.g. 175.5"
               value={weight}
               onChangeText={setWeight}
-               returnKeyType="done"
+              returnKeyType="done"
             />
 
             <DateTimePicker

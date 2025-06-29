@@ -39,7 +39,7 @@ export function MiniLineChart({
   const axisColor = theme.gray8.val
   const lineColor = theme.color.val
   const areaFill = theme.gray6.val + '22'
-// soft filled shadow area
+  // soft filled shadow area
 
   return (
     <View style={{ width, height, borderRadius: 8 }}>

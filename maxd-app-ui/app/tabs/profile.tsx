@@ -1,15 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useThemePreference } from '@/contexts/ThemeContext' // ✅ import your theme context
-import {
-  YStack,
-  Text,
-  Button,
-  Card,
-  Separator,
-  XStack,
-  Switch,
-  Input,
-} from 'tamagui'
+import { YStack, Text, Button, Card, Separator, XStack, Switch, Input } from 'tamagui'
 import { useState } from 'react'
 import { Alert, Pressable } from 'react-native'
 import { Sun, Moon, LogOut, Trash2 } from '@tamagui/lucide-icons'
@@ -58,7 +49,7 @@ export default function ProfileTab() {
         <Text fontSize="$9" fontWeight="700">
           Your Profile
         </Text>
-        <Pressable onPress={() => setEditMode((v) => !v)} hitSlop={10}>
+        <Pressable onPress={() => setEditMode(v => !v)} hitSlop={10}>
           <XStack fd="row" ai="center" gap="$2">
             <Text fontSize="$5" fontWeight="600">
               {editMode ? 'Cancel' : 'Edit'}
@@ -70,7 +61,13 @@ export default function ProfileTab() {
       <Card elevate p="$4" w="100%" maxWidth={400} br="$6" bg="$gray2" gap="$3">
         {editMode ? (
           <>
-            <Input placeholder="Name" value={name} onChangeText={setName} maxLength={30} returnKeyType="done" />
+            <Input
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+              maxLength={30}
+              returnKeyType="done"
+            />
             <Input placeholder="Email" value={email} onChangeText={setEmail} returnKeyType="done" />
           </>
         ) : (
@@ -111,25 +108,13 @@ export default function ProfileTab() {
       <Separator />
 
       {editMode && (
-        <Button
-          icon={Trash2}
-          size="$4"
-          mt="$4"
-          theme="red"
-          onPress={handleDelete}
-        >
+        <Button icon={Trash2} size="$4" mt="$4" theme="red" onPress={handleDelete}>
           Delete Profile
         </Button>
       )}
 
       {!editMode && (
-        <Button
-          icon={LogOut}
-          size="$4"
-          mt="$4"
-          theme="active"
-          onPress={logout}
-        >
+        <Button icon={LogOut} size="$4" mt="$4" theme="active" onPress={logout}>
           Log Out
         </Button>
       )}

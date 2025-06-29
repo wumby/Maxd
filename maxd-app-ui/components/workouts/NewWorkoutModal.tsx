@@ -1,26 +1,15 @@
 import { useState } from 'react'
-import {
-  YStack,
-  Text,
-  Button,
-  XStack,
-  Input,
-  Separator,
-} from 'tamagui'
-import {
-  Modal,
-  ScrollView,
-  View,
-  Keyboard,
-} from 'react-native'
+import { YStack, Text, Button, XStack } from 'tamagui'
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
-
-
-
-const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
+import { AddExerciseCard } from './AddExerciseCard'
+import { WorkoutTitleHeader } from './WorkoutTitleHeader'
+import { FavoritesTab } from './FavoritesTab'
+import { ExerciseControls } from './ExerciseControls'
+import { FinalActions } from './FinalActions'
 
 export default function NewWorkoutModal({
   visible,
@@ -33,43 +22,66 @@ export default function NewWorkoutModal({
   const [missingTitle, setMissingTitle] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [tab, setTab] = useState<'new' | 'saved'>('new')
-  const [dropdownIndex, setDropdownIndex] = useState<number | null>(null)
   const [exercises, setExercises] = useState<any[]>([
     { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
   ])
-const { saved, setSaved, loading } = useSavedWorkouts()
-const { savedExercises, setSavedExercises, loading: loadingSavedExercises } = useSavedExercises()
-const [isFavorite, setIsFavorite] = useState(false)
-
+  const { saved, setSaved, loading } = useSavedWorkouts()
+  const { savedExercises, setSavedExercises, loading: loadingSavedExercises } = useSavedExercises()
   const { token } = useAuth()
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
 
-  const handleLoadTemplate = (template: any) => {
-  setTitle(template.title)
-  setExercises(template.exercises)
-  setTab('new')
-  setIsFavorite(true)
-  setFeedback('')
+  const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
+
+
+  const toggleExpand = (index: number) => {
+  setExpandedIndex(prev => (prev === index ? null : index))
 }
 
+
+  const handleLoadTemplate = (template: any) => {
+    setTitle(template.title)
+    setExercises(template.exercises)
+    setTab('new')
+    setFeedback('')
+    setExpandedIndex(0)
+  }
 
   const handleAddExercise = () => {
     setExercises(prev => [
       ...prev,
       { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
     ])
+    setExpandedIndex(exercises.length)
   }
 
   const handleRemoveExercise = (index: number) => {
-    setExercises(prev => prev.filter((_, i) => i !== index))
-  }
+  setExercises(prev => {
+    const updated = prev.filter((_, i) => i !== index)
+    // If the removed index was the expanded one, collapse it
+    if (expandedIndex === index) {
+      setExpandedIndex(null)
+    } else if (expandedIndex !== null && expandedIndex > index) {
+      // Adjust expandedIndex if it was after the removed one
+      setExpandedIndex(expandedIndex - 1)
+    }
+
+    return updated
+  })
+}
+
 
   const handleChangeName = (index: number, newName: string) => {
-    setExercises(prev => {
-      const updated = [...prev]
-      updated[index].name = newName
-      return updated
-    })
-  }
+  setExercises(prev => {
+    const updated = [...prev]
+    updated[index].name = newName
+    return updated
+  })
+  setExerciseErrors(prev => {
+    const next = { ...prev }
+    delete next[index]
+    return next
+  })
+}
 
   const handleChangeType = (index: number, newType: string) => {
     setExercises(prev => {
@@ -96,17 +108,23 @@ const [isFavorite, setIsFavorite] = useState(false)
   }
 
   const handleChangeSet = (
-    exerciseIndex: number,
-    setIndex: number,
-    field: string,
-    value: string
-  ) => {
-    setExercises(prev => {
-      const updated = [...prev]
-      updated[exerciseIndex].sets[setIndex][field] = value
-      return updated
-    })
-  }
+  exerciseIndex: number,
+  setIndex: number,
+  field: string,
+  value: string
+) => {
+  setExercises(prev => {
+    const updated = [...prev]
+    updated[exerciseIndex].sets[setIndex][field] = value
+    return updated
+  })
+  setExerciseErrors(prev => {
+    const next = { ...prev }
+    delete next[exerciseIndex]
+    return next
+  })
+}
+
 
   const handleSubmit = async () => {
     setFeedback('')
@@ -157,81 +175,92 @@ const [isFavorite, setIsFavorite] = useState(false)
     setMissingTitle(false)
     setFeedback('')
     setTitle('')
-    setIsFavorite(false);
     setExercises([
       { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
     ])
-  }
-const handleSaveTemplate = async () => {
-  setFeedback('')
-  if (!title.trim()) {
-    setMissingTitle(true)
-    setFeedback('Workout title is required to save as favorite')
-    return
-  }
-  const alreadyFavorited = saved.some(
-  (w) => w.title.toLowerCase().trim() === title.toLowerCase().trim()
-)
-
-if (alreadyFavorited) {
-  setFeedback('This workout name is already in your favorites')
-  return
-}
-
-  
-  
-
-  const payload = exercises
-    .filter(ex => ex.name.trim() && ex.sets.length > 0)
-    .map(ex => ({
-      name: ex.name.trim(),
-      type: ex.type,
-      sets: ex.sets.map((set: any) => ({
-        reps: set.reps || null,
-        weight: set.weight || null,
-        duration: set.duration || null,
-        distance: set.distance || null,
-      })),
-    }))
-    .filter(ex => ex.sets.length > 0)
-
-  if (payload.length === 0) {
-    setFeedback('Add at least one valid exercise to favorite')
-    return
+    setExpandedIndex(0)
   }
 
-  try {
-    const res = await fetch(`${API_URL}/saved-workouts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ title: title.trim(), exercises: payload }),
-    })
+  const handleSaveTemplate = async () => {
+    setFeedback('')
+    if (!title.trim()) {
+      setMissingTitle(true)
+      setFeedback('Workout title is required to save as favorite')
+      return
+    }
 
-    if (!res.ok) throw new Error()
+    const alreadyFavorited = saved.some(
+      w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
+    )
+    if (alreadyFavorited) {
+      setFeedback('This workout name is already in your favorites')
+      return
+    }
 
-    const newFavorite = await res.json()
-    setSaved(prev => [newFavorite, ...prev]) // ✅ update list immediately
-    setIsFavorite(true)
-  } catch (err) {
-    console.error('Save template failed', err)
-    setFeedback('Error saving favorite')
+    const payload = exercises
+      .filter(ex => ex.name.trim() && ex.sets.length > 0)
+      .map(ex => ({
+        name: ex.name.trim(),
+        type: ex.type,
+        sets: ex.sets.map((set: any) => ({
+          reps: set.reps || null,
+          weight: set.weight || null,
+          duration: set.duration || null,
+          distance: set.distance || null,
+        })),
+      }))
+      .filter(ex => ex.sets.length > 0)
+
+    if (payload.length === 0) {
+      setFeedback('Add at least one valid exercise to favorite')
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/saved-workouts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: title.trim(), exercises: payload }),
+      })
+
+      if (!res.ok) throw new Error()
+
+      const newFavorite = await res.json()
+      setSaved(prev => [newFavorite, ...prev])
+    } catch (err) {
+      console.error('Save template failed', err)
+      setFeedback('Error saving favorite')
+    }
   }
-}
 
-const [showExerciseDropdown, setShowExerciseDropdown] = useState(false)
+  const handleAddFavoriteExercise = (exercise: any) => {
+    setExercises(prev => [...prev, { ...exercise }])
+    setExpandedIndex(exercises.length)
+  }
 
-// Example favorite exercises — replace with real data later
-
-
-const handleAddFavoriteExercise = (exercise: { name: string; type: string; sets: { reps: string; weight: string; duration: string; distance: string }[] }) => {
-  setExercises(prev => [...prev, { ...exercise }])
-}
-const handleSaveExercise = async (exercise: any) => {
+  const handleSaveExercise = async (exercise: any, index: number) => {
   const name = exercise.name.trim()
-  if (!name) return
+  const hasValidSet = exercise.sets.some(
+    (set: any) =>
+      set.reps || set.weight || set.duration || set.distance
+  )
+
+  if (!name || !hasValidSet) {
+    setExerciseErrors(prev => ({
+      ...prev,
+      [index]: 'Enter a name and at least one set to favorite this exercise.',
+    }))
+    return
+  }
+
+  setExerciseErrors(prev => {
+    const updated = { ...prev }
+    delete updated[index]
+    return updated
+  })
 
   const alreadyExists = savedExercises.some(ex => ex.name.toLowerCase() === name.toLowerCase())
   if (alreadyExists) return
@@ -255,347 +284,133 @@ const handleSaveExercise = async (exercise: any) => {
     setSavedExercises(prev => [saved, ...prev])
   } catch (err) {
     console.error('Error saving exercise', err)
+    setExerciseErrors(prev => ({
+      ...prev,
+      [index]: 'Server error saving this exercise.',
+    }))
   }
 }
 
 
+  const alreadyFavorited = saved.some(
+    w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
+  )
 
-
- return (
-  <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-      }}
-    >
-      <YStack w="100%" maxWidth={400} br="$4" overflow="hidden">
-        {/* Tabs */}
-        <XStack bg="$gray3" borderTopEndRadius="$4" overflow="hidden">
-          {[
-            { key: 'new', label: 'New Workout' },
-            { key: 'saved', label: 'Favorites' },
-          ].map(({ key, label }) => (
-            <Button
-              key={key}
-              onPress={() => setTab(key as 'new' | 'saved')}
-              flex={1}
-              borderRadius="0"
-              bg={tab === key ? '$background' : 'transparent'}
-              paddingVertical="$3"
-              paddingHorizontal="$3"
-              justifyContent="center"
-            >
-              <Text
-                fontSize="$5"
-                textAlign="center"
-                fontWeight="600"
-                color={tab === key ? '$color' : '$gray10'}
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: 20,
+          paddingTop:60
+        }}
+      >
+        <YStack w="100%" maxWidth={400} br="$4" overflow="hidden">
+          {/* Tabs */}
+          <XStack bg="$gray3" borderTopEndRadius="$4" overflow="hidden">
+            {[
+              { key: 'new', label: 'New Workout' },
+              { key: 'saved', label: 'Favorites' },
+            ].map(({ key, label }) => (
+              <Button
+                key={key}
+                onPress={() => setTab(key as 'new' | 'saved')}
+                flex={1}
+                borderRadius="0"
+                bg={tab === key ? '$background' : 'transparent'}
+                paddingVertical="$3"
+                paddingHorizontal="$3"
+                justifyContent="center"
               >
-                {label}
-              </Text>
-            </Button>
-          ))}
-        </XStack>
-
-        {/* Content */}
-        <YStack bg="$background" p="$4" gap="$4">
-          {tab === 'saved' ? (
-            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-              <YStack gap="$3">
-                {loading && <Text>Loading...</Text>}
-                {!loading && saved.length === 0 && (
-                  <Text color="$gray10" fontSize="$4" textAlign="center">
-                    No saved workouts yet.
-                  </Text>
-                )}
-                {!loading && saved.length > 0 && (
-                  <YStack>
-                  <Text fontSize="$7" textAlign="left" mb={'$3'}>
-                    Select a Favorite
-                  </Text>
-                    <Text fontSize="$3" color="$gray10" textAlign="left">
-                  Selecting will use that workout as a template
+                <Text
+                  fontSize="$5"
+                  textAlign="center"
+                  fontWeight="600"
+                  color={tab === key ? '$color' : '$gray10'}
+                >
+                  {label}
                 </Text>
-                  </YStack>
-                )}
-                {saved.map((template) => (
-                  <Button
-                    key={template.id}
-                    onPress={() => handleLoadTemplate(template)}
-                  >
-                    {template.title}
-                  </Button>
-                ))}
-              </YStack>
-            </ScrollView>
-          ) : (
-            <>
-              {/* Header */}
-              <XStack jc="space-between" ai="center">
-                <Text fontSize="$6" fontWeight="700">
-                  {title.trim() ? ` ${title.trim()}` : ''}
-                </Text>
-                {(title.trim() || exercises.length > 1 || exercises[0].name.trim()) && (
-                  <Button chromeless size="$2" onPress={resetForm}>
-                    Reset
-                  </Button>
-                )}
-              </XStack>
+              </Button>
+            ))}
+          </XStack>
 
-              {/* Title input + Star */}
-              <XStack ai="center" gap="$2">
-                <Input
-                  flex={1}
-                  placeholder="Workout title"
-                  value={title}
-                  onChangeText={text => {
+          {/* Content */}
+          <YStack bg="$background" p="$4" gap="$4">
+            {tab === 'saved' ? (
+              <FavoritesTab saved={saved} loading={loading} onSelectTemplate={handleLoadTemplate} />
+            ) : (
+              <>
+                <WorkoutTitleHeader
+                  title={title}
+                  onChangeTitle={text => {
                     setTitle(text)
                     if (text.trim()) {
                       setMissingTitle(false)
                       setFeedback('')
                     }
                   }}
-                  returnKeyType="done"
-                  onSubmitEditing={Keyboard.dismiss}
-                  maxLength={20}
+                  onReset={resetForm}
+                  isFavorited={alreadyFavorited}
+                  onFavorite={handleSaveTemplate}
                 />
-                {title.trim().length > 0 && (
-                  <Button
-                    chromeless
-                    size="$4"
-                    icon={() => <Text fontSize="$6">{isFavorite ? '★' : '☆'}</Text>}
-                    onPress={isFavorite ? undefined : handleSaveTemplate}
-                    disabled={isFavorite}
-                    accessibilityLabel="Favorite workout"
-                  />
+
+                {title.trim().length === 0 && (
+                  <Text fontSize="$4" color="$gray10" textAlign="center">
+                    Enter new workout title or select workout template from favorites tab
+                  </Text>
                 )}
-              </XStack>
 
-              {title.trim().length === 0 && (
-                <Text fontSize="$4" color="$gray10" textAlign="center">
-                  Enter new workout title or select workout template from favorites
-                </Text>
-              )}
+                
 
-              {feedback !== '' && (
-                <Text color="$red10" fontSize="$4" textAlign="center">
-                  {feedback}
-                </Text>
-              )}
+                {title.trim().length > 0 && (
+                  
+                  <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                    <YStack gap="$6" pb="$8">
+                      {exercises.map((exercise, index) => (
+                        <AddExerciseCard
+                          key={index}
+                          index={index}
+                          exercise={exercise}
+                          expanded={expandedIndex === index}
 
-              {title.trim().length > 0 && (
-                <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                  <YStack gap="$6" pb="$8">
-                    {exercises.map((exercise, exerciseIndex) => (
-                      <YStack key={exerciseIndex} gap="$3">
-                       <XStack jc="space-between" ai="center">
-  <Text fontWeight="600" fontSize="$6">
-    Exercise {exerciseIndex + 1}
-  </Text>
-  <XStack gap="$2" ai="center">
-    <Button
-  chromeless
-  size="$2"
-  onPress={() => handleSaveExercise(exercises[exerciseIndex])}
-  icon={() => (
-    <Text fontSize="$5">
-      {savedExercises.some(
-        (ex) =>
-          ex.name.toLowerCase() === exercises[exerciseIndex].name.trim().toLowerCase()
-      )
-        ? '★'
-        : '☆'}
-    </Text>
-  )}
-/>
-
-    <Button
-      chromeless
-      size="$2"
-      onPress={() => handleRemoveExercise(exerciseIndex)}
-    >
-      Remove
-    </Button>
-  </XStack>
-</XStack>
-
-
-                        <Input
-                          placeholder="Exercise name"
-                          value={exercise.name}
-                          onChangeText={text => handleChangeName(exerciseIndex, text)}
-                          returnKeyType="done"
-                        />
-                        <YStack>
-                          <Button
-                            size="$3"
-                            onPress={() =>
-                              setDropdownIndex(dropdownIndex === exerciseIndex ? null : exerciseIndex)
-                            }
-                          >
-                            {exercise.type}
-                          </Button>
-                          {dropdownIndex === exerciseIndex && (
-                            <YStack gap="$1" mt="$2">
-                              {EXERCISE_TYPES.map(type => (
-                                <Button
-                                  key={type}
-                                  chromeless
-                                  onPress={() => {
-                                    handleChangeType(exerciseIndex, type)
-                                    setDropdownIndex(null)
-                                  }}
-                                >
-                                  {type}
-                                </Button>
-                              ))}
-                            </YStack>
+                          onToggleExpand={toggleExpand}
+                          onChangeName={handleChangeName}
+                          onChangeType={handleChangeType}
+                          onAddSet={handleAddSet}
+                          onRemoveSet={handleRemoveSet}
+                          onChangeSet={handleChangeSet}
+                          onRemove={handleRemoveExercise}
+                           onSave={(exercise) => handleSaveExercise(exercise, index)}
+  error={exerciseErrors[index]}
+                          isSaved={savedExercises.some(
+                            ex => ex.name.toLowerCase() === exercise.name.trim().toLowerCase()
                           )}
-                        </YStack>
+                        />
+                      ))}
 
-                        {exercise.sets.map((set: any, setIndex: number) => (
-                          <XStack key={setIndex} gap="$2" flexWrap="wrap" ai="center">
-                            {exercise.type === 'weights' || exercise.type === 'bodyweight' ? (
-                              <>
-                                <Input
-                                  flex={1}
-                                  keyboardType="numeric"
-                                  placeholder="Reps"
-                                  value={set.reps}
-                                  onChangeText={val =>
-                                    handleChangeSet(exerciseIndex, setIndex, 'reps', val)
-                                  }
-                                  returnKeyType="done"
-                                />
-                                {exercise.type === 'weights' && (
-                                  <Input
-                                    flex={1}
-                                    keyboardType="numeric"
-                                    placeholder="Weight (lbs)"
-                                    value={set.weight}
-                                    onChangeText={val =>
-                                      handleChangeSet(exerciseIndex, setIndex, 'weight', val)
-                                    }
-                                    returnKeyType="done"
-                                  />
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <Input
-                                  flex={1}
-                                  placeholder="Duration (min)"
-                                  value={set.duration}
-                                  onChangeText={val =>
-                                    handleChangeSet(exerciseIndex, setIndex, 'duration', val)
-                                  }
-                                  returnKeyType="done"
-                                />
-                                <Input
-                                  flex={1}
-                                  placeholder="Distance (mi)"
-                                  value={set.distance}
-                                  onChangeText={val =>
-                                    handleChangeSet(exerciseIndex, setIndex, 'distance', val)
-                                  }
-                                  returnKeyType="done"
-                                />
-                              </>
-                            )}
-                            <Button
-                              chromeless
-                              size="$2"
-                              onPress={() => handleRemoveSet(exerciseIndex, setIndex)}
-                            >
-                              Remove
-                            </Button>
-                          </XStack>
-                        ))}
-
-                        <Button size="$2" onPress={() => handleAddSet(exerciseIndex)}>
-                          + Add Set
-                        </Button>
-
-                        <Separator />
-                      </YStack>
-                    ))}
-
-                   <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems='center'>
-  <Button onPress={handleAddExercise}>
-    + Add Exercise
-  </Button>
-  <Text>or</Text>
-  <YStack>
-    <Button onPress={() => setShowExerciseDropdown(!showExerciseDropdown)}>
-      + From Favorites
-    </Button>
-
-    {showExerciseDropdown && (
-      <YStack
-        mt="$2"
-        bg="$background"
-        borderWidth={1}
-        borderColor="$gray6"
-        borderRadius="$3"
-        p="$2"
-        gap="$2"
-        maxHeight={200}
-        overflow="scroll"
-        zIndex={100}
-      >
-       {loadingSavedExercises ? (
-  <Text>Loading...</Text>
-) : savedExercises.length > 0 ? (
-  savedExercises.map((ex, i) => (
-    <Button
-      key={i}
-      size="$2"
-      chromeless
-      onPress={() => {
-        handleAddFavoriteExercise(ex)
-        setShowExerciseDropdown(false)
-      }}
-    >
-      {ex.name}
-    </Button>
-  ))
-) : (
-  <Text color="$gray10" fontSize="$4" textAlign="center">
-    No favorites yet.
-  </Text>
-)}
-
-      </YStack>
-    )}
-  </YStack>
-</XStack>
-
-                  </YStack>
-                </ScrollView>
-              )}
-            </>
-          )}
-
-          {/* Final Actions */}
-          {tab === 'new' && (
-  <XStack gap="$2">
-            <Button flex={1} onPress={onClose}>
-              Cancel
-            </Button>
-            <Button flex={1} onPress={handleSubmit} theme="active">
-              Submit
-            </Button>
-          </XStack>
-          )}
-        
+                      <ExerciseControls
+                        savedExercises={savedExercises}
+                        loading={loadingSavedExercises}
+                        onAddExercise={handleAddExercise}
+                        onAddFavoriteExercise={handleAddFavoriteExercise}
+                      />
+                    </YStack>
+                  </ScrollView>
+                )}
+              </>
+            )}
+            {feedback !== '' && (
+                  <Text color="$red10" fontSize="$4" textAlign="center">
+                    {feedback}
+                  </Text>
+                )}
+            {tab === 'new' && <FinalActions onCancel={onClose} onSubmit={handleSubmit} />}
+          </YStack>
         </YStack>
-      </YStack>
-    </View>
-  </Modal>
-)
-
+      </View>
+    </Modal>
+  )
 }

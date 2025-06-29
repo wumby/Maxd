@@ -10,10 +10,7 @@ export default function TabLayout() {
 
   const activeTintColor = isDark ? '#E4E4E7' : '#1F2937'
   const inactiveTintColor = isDark ? '#7C7C8A' : '#A3A3A3'
-const backgroundColor = isDark
-  ? 'rgba(20, 20, 20, 0.93)'   
-  : 'rgba(255,255,255,0.9)' 
-
+  const backgroundColor = isDark ? 'rgba(20, 20, 20, 0.93)' : 'rgba(255,255,255,0.9)'
 
   const borderColor = isDark ? '#2C2C2E' : '#E5E7EB'
 

@@ -198,7 +198,13 @@ export default function MonthlyChartWebView({
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(400)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color={isDark ? 'white' : 'black'}>
+          <Text
+            fontSize="$9"
+            fontWeight="900"
+            ta="center"
+            mb="$3"
+            color={isDark ? 'white' : 'black'}
+          >
             Monthly Averages
           </Text>
         </Animated.View>
@@ -227,7 +233,10 @@ export default function MonthlyChartWebView({
           contentContainerStyle={{ paddingHorizontal: 16 }}
         >
           <XStack gap="$2" mb="$4">
-            {[{ label: 'All Months', val: 'all' }, { label: 'Last 6 Months', val: '6mo' }].map(opt => (
+            {[
+              { label: 'All Months', val: 'all' },
+              { label: 'Last 6 Months', val: '6mo' },
+            ].map(opt => (
               <YearFilterItem
                 key={opt.val}
                 val={opt.label}

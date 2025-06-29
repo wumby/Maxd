@@ -1,14 +1,5 @@
 import { useState } from 'react'
-import {
-  YStack,
-  Text,
-  Button,
-  ScrollView,
-  XStack,
-  Card,
-  Separator,
-  View,
-} from 'tamagui'
+import { YStack, Text, Button, ScrollView, XStack, Card, Separator, View } from 'tamagui'
 import { ChevronDown, ChevronUp } from '@tamagui/lucide-icons'
 import { ScreenContainer } from '../ScreenContainer'
 
@@ -26,7 +17,6 @@ export default function WorkoutHistory({
   }
 
   return (
-
     <ScreenContainer>
       <XStack ai="center" jc="space-between" mb="$2">
         <Button size="$3" onPress={onClose}>
@@ -40,24 +30,13 @@ export default function WorkoutHistory({
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap="$4" pb="$8">
-          {workouts.map((workout) => {
+          {workouts.map(workout => {
             const isOpen = expanded === workout.id
             const workoutDate = new Date(workout.created_at).toLocaleDateString()
 
             return (
-              <Card
-                key={workout.id}
-                elevate
-                bg="$color2"
-                p="$4"
-                gap="$3"
-                br="$6"
-              >
-                <XStack
-                  jc="space-between"
-                  ai="center"
-                  onPress={() => toggleExpand(workout.id)}
-                >
+              <Card key={workout.id} elevate bg="$color2" p="$4" gap="$3" br="$6">
+                <XStack jc="space-between" ai="center" onPress={() => toggleExpand(workout.id)}>
                   <Text fontSize="$5" fontWeight="700">
                     {workoutDate}
                   </Text>
@@ -78,7 +57,7 @@ export default function WorkoutHistory({
                             </Text>
                           ))}
                         </YStack>
-                       {i < workout.exercises.length - 1 && <Separator />} 
+                        {i < workout.exercises.length - 1 && <Separator />}
                       </YStack>
                     ))}
                   </YStack>

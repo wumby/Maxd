@@ -3,14 +3,7 @@ import { Alert, Pressable } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
 import { router } from 'expo-router'
-import {
-  YStack,
-  Input,
-  Button,
-  Text,
-  Spinner,
-  Separator,
-} from 'tamagui'
+import { YStack, Input, Button, Text, Spinner, Separator } from 'tamagui'
 
 export default function SignupScreen() {
   const { login } = useAuth()
@@ -61,7 +54,7 @@ export default function SignupScreen() {
         size="$6"
         autoCapitalize="words"
         w={'100%'}
-         returnKeyType="done"
+        returnKeyType="done"
       />
       <Input
         placeholder="Email"
@@ -71,7 +64,7 @@ export default function SignupScreen() {
         autoCapitalize="none"
         keyboardType="email-address"
         w={'100%'}
-         returnKeyType="done"
+        returnKeyType="done"
       />
       <Input
         placeholder="Password"
@@ -80,24 +73,19 @@ export default function SignupScreen() {
         secureTextEntry
         size="$6"
         w={'100%'}
-         returnKeyType="done"
+        returnKeyType="done"
       />
 
-      <Button
-        size="$4"
-        theme="active"
-        onPress={handleSignup}
-        disabled={loading}
-      >
+      <Button size="$4" theme="active" onPress={handleSignup} disabled={loading}>
         {loading ? <Spinner size="small" color="$color" /> : 'Sign Up'}
       </Button>
 
       <Separator />
       <Pressable hitSlop={15} onPress={() => router.push('/login')}>
-  <Text fontSize="$4" color="$blue10">
-    Already have an account? Log in
-  </Text>
-</Pressable>
+        <Text fontSize="$4" color="$blue10">
+          Already have an account? Log in
+        </Text>
+      </Pressable>
     </YStack>
   )
 }

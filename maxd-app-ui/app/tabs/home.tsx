@@ -1,13 +1,11 @@
+import { Text, XStack, Card, Separator, Button, View, YStack } from 'tamagui'
 import {
-  Text,
-  XStack,
-  Card,
-  Separator,
-  Button,
-  View,
-  YStack,
-} from 'tamagui'
-import { useSharedValue, withTiming, useAnimatedStyle, withRepeat, withSequence } from 'react-native-reanimated'
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+} from 'react-native-reanimated'
 import Animated from 'react-native-reanimated'
 import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useState, useEffect } from 'react'
@@ -26,10 +24,7 @@ function JiggleWrapper({ children, isEditing }: { children: React.ReactNode; isE
   useEffect(() => {
     if (isEditing) {
       rotate.value = withRepeat(
-        withSequence(
-          withTiming(-1, { duration: 100 }),
-          withTiming(1, { duration: 100 })
-        ),
+        withSequence(withTiming(-1, { duration: 100 }), withTiming(1, { duration: 100 })),
         -1,
         true
       )
@@ -65,7 +60,9 @@ export default function HomeTab() {
     <ScreenContainer>
       <Animated.View style={{ opacity, transform: [{ translateY }] }}>
         <XStack jc="center" ai="center" px="$4" mt="$4" mb="$3">
-          <Text fontSize="$10" fontWeight="900">Maxd</Text>
+          <Text fontSize="$10" fontWeight="900">
+            Maxd
+          </Text>
         </XStack>
 
         <Text fontSize="$6" ta="center" color="$gray10" mt="$1" mb="$4">
@@ -82,8 +79,8 @@ export default function HomeTab() {
             rowGap: 16,
           }}
         >
-         <CurrentWeightWidget />
-         <StreakWidget />
+          <CurrentWeightWidget />
+          <StreakWidget />
         </View>
 
         <XStack jc="space-between" gap="$2" mt="$5" px="$4">
@@ -97,10 +94,12 @@ export default function HomeTab() {
             onPress={() => router.push('/tabs/weight?log=1')}
           >
             <YStack position="absolute" top="$2" right="$2" opacity={0.3}>
-    <ArrowUpRight size={18} />
-  </YStack>
-  <Scale size={22} />
-  <Text mt="$2" fontWeight="600">Log New Weight</Text>
+              <ArrowUpRight size={18} />
+            </YStack>
+            <Scale size={22} />
+            <Text mt="$2" fontWeight="600">
+              Log New Weight
+            </Text>
           </Card>
           <Card
             f={1}
@@ -113,11 +112,11 @@ export default function HomeTab() {
           >
             <YStack position="absolute" top="$2" right="$2" opacity={0.3}>
               <ArrowUpRight size={18} />
-              </YStack>
-               <Dumbbell size={22} />
-            <Text mt="$2" fontWeight="600">Log New Workout</Text>
-            
-           
+            </YStack>
+            <Dumbbell size={22} />
+            <Text mt="$2" fontWeight="600">
+              Log New Workout
+            </Text>
           </Card>
         </XStack>
       </Animated.View>

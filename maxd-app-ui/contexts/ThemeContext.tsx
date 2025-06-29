@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeName>('light')
 
   useEffect(() => {
-    AsyncStorage.getItem('theme').then((val) => {
+    AsyncStorage.getItem('theme').then(val => {
       if (val === 'dark' || val === 'light') {
         setThemeState(val)
       }
@@ -30,9 +30,5 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem('theme', newTheme)
   }
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
 }

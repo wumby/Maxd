@@ -1,8 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import {
-  YStack, Text, XStack, Card, Input, Button,
-  useThemeName, useTheme
-} from 'tamagui'
+import { YStack, Text, XStack, Card, Input, Button, useThemeName, useTheme } from 'tamagui'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Edit3, Trash2 } from '@tamagui/lucide-icons'
 import { Pressable, FlatList, Dimensions, Modal, View, ScrollView } from 'react-native'
@@ -237,7 +234,11 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </Text>
         </Animated.View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -251,7 +252,11 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
           </XStack>
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$4">
             {[
               { label: 'All Days', val: 'all' },
@@ -270,7 +275,8 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
         </ScrollView>
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
-          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filter === 'all' ? 'all years' : filter}
         </Text>
       </YStack>
@@ -299,7 +305,12 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
       />
 
       {/* Edit Modal */}
-      <Modal animationType="fade" transparent visible={!!editingWeight} onRequestClose={() => setEditingWeight(null)}>
+      <Modal
+        animationType="fade"
+        transparent
+        visible={!!editingWeight}
+        onRequestClose={() => setEditingWeight(null)}
+      >
         <View
           style={{
             flex: 1,
@@ -333,7 +344,12 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
       </Modal>
 
       {/* Confirm Delete Modal */}
-      <Modal animationType="fade" transparent visible={confirmId !== null} onRequestClose={() => setConfirmId(null)}>
+      <Modal
+        animationType="fade"
+        transparent
+        visible={confirmId !== null}
+        onRequestClose={() => setConfirmId(null)}
+      >
         <View
           style={{
             flex: 1,

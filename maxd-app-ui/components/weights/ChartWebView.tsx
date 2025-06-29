@@ -196,7 +196,11 @@ export default function ChartWebView({
           </Text>
         </Animated.View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$3">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
@@ -210,9 +214,17 @@ export default function ChartWebView({
           </XStack>
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" mb="$4">
-            {[{ label: 'All Days', val: 'all' }, { label: 'Last 3 Months', val: '3mo' }, { label: 'Last 30 Days', val: '30d' }].map(opt => (
+            {[
+              { label: 'All Days', val: 'all' },
+              { label: 'Last 3 Months', val: '3mo' },
+              { label: 'Last 30 Days', val: '30d' },
+            ].map(opt => (
               <YearFilterItem
                 key={opt.val}
                 val={opt.label}
@@ -225,7 +237,8 @@ export default function ChartWebView({
         </ScrollView>
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$2">
-          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filter === 'all' ? 'all years' : filter}
         </Text>
       </YStack>
@@ -243,8 +256,8 @@ export default function ChartWebView({
         onLoadEnd={() => setLoading(false)}
         javaScriptEnabled
         scalesPageToFit
-        bounces={false}          // 👈 disable scroll bounce (especially on iOS)
-  overScrollMode="never"
+        bounces={false} // 👈 disable scroll bounce (especially on iOS)
+        overScrollMode="never"
       />
     </YStack>
   )

@@ -26,15 +26,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <YStack
-      f={1}
-      jc="center"
-      ai="center"
-      p="$4"
-      bg="$background"
-      gap="$4"
-      w="100%"
-    >
+    <YStack f={1} jc="center" ai="center" p="$4" bg="$background" gap="$4" w="100%">
       <Text fontSize="$9" fontWeight="700">
         Log In
       </Text>
@@ -48,7 +40,7 @@ export default function LoginScreen() {
         size="$6"
         fontSize="$5"
         w="100%"
-         returnKeyType="done"
+        returnKeyType="done"
       />
       <Input
         placeholder="Password"
@@ -58,29 +50,17 @@ export default function LoginScreen() {
         size="$6"
         fontSize="$5"
         w="100%"
-         returnKeyType="done"
+        returnKeyType="done"
       />
 
-      <Button
-        size="$4"
-        theme="active"
-        onPress={handleLogin}
-        disabled={loading}
-        w="100%"
-      >
+      <Button size="$4" theme="active" onPress={handleLogin} disabled={loading} w="100%">
         {loading ? <Spinner size="small" color="$color" /> : 'Login'}
       </Button>
-    <Pressable onPress={() => router.push('/signup')} hitSlop={15}>
-<Text
-        fontSize="$4"
-        color="$blue10"
-        mt="$2"
-        
-      >
-        Don’t have an account? Sign up
-      </Text>
-    </Pressable>
-      
+      <Pressable onPress={() => router.push('/signup')} hitSlop={15}>
+        <Text fontSize="$4" color="$blue10" mt="$2">
+          Don’t have an account? Sign up
+        </Text>
+      </Pressable>
     </YStack>
   )
 }
