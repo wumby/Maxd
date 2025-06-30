@@ -1,18 +1,25 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { useThemePreference } from '@/contexts/ThemeContext' // ✅ import your theme context
+import { useThemePreference } from '@/contexts/ThemeContext'
 import { YStack, Text, Button, Card, Separator, XStack, Switch, Input } from 'tamagui'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, Pressable } from 'react-native'
 import { Sun, Moon, LogOut, Trash2 } from '@tamagui/lucide-icons'
 import { API_URL } from '@/env'
 
 export default function ProfileTab() {
   const { user, token, logout } = useAuth()
-  const { theme, setTheme } = useThemePreference() // ✅ access current theme
+  const { theme, setTheme } = useThemePreference()
   const [useKg, setUseKg] = useState(false)
   const [editMode, setEditMode] = useState(false)
-  const [name, setName] = useState(user?.name || '')
-  const [email, setEmail] = useState(user?.email || '')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    if (editMode && user) {
+      setName(user.name)
+      setEmail(user.email)
+    }
+  }, [editMode, user])
 
   const handleDelete = () => {
     Alert.alert('Delete Profile', 'Are you sure you want to permanently delete your account?', [
@@ -68,7 +75,14 @@ export default function ProfileTab() {
               maxLength={30}
               returnKeyType="done"
             />
-            <Input placeholder="Email" value={email} onChangeText={setEmail} returnKeyType="done" />
+            <Input
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              returnKeyType="done"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
           </>
         ) : (
           <>
@@ -91,7 +105,9 @@ export default function ProfileTab() {
 
         <XStack ai="center" jc="space-between">
           <Text fontSize="$5">Use Kilograms</Text>
-          <Switch size="$3" checked={useKg} onCheckedChange={setUseKg} />
+          <Switch size="$3" checked={useKg} onCheckedChange={setUseKg}>
+            <Switch.Thumb />
+          </Switch>
         </XStack>
 
         <XStack ai="center" jc="space-between" mt="$3">
@@ -100,20 +116,19 @@ export default function ProfileTab() {
             size="$3"
             checked={theme === 'dark'}
             onCheckedChange={handleThemeToggle}
-            icon={theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
-          />
+          >
+            <Switch.Thumb />
+          </Switch>
         </XStack>
       </Card>
 
       <Separator />
 
-      {editMode && (
+      {editMode ? (
         <Button icon={Trash2} size="$4" mt="$4" theme="red" onPress={handleDelete}>
           Delete Profile
         </Button>
-      )}
-
-      {!editMode && (
+      ) : (
         <Button icon={LogOut} size="$4" mt="$4" theme="active" onPress={logout}>
           Log Out
         </Button>

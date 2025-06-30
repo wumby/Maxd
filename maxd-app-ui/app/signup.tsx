@@ -76,7 +76,7 @@ export default function SignupScreen() {
         returnKeyType="done"
       />
 
-      <Button size="$4" theme="active" onPress={handleSignup} disabled={loading}>
+      <Button size="$4" theme="active" onPress={handleSignup} disabled={loading} w={'100%'}>
         {loading ? <Spinner size="small" color="$color" /> : 'Sign Up'}
       </Button>
 

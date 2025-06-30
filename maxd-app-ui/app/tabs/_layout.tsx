@@ -33,8 +33,6 @@ export default function TabLayout() {
           paddingBottom: insets.bottom,
           borderTopWidth: Platform.OS === 'ios' ? 0.5 : 1,
           borderTopColor: borderColor,
-          backdropFilter: 'blur(12px)', // iOS only
-          // For Android: use blur view component if needed
         },
         headerShown: false,
       }}

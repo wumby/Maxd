@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import * as SecureStore from 'expo-secure-store'
 import { router } from 'expo-router'
+import { API_URL } from '@/env'
 type User = {
   name: string
   email: string
@@ -22,21 +23,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
-    const loadAuth = async () => {
-      const storedToken = await SecureStore.getItemAsync('token')
-      const storedUser = await SecureStore.getItemAsync('user')
+  const loadAuth = async () => {
+    const storedToken = await SecureStore.getItemAsync('token')
+    const storedUser = await SecureStore.getItemAsync('user')
 
-      if (storedToken) setToken(storedToken)
-      if (storedUser) setUser(JSON.parse(storedUser))
-
+    if (!storedToken || !storedUser) {
       setAuthLoaded(true)
+      return
     }
 
-    loadAuth()
-  }, [])
+    // ✅ Try to validate the token via a /me endpoint
+    const res = await fetch(`${API_URL}/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${storedToken}`,
+      },
+    })
+
+    if (!res.ok) {
+      // Token is invalid (maybe user deleted) — clear it
+      await SecureStore.deleteItemAsync('token')
+      await SecureStore.deleteItemAsync('user')
+      setToken(null)
+      setUser(null)
+      setAuthLoaded(true)
+      return
+    }
+
+    const validatedUser = await res.json()
+    setToken(storedToken)
+    setUser(validatedUser)
+    setAuthLoaded(true)
+  }
+
+  loadAuth()
+}, [])
+
 
   const login = async (email: string, password: string) => {
-    const res = await fetch('http://192.168.0.6:3001/auth/login', {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -60,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.deleteItemAsync('user')
     setToken(null)
     setUser(null)
-    router.replace('/signin')
+    router.replace('/signup')
   }
 
   return (
