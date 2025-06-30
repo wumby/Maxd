@@ -10,6 +10,8 @@ import { useToast } from '@/contexts/ToastContextProvider'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { CardsTop } from '@/components/weights/CardsTop'
 import { useIsFocused } from '@react-navigation/native'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 const AnimatedYStack = Animated.createAnimatedComponent(YStack)
 const History = lazy(() => import('@/components/weights/History'))
@@ -20,6 +22,7 @@ const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChart
 export default function WeightTab() {
   const { token } = useAuth()
   const [duplicateWarning, setDuplicateWarning] = useState(false)
+  const { weightUnit } = usePreferences()
 
   const router = useRouter()
   const { showToast } = useToast()
@@ -49,6 +52,7 @@ export default function WeightTab() {
             headers: { Authorization: `Bearer ${token}` },
           })
           const data = await res.json()
+
           if (res.status === 401 || data.error === 'Invalid or expired token') {
             console.warn('Token expired, logging out...')
             router.replace('/login')
@@ -60,8 +64,12 @@ export default function WeightTab() {
             setWeights([])
             return
           }
-
-          setWeights(data)
+          setWeights(
+            data.map(w => ({
+              ...w,
+              value: typeof w.value === 'string' ? parseFloat(w.value) : w.value,
+            }))
+          )
         } catch (err) {
           console.error('Error fetching weights:', err)
           setWeights([])
@@ -72,12 +80,14 @@ export default function WeightTab() {
   )
 
   const handleLogWeight = async () => {
-    const numericWeight = parseFloat(weight)
-    if (isNaN(numericWeight) || numericWeight <= 0) {
+    const rawInput = parseFloat(weight)
+
+    if (isNaN(rawInput) || rawInput <= 0) {
       showToast('Please enter a valid weight')
       return
     }
 
+    const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
     try {
       const res = await fetch(`${API_URL}/weights`, {
         method: 'POST',
@@ -86,7 +96,7 @@ export default function WeightTab() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          value: numericWeight,
+          value: weightInKg,
           date: selectedDate.toISOString(),
         }),
       })
@@ -118,7 +128,10 @@ export default function WeightTab() {
   const currentWeight = useMemo(() => {
     if (weights.length === 0) return '--'
     const val = Number(weights[0].value)
-    return isNaN(val) ? '--' : `${val.toFixed(1)} lb`
+    if (isNaN(val)) return '--'
+    const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(val) : val
+    const unitLabel = weightUnit
+    return `${converted.toFixed(1)} ${unitLabel}`
   }, [weights])
 
   const themeName = useThemeName()

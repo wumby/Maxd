@@ -1,18 +1,30 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { useThemePreference } from '@/contexts/ThemeContext'
-import { YStack, Text, Button, Card, Separator, XStack, Switch, Input } from 'tamagui'
-import { useEffect, useState } from 'react'
+import {
+  YStack,
+  Text,
+  Button,
+  Card,
+  Separator,
+  XStack,
+  Switch,
+  Input,
+  Adapt,
+  Select,
+  Sheet,
+} from 'tamagui'
+import React, { useEffect, useState } from 'react'
 import { Alert, Pressable } from 'react-native'
-import { Sun, Moon, LogOut, Trash2 } from '@tamagui/lucide-icons'
+import { LogOut, Moon, Sun, Trash2 } from '@tamagui/lucide-icons'
 import { API_URL } from '@/env'
+import { usePreferences } from '@/contexts/PreferencesContext'
 
 export default function ProfileTab() {
-  const { user, token, logout } = useAuth()
-  const { theme, setTheme } = useThemePreference()
-  const [useKg, setUseKg] = useState(false)
+  const { user, token, logout, updateUser } = useAuth()
+  const { theme, setTheme, weightUnit, setWeightUnit } = usePreferences()
   const [editMode, setEditMode] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (editMode && user) {
@@ -20,6 +32,36 @@ export default function ProfileTab() {
       setEmail(user.email)
     }
   }, [editMode, user])
+
+  const handleSave = async () => {
+    if (!name.trim() || !email.trim()) {
+      Alert.alert('Validation', 'Name and email cannot be empty.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_URL}/users/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, email }),
+      })
+
+      if (!res.ok) throw new Error('Failed to update profile')
+
+      const updatedUser = await res.json()
+      await updateUser(updatedUser)
+      setEditMode(false)
+    } catch (err) {
+      console.error(err)
+      Alert.alert('Error', 'Could not update profile.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDelete = () => {
     Alert.alert('Delete Profile', 'Are you sure you want to permanently delete your account?', [
@@ -39,6 +81,7 @@ export default function ProfileTab() {
             logout()
           } catch (err) {
             console.error(err)
+            Alert.alert('Error', 'Could not delete account.')
           }
         },
       },
@@ -59,7 +102,7 @@ export default function ProfileTab() {
         <Pressable onPress={() => setEditMode(v => !v)} hitSlop={10}>
           <XStack fd="row" ai="center" gap="$2">
             <Text fontSize="$5" fontWeight="600">
-              {editMode ? 'Cancel' : 'Edit'}
+              {editMode ? '' : 'Edit'}
             </Text>
           </XStack>
         </Pressable>
@@ -83,9 +126,24 @@ export default function ProfileTab() {
               autoCapitalize="none"
               keyboardType="email-address"
             />
+            <XStack jc="center" gap="$3" mt="$3">
+              <Button size="$4" disabled={loading} onPress={() => setEditMode(false)}>
+                Cancel
+              </Button>
+              <Button size="$4" theme="active" disabled={loading} onPress={handleSave}>
+                Save
+              </Button>
+            </XStack>
+            <Button icon={Trash2} size="$4" mt="$9" theme="red" onPress={handleDelete}>
+              Delete Profile
+            </Button>
           </>
         ) : (
           <>
+            <Text fontSize="$6" fontWeight="700" mb="$2">
+              User Info
+            </Text>
+            <Separator />
             <Text fontSize="$6" color="$gray12">
               Name: <Text fontWeight="600">{user?.name || 'Unknown'}</Text>
             </Text>
@@ -102,33 +160,51 @@ export default function ProfileTab() {
         <Text fontSize="$6" fontWeight="700" mb="$2">
           Preferences
         </Text>
+        <Separator />
 
-        <XStack ai="center" jc="space-between">
-          <Text fontSize="$5">Use Kilograms</Text>
-          <Switch size="$3" checked={useKg} onCheckedChange={setUseKg}>
-            <Switch.Thumb />
-          </Switch>
+        <XStack ai="center" jc="space-between" mt="$3">
+          <Text fontSize="$5">Weight Unit</Text>
+
+          <XStack ai="center" gap="$2">
+            <Text fontWeight="700" opacity={weightUnit === 'kg' ? 1 : 0.4}>
+              kg
+            </Text>
+            <Switch
+              size="$3"
+              checked={weightUnit === 'lb'}
+              onCheckedChange={val => setWeightUnit(val ? 'lb' : 'kg')}
+              bg="$gray5"
+              borderRadius="$10"
+            >
+              <Switch.Thumb backgroundColor="$color8" />
+            </Switch>
+            <Text fontWeight="700" opacity={weightUnit === 'lb' ? 1 : 0.4}>
+              lb
+            </Text>
+          </XStack>
         </XStack>
 
         <XStack ai="center" jc="space-between" mt="$3">
           <Text fontSize="$5">Dark Mode</Text>
-          <Switch
-            size="$3"
-            checked={theme === 'dark'}
-            onCheckedChange={handleThemeToggle}
-          >
-            <Switch.Thumb />
-          </Switch>
+          <XStack ai="center" gap="$2">
+            <Sun size={16} opacity={theme === 'light' ? 1 : 0.4} />
+
+            <Switch
+              size="$3"
+              checked={theme === 'dark'}
+              onCheckedChange={handleThemeToggle}
+              bg="$gray5" // neutral consistent track color
+              borderRadius="$10"
+            >
+              <Switch.Thumb backgroundColor="$color8" borderRadius={999} />
+            </Switch>
+
+            <Moon size={16} opacity={theme === 'dark' ? 1 : 0.4} />
+          </XStack>
         </XStack>
       </Card>
 
-      <Separator />
-
-      {editMode ? (
-        <Button icon={Trash2} size="$4" mt="$4" theme="red" onPress={handleDelete}>
-          Delete Profile
-        </Button>
-      ) : (
+      {!editMode && (
         <Button icon={LogOut} size="$4" mt="$4" theme="active" onPress={logout}>
           Log Out
         </Button>

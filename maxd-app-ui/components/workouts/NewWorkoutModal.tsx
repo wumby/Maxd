@@ -32,11 +32,9 @@ export default function NewWorkoutModal({
 
   const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
 
-
   const toggleExpand = (index: number) => {
-  setExpandedIndex(prev => (prev === index ? null : index))
-}
-
+    setExpandedIndex(prev => (prev === index ? null : index))
+  }
 
   const handleLoadTemplate = (template: any) => {
     setTitle(template.title)
@@ -55,33 +53,32 @@ export default function NewWorkoutModal({
   }
 
   const handleRemoveExercise = (index: number) => {
-  setExercises(prev => {
-    const updated = prev.filter((_, i) => i !== index)
-    // If the removed index was the expanded one, collapse it
-    if (expandedIndex === index) {
-      setExpandedIndex(null)
-    } else if (expandedIndex !== null && expandedIndex > index) {
-      // Adjust expandedIndex if it was after the removed one
-      setExpandedIndex(expandedIndex - 1)
-    }
+    setExercises(prev => {
+      const updated = prev.filter((_, i) => i !== index)
+      // If the removed index was the expanded one, collapse it
+      if (expandedIndex === index) {
+        setExpandedIndex(null)
+      } else if (expandedIndex !== null && expandedIndex > index) {
+        // Adjust expandedIndex if it was after the removed one
+        setExpandedIndex(expandedIndex - 1)
+      }
 
-    return updated
-  })
-}
-
+      return updated
+    })
+  }
 
   const handleChangeName = (index: number, newName: string) => {
-  setExercises(prev => {
-    const updated = [...prev]
-    updated[index].name = newName
-    return updated
-  })
-  setExerciseErrors(prev => {
-    const next = { ...prev }
-    delete next[index]
-    return next
-  })
-}
+    setExercises(prev => {
+      const updated = [...prev]
+      updated[index].name = newName
+      return updated
+    })
+    setExerciseErrors(prev => {
+      const next = { ...prev }
+      delete next[index]
+      return next
+    })
+  }
 
   const handleChangeType = (index: number, newType: string) => {
     setExercises(prev => {
@@ -108,23 +105,22 @@ export default function NewWorkoutModal({
   }
 
   const handleChangeSet = (
-  exerciseIndex: number,
-  setIndex: number,
-  field: string,
-  value: string
-) => {
-  setExercises(prev => {
-    const updated = [...prev]
-    updated[exerciseIndex].sets[setIndex][field] = value
-    return updated
-  })
-  setExerciseErrors(prev => {
-    const next = { ...prev }
-    delete next[exerciseIndex]
-    return next
-  })
-}
-
+    exerciseIndex: number,
+    setIndex: number,
+    field: string,
+    value: string
+  ) => {
+    setExercises(prev => {
+      const updated = [...prev]
+      updated[exerciseIndex].sets[setIndex][field] = value
+      return updated
+    })
+    setExerciseErrors(prev => {
+      const next = { ...prev }
+      delete next[exerciseIndex]
+      return next
+    })
+  }
 
   const handleSubmit = async () => {
     setFeedback('')
@@ -242,55 +238,53 @@ export default function NewWorkoutModal({
   }
 
   const handleSaveExercise = async (exercise: any, index: number) => {
-  const name = exercise.name.trim()
-  const hasValidSet = exercise.sets.some(
-    (set: any) =>
-      set.reps || set.weight || set.duration || set.distance
-  )
+    const name = exercise.name.trim()
+    const hasValidSet = exercise.sets.some(
+      (set: any) => set.reps || set.weight || set.duration || set.distance
+    )
 
-  if (!name || !hasValidSet) {
-    setExerciseErrors(prev => ({
-      ...prev,
-      [index]: 'Enter a name and at least one set to favorite this exercise.',
-    }))
-    return
-  }
+    if (!name || !hasValidSet) {
+      setExerciseErrors(prev => ({
+        ...prev,
+        [index]: 'Enter a name and at least one set to favorite this exercise.',
+      }))
+      return
+    }
 
-  setExerciseErrors(prev => {
-    const updated = { ...prev }
-    delete updated[index]
-    return updated
-  })
-
-  const alreadyExists = savedExercises.some(ex => ex.name.toLowerCase() === name.toLowerCase())
-  if (alreadyExists) return
-
-  try {
-    const res = await fetch(`${API_URL}/saved-exercises`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name,
-        type: exercise.type,
-        sets: exercise.sets,
-      }),
+    setExerciseErrors(prev => {
+      const updated = { ...prev }
+      delete updated[index]
+      return updated
     })
 
-    if (!res.ok) throw new Error()
-    const saved = await res.json()
-    setSavedExercises(prev => [saved, ...prev])
-  } catch (err) {
-    console.error('Error saving exercise', err)
-    setExerciseErrors(prev => ({
-      ...prev,
-      [index]: 'Server error saving this exercise.',
-    }))
-  }
-}
+    const alreadyExists = savedExercises.some(ex => ex.name.toLowerCase() === name.toLowerCase())
+    if (alreadyExists) return
 
+    try {
+      const res = await fetch(`${API_URL}/saved-exercises`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          type: exercise.type,
+          sets: exercise.sets,
+        }),
+      })
+
+      if (!res.ok) throw new Error()
+      const saved = await res.json()
+      setSavedExercises(prev => [saved, ...prev])
+    } catch (err) {
+      console.error('Error saving exercise', err)
+      setExerciseErrors(prev => ({
+        ...prev,
+        [index]: 'Server error saving this exercise.',
+      }))
+    }
+  }
 
   const alreadyFavorited = saved.some(
     w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
@@ -305,7 +299,7 @@ export default function NewWorkoutModal({
           justifyContent: 'flex-start',
           alignItems: 'center',
           padding: 20,
-          paddingTop:60
+          paddingTop: 60,
         }}
       >
         <YStack w="100%" maxWidth={400} br="$4" overflow="hidden">
@@ -363,10 +357,7 @@ export default function NewWorkoutModal({
                   </Text>
                 )}
 
-                
-
                 {title.trim().length > 0 && (
-                  
                   <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
                     <YStack gap="$6" pb="$8">
                       {exercises.map((exercise, index) => (
@@ -375,7 +366,6 @@ export default function NewWorkoutModal({
                           index={index}
                           exercise={exercise}
                           expanded={expandedIndex === index}
-
                           onToggleExpand={toggleExpand}
                           onChangeName={handleChangeName}
                           onChangeType={handleChangeType}
@@ -383,8 +373,8 @@ export default function NewWorkoutModal({
                           onRemoveSet={handleRemoveSet}
                           onChangeSet={handleChangeSet}
                           onRemove={handleRemoveExercise}
-                           onSave={(exercise) => handleSaveExercise(exercise, index)}
-  error={exerciseErrors[index]}
+                          onSave={exercise => handleSaveExercise(exercise, index)}
+                          error={exerciseErrors[index]}
                           isSaved={savedExercises.some(
                             ex => ex.name.toLowerCase() === exercise.name.trim().toLowerCase()
                           )}
@@ -403,10 +393,10 @@ export default function NewWorkoutModal({
               </>
             )}
             {feedback !== '' && (
-                  <Text color="$red10" fontSize="$4" textAlign="center">
-                    {feedback}
-                  </Text>
-                )}
+              <Text color="$red10" fontSize="$4" textAlign="center">
+                {feedback}
+              </Text>
+            )}
             {tab === 'new' && <FinalActions onCancel={onClose} onSubmit={handleSubmit} />}
           </YStack>
         </YStack>

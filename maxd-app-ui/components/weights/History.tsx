@@ -8,6 +8,8 @@ import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { YearFilterItem } from './YearFilterItem'
 import { useToast } from '@/contexts/ToastContextProvider'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 interface WeightEntry {
   id: number
@@ -44,6 +46,17 @@ const HistoryItem = React.memo(
   }) => {
     const delta = prev ? item.value - prev.value : 0
     const screenWidth = Dimensions.get('window').width
+    const { weightUnit } = usePreferences()
+
+    const convertWeight = (val?: number | string) => {
+      const num = typeof val === 'number' ? val : parseFloat(val!)
+      if (isNaN(num)) {
+        console.warn('Invalid weight value:', val)
+        return '--'
+      }
+      const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(num) : num
+      return converted.toFixed(1)
+    }
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
@@ -59,8 +72,9 @@ const HistoryItem = React.memo(
           <XStack jc="space-between" ai="center">
             <YStack>
               <Text fontSize="$5" fontWeight="600" color="$color">
-                {item.value} lb
+                {convertWeight(item.value)} {weightUnit}
               </Text>
+
               <Text fontSize="$2" color="$gray10">
                 {new Date(item.created_at).toLocaleDateString('en-US', {
                   weekday: 'short',
@@ -83,7 +97,7 @@ const HistoryItem = React.memo(
             ) : prev ? (
               <Text color={delta > 0 ? 'red' : 'green'} fontSize="$3">
                 {delta > 0 ? '+' : ''}
-                {delta.toFixed(1)} lb
+                {convertWeight(Math.abs(delta))} {weightUnit}
               </Text>
             ) : null}
           </XStack>

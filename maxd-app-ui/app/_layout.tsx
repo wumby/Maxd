@@ -3,17 +3,17 @@ import { Slot } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { TamaguiProvider, Theme } from 'tamagui'
 import config from '../tamagui.config'
-import { ThemeProvider, useThemePreference } from '@/contexts/ThemeContext'
 import { ToastContextProvider } from '@/contexts/ToastContextProvider'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { StyleSheet } from 'react-native'
+import { PreferencesProvider, usePreferences } from '@/contexts/PreferencesContext'
 
 function InnerApp() {
-  const { theme } = useThemePreference()
+  const { theme } = usePreferences()
 
   return (
     <GestureHandlerRootView style={styles.flex}>
-      <TamaguiProvider config={config} defaultTheme={theme} key={theme}>
+      <TamaguiProvider config={config} defaultTheme={theme}>
         <ToastContextProvider>
           <Theme name={theme}>
             <AuthProvider>
@@ -28,9 +28,9 @@ function InnerApp() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
+    <PreferencesProvider>
       <InnerApp />
-    </ThemeProvider>
+    </PreferencesProvider>
   )
 }
 

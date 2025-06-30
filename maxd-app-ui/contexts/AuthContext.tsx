@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import * as SecureStore from 'expo-secure-store'
 import { router } from 'expo-router'
 import { API_URL } from '@/env'
+
 type User = {
   name: string
   email: string
@@ -13,6 +14,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   authLoaded: boolean
+  updateUser: (newUser: User) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -23,41 +25,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
-  const loadAuth = async () => {
-    const storedToken = await SecureStore.getItemAsync('token')
-    const storedUser = await SecureStore.getItemAsync('user')
+    const loadAuth = async () => {
+      const storedToken = await SecureStore.getItemAsync('token')
+      if (!storedToken) {
+        setAuthLoaded(true)
+        return
+      }
 
-    if (!storedToken || !storedUser) {
-      setAuthLoaded(true)
-      return
+      try {
+        const res = await fetch(`${API_URL}/users/me`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        })
+
+        if (!res.ok) throw new Error('Token invalid or user missing')
+
+        const validatedUser = await res.json()
+        setToken(storedToken)
+        setUser(validatedUser)
+      } catch {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('user')
+        setToken(null)
+        setUser(null)
+      } finally {
+        setAuthLoaded(true)
+      }
     }
 
-    // ✅ Try to validate the token via a /me endpoint
-    const res = await fetch(`${API_URL}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${storedToken}`,
-      },
-    })
-
-    if (!res.ok) {
-      // Token is invalid (maybe user deleted) — clear it
-      await SecureStore.deleteItemAsync('token')
-      await SecureStore.deleteItemAsync('user')
-      setToken(null)
-      setUser(null)
-      setAuthLoaded(true)
-      return
-    }
-
-    const validatedUser = await res.json()
-    setToken(storedToken)
-    setUser(validatedUser)
-    setAuthLoaded(true)
-  }
-
-  loadAuth()
-}, [])
-
+    loadAuth()
+  }, [])
 
   const login = async (email: string, password: string) => {
     const res = await fetch(`${API_URL}/auth/login`, {
@@ -87,8 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.replace('/signup')
   }
 
+  const updateUser = async (newUser: User) => {
+    setUser(newUser)
+    await SecureStore.setItemAsync('user', JSON.stringify(newUser))
+  }
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, authLoaded }}>
+    <AuthContext.Provider value={{ token, user, login, logout, authLoaded, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

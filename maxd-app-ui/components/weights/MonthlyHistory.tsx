@@ -9,6 +9,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated'
+import WeightUtil from '@/util/weightConversion'
+import { usePreferences } from '@/contexts/PreferencesContext'
 
 interface WeightEntry {
   id: number
@@ -30,7 +32,12 @@ export default function MonthlySummary({
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
-
+  const { weightUnit } = usePreferences()
+  const convertWeight = (val?: number) => {
+    if (typeof val !== 'number' || isNaN(val)) return '--'
+    const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(val) : val
+    return converted.toFixed(1)
+  }
   const allYears = useMemo(() => {
     const years = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(years).sort((a, b) => b - a)
@@ -172,7 +179,6 @@ export default function MonthlySummary({
             const prev = monthlyAverages[index + 1]
             const delta =
               prev && typeof prev.average === 'number' ? entry.average - prev.average : null
-
             return (
               <Animated.View
                 key={`month-${entry.year}-${entry.month}`}
@@ -190,7 +196,7 @@ export default function MonthlySummary({
                   <XStack jc="space-between" ai="center">
                     <YStack>
                       <Text fontSize="$5" fontWeight="700" color="$color">
-                        {entry.average.toFixed(1)} lb
+                        {convertWeight(entry.average)} {weightUnit}
                       </Text>
                       <Text fontSize="$2" color="$gray10">
                         {formatMonth(entry.year, entry.month)} • {entry.count} weight
@@ -201,7 +207,7 @@ export default function MonthlySummary({
                     {delta !== null && !isNaN(delta) ? (
                       <Text color={delta > 0 ? 'red' : 'green'} fontSize="$3">
                         {delta > 0 ? '+' : ''}
-                        {delta.toFixed(1)} lb
+                        {convertWeight(delta)} {weightUnit}
                       </Text>
                     ) : null}
                   </XStack>

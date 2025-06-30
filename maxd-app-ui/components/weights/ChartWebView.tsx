@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
 import { ChevronLeft } from '@tamagui/lucide-icons'
 import Animated, { FadeInUp } from 'react-native-reanimated'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 export default function ChartWebView({
   weights,
@@ -15,6 +17,8 @@ export default function ChartWebView({
   weights: { value: number; created_at: string }[]
   onBack: () => void
 }) {
+  const { weightUnit } = usePreferences()
+
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
   const themeName = useThemeName()
@@ -65,7 +69,8 @@ export default function ChartWebView({
 
   const safeWeights = filteredWeights
     .map(w => {
-      const value = Number(w.value)
+      const rawValue = Number(w.value)
+      const value = weightUnit === 'lb' ? WeightUtil.kgToLbs(rawValue) : rawValue
       const date = new Date(w.created_at)
       if (!isNaN(value) && !isNaN(date.getTime())) {
         return { x: date.toISOString(), y: value }
@@ -138,7 +143,7 @@ export default function ChartWebView({
                 title: { display: true, text: 'Date', color: '${textColor}' }
               },
               y: {
-                title: { display: true, text: 'Weight (lb)', color: '${textColor}' },
+                title: { display: true, text: 'Weight (${weightUnit})', color: '${textColor}' },
                 grid: { color: '${gridColor}' },
                 ticks: { color: '${textColor}' }
               }
@@ -150,7 +155,7 @@ export default function ChartWebView({
                 callbacks: {
                   label: function(ctx) {
                     const y = ctx.raw.y;
-                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' lb';
+                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
                   }
                 }
               },

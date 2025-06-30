@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
 import { ChevronLeft } from '@tamagui/lucide-icons'
 import Animated, { FadeInUp } from 'react-native-reanimated'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 export default function MonthlyChartWebView({
   weights,
@@ -15,6 +17,8 @@ export default function MonthlyChartWebView({
   weights: { value: number; created_at: string }[]
   onBack: () => void
 }) {
+  const { weightUnit } = usePreferences()
+
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
   const theme = useThemeName()
@@ -70,8 +74,9 @@ export default function MonthlyChartWebView({
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const key = `${year}-${month}`
 
-      const value = Number(w.value)
+      let value = Number(w.value)
       if (!isNaN(value)) {
+        if (weightUnit === 'lb') value = WeightUtil.kgToLbs(value)
         if (!monthlyMap[key]) monthlyMap[key] = []
         monthlyMap[key].push(value)
       }
@@ -81,7 +86,7 @@ export default function MonthlyChartWebView({
       const avg = vals.reduce((sum, val) => sum + val, 0) / vals.length
       return { x: `${month}-01`, y: parseFloat(avg.toFixed(1)) }
     })
-  }, [filteredWeights])
+  }, [filteredWeights, weightUnit])
 
   const chartHtml = `
   <!DOCTYPE html>
@@ -145,7 +150,7 @@ export default function MonthlyChartWebView({
                 title: { display: true, text: 'Month', color: '${isDark ? '#fff' : '#000'}' }
               },
               y: {
-                title: { display: true, text: 'Weight (lb)', color: '${isDark ? '#fff' : '#000'}' },
+                title: { display: true, text: 'Weight (${weightUnit})', color: '${isDark ? '#fff' : '#000'}' },
                 grid: { color: '${isDark ? '#333' : '#eee'}' },
                 ticks: { color: '${isDark ? '#aaa' : '#333'}' }
               }
@@ -157,7 +162,7 @@ export default function MonthlyChartWebView({
                 callbacks: {
                   label: function(ctx) {
                     const y = ctx.raw.y;
-                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' lb';
+                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
                   }
                 }
               },

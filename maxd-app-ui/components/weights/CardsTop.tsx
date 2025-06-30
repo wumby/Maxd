@@ -13,7 +13,9 @@ interface Props {
   }
 }
 
-export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }: Props) {
+export function CardsTop({ onChartPress, onMonthlyPress, weights = [] }: Props) {
+  const hasWeightData = weights.length >= 2
+
   const monthlyAverages = useMemo(() => {
     const map: Record<string, number[]> = {}
 
@@ -36,10 +38,12 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
         avg: values.reduce((sum, v) => sum + v, 0) / values.length,
       }))
       .sort((a, b) => new Date(a.month + '-01').getTime() - new Date(b.month + '-01').getTime())
-      .slice(-6) // only last 6 months
+      .slice(-6)
 
     return sorted.map(item => ({ value: Number(item.avg.toFixed(1)) }))
   }, [weights])
+
+  const hasMonthlyData = monthlyAverages.length >= 2
 
   return (
     <XStack w="100%" gap="$4" jc="center" fw="wrap">
@@ -54,17 +58,25 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
         onPress={onChartPress}
         mih={160}
       >
-        <YStack gap="$3">
+        <YStack gap="$3" f={1} jc="space-between">
           <XStack jc="space-between" ai="center">
             <Text fontWeight="800" fontSize="$7">
               Graph
             </Text>
             <Expand size="$1" color="$gray9" />
           </XStack>
-          <MiniLineChart weights={weights} />
+
+          {hasWeightData ? (
+            <MiniLineChart weights={weights} />
+          ) : (
+            <Text fontSize="$3" ta="center">
+              Not enough weight entries yet.
+            </Text>
+          )}
         </YStack>
       </Card>
-      {/* History Card */}
+
+      {/* Monthly Card */}
       <Card
         elevate
         p="$4"
@@ -73,8 +85,9 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
         bg="$background"
         pressStyle={{ scale: 0.98 }}
         onPress={onMonthlyPress}
+        mih={160}
       >
-        <YStack gap="$3">
+        <YStack gap="$3" f={1} jc="space-between">
           <XStack jc="space-between" ai="center">
             <Text fontWeight="800" fontSize="$7">
               Monthly
@@ -82,9 +95,13 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [], extras }:
             <Expand size="$1" color="$gray9" />
           </XStack>
 
-          <YStack gap="$2" width="100%">
+          {hasMonthlyData ? (
             <MiniLineChart weights={monthlyAverages} />
-          </YStack>
+          ) : (
+            <Text fontSize="$3" ta="center">
+              Not enough monthly data yet.
+            </Text>
+          )}
         </YStack>
       </Card>
     </XStack>
