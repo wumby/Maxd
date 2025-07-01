@@ -1,49 +1,17 @@
-import { Text, XStack, Card, Separator, Button, View, YStack } from 'tamagui'
-import {
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-} from 'react-native-reanimated'
-import Animated from 'react-native-reanimated'
+import { Text, XStack, Card, View, YStack } from 'tamagui'
+import Animated, { useSharedValue, withTiming } from 'react-native-reanimated'
 import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback } from 'react'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'expo-router'
-import { Dumbbell, Scale, Trash2, Plus, ArrowUpRight } from '@tamagui/lucide-icons'
-import { useUserWidgets } from '@/hooks/useUserWidgets'
-import { AddWidgetModal } from '@/components/AddWidgetModal'
+import { Dumbbell, Scale, ArrowUpRight } from '@tamagui/lucide-icons'
 import { CurrentWeightWidget } from '@/components/widgets/CurrentWeightWidget'
 import { StreakWidget } from '@/components/widgets/StreakWidget'
-
-function JiggleWrapper({ children, isEditing }: { children: React.ReactNode; isEditing: boolean }) {
-  const rotate = useSharedValue(0)
-
-  useEffect(() => {
-    if (isEditing) {
-      rotate.value = withRepeat(
-        withSequence(withTiming(-1, { duration: 100 }), withTiming(1, { duration: 100 })),
-        -1,
-        true
-      )
-    } else {
-      rotate.value = withTiming(0, { duration: 150 })
-    }
-  }, [isEditing])
-
-  const style = useAnimatedStyle(() => ({
-    transform: [{ rotateZ: `${rotate.value}deg` }],
-  }))
-
-  return <Animated.View style={style}>{children}</Animated.View>
-}
 
 export default function HomeTab() {
   const { user } = useAuth()
   const router = useRouter()
-  const { layout, setLayout } = useUserWidgets()
   const opacity = useSharedValue(0)
   const translateY = useSharedValue(20)
 
