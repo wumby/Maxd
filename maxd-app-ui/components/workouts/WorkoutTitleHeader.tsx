@@ -51,6 +51,11 @@ export function WorkoutTitleHeader({
           maxLength={20}
         />
       </XStack>
+      {title.trim().length === 0 && (
+                      <Text fontSize="$4" color="$gray10" textAlign="center" mt="$5">
+                        Enter new workout title
+                      </Text>
+                    )}
     </>
   )
 }

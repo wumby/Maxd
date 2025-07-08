@@ -1,15 +1,21 @@
-import { useState } from 'react'
-import { YStack, Text, Button, XStack } from 'tamagui'
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { YStack, Text, Button, XStack, Spacer, Sheet } from 'tamagui'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
 import { AddExerciseCard } from './AddExerciseCard'
 import { WorkoutTitleHeader } from './WorkoutTitleHeader'
-import { FavoritesTab } from './FavoritesTab'
 import { ExerciseControls } from './ExerciseControls'
 import { FinalActions } from './FinalActions'
+import { WorkoutModeChooser } from './WorkoutModeChooser'
+import { X } from '@tamagui/lucide-icons'
+import { FavoriteWorkoutSheet } from './FavoriteWorkoutSheet'
+import { ScreenContainer } from '../ScreenContainer'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ExerciseTypeSheet } from './ExerciseTypeSheet'
+import { DurationPickerSheet } from './DurationPickerSheet'
 
 export default function NewWorkoutModal({
   visible,
@@ -18,10 +24,10 @@ export default function NewWorkoutModal({
   visible: boolean
   onClose: () => void
 }) {
+  const [step, setStep] = useState<'choose' | 'form'>('choose')
   const [title, setTitle] = useState('')
   const [missingTitle, setMissingTitle] = useState(false)
   const [feedback, setFeedback] = useState('')
-  const [tab, setTab] = useState<'new' | 'saved'>('new')
   const [exercises, setExercises] = useState<any[]>([
     { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
   ])
@@ -29,7 +35,6 @@ export default function NewWorkoutModal({
   const { savedExercises, setSavedExercises, loading: loadingSavedExercises } = useSavedExercises()
   const { token } = useAuth()
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
-
   const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
 
   const toggleExpand = (index: number) => {
@@ -39,30 +44,43 @@ export default function NewWorkoutModal({
   const handleLoadTemplate = (template: any) => {
     setTitle(template.title)
     setExercises(template.exercises)
-    setTab('new')
+    setStep('form')
     setFeedback('')
     setExpandedIndex(0)
   }
 
+  const [showTypeSheet, setShowTypeSheet] = useState(false)
+
   const handleAddExercise = () => {
-    setExercises(prev => [
+  setShowTypeSheet(true)
+}
+
+
+  const handleAddExerciseOfType  = (type: 'weights' | 'cardio' | 'bodyweight') => {
+  setExercises(prev => {
+    const updated = [
       ...prev,
-      { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
-    ])
-    setExpandedIndex(exercises.length)
-  }
+      {
+        name: '',
+        type,
+        sets: [{ reps: '', weight: '', duration: '', distance: '' }],
+      },
+    ]
+    setExpandedIndex(updated.length - 1)
+    return updated
+  })
+  setShowTypeSheet(false)
+}
+
 
   const handleRemoveExercise = (index: number) => {
     setExercises(prev => {
       const updated = prev.filter((_, i) => i !== index)
-      // If the removed index was the expanded one, collapse it
       if (expandedIndex === index) {
         setExpandedIndex(null)
       } else if (expandedIndex !== null && expandedIndex > index) {
-        // Adjust expandedIndex if it was after the removed one
         setExpandedIndex(expandedIndex - 1)
       }
-
       return updated
     })
   }
@@ -175,67 +193,70 @@ export default function NewWorkoutModal({
       { name: '', type: 'weights', sets: [{ reps: '', weight: '', duration: '', distance: '' }] },
     ])
     setExpandedIndex(0)
-  }
-
-  const handleSaveTemplate = async () => {
-    setFeedback('')
-    if (!title.trim()) {
-      setMissingTitle(true)
-      setFeedback('Workout title is required to save as favorite')
-      return
-    }
-
-    const alreadyFavorited = saved.some(
-      w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
-    )
-    if (alreadyFavorited) {
-      setFeedback('This workout name is already in your favorites')
-      return
-    }
-
-    const payload = exercises
-      .filter(ex => ex.name.trim() && ex.sets.length > 0)
-      .map(ex => ({
-        name: ex.name.trim(),
-        type: ex.type,
-        sets: ex.sets.map((set: any) => ({
-          reps: set.reps || null,
-          weight: set.weight || null,
-          duration: set.duration || null,
-          distance: set.distance || null,
-        })),
-      }))
-      .filter(ex => ex.sets.length > 0)
-
-    if (payload.length === 0) {
-      setFeedback('Add at least one valid exercise to favorite')
-      return
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/saved-workouts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title: title.trim(), exercises: payload }),
-      })
-
-      if (!res.ok) throw new Error()
-
-      const newFavorite = await res.json()
-      setSaved(prev => [newFavorite, ...prev])
-    } catch (err) {
-      console.error('Save template failed', err)
-      setFeedback('Error saving favorite')
-    }
+    setStep('choose')
   }
 
   const handleAddFavoriteExercise = (exercise: any) => {
     setExercises(prev => [...prev, { ...exercise }])
     setExpandedIndex(exercises.length)
   }
+
+  const handleSaveWorkout = async () => {
+  setFeedback('')
+
+  if (!title.trim()) {
+    setMissingTitle(true)
+    setFeedback('Workout title is required to save as favorite')
+    return
+  }
+
+  const alreadyFavorited = saved.some(
+    w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
+  )
+  if (alreadyFavorited) {
+    setFeedback('This workout name is already in your favorites')
+    return
+  }
+
+  const payload = exercises
+    .filter(ex => ex.name.trim() && ex.sets.length > 0)
+    .map(ex => ({
+      name: ex.name.trim(),
+      type: ex.type,
+      sets: ex.sets.map((set: any) => ({
+        reps: set.reps || null,
+        weight: set.weight || null,
+        duration: set.duration || null,
+        distance: set.distance || null,
+      })),
+    }))
+    .filter(ex => ex.sets.length > 0)
+
+  if (payload.length === 0) {
+    setFeedback('Add at least one valid exercise to favorite')
+    return
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/saved-workouts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title: title.trim(), exercises: payload }),
+    })
+
+    if (!res.ok) throw new Error()
+
+    const newFavorite = await res.json()
+    setSaved(prev => [newFavorite, ...prev]) // ✅ <-- This makes it available in `saved[0]`
+  } catch (err) {
+    console.error('Error saving favorite workout', err)
+    setFeedback('Error saving workout to favorites')
+  }
+}
+
 
   const handleSaveExercise = async (exercise: any, index: number) => {
     const name = exercise.name.trim()
@@ -290,117 +311,155 @@ export default function NewWorkoutModal({
     w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
   )
 
+
+useEffect(() => {
+  if (visible) {
+    resetForm()
+  }
+}, [visible])
+
+const [showFavoritesSheet, setShowFavoritesSheet] = useState(false)
+const insets = useSafeAreaInsets()
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          padding: 20,
-          paddingTop: 60,
-        }}
+  <>
+    {visible && (
+      <YStack
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        zIndex={99999}
+        bg="rgba(0,0,0,0.9)"
+        ai="center"
+        jc="flex-start"
+        p="$4"
+        pt={insets.top}
       >
-        <YStack w="100%" maxWidth={400} br="$4" overflow="hidden">
-          {/* Tabs */}
-          <XStack bg="$gray3" borderTopEndRadius="$4" overflow="hidden">
-            {[
-              { key: 'new', label: 'New Workout' },
-              { key: 'saved', label: 'Favorites' },
-            ].map(({ key, label }) => (
-              <Button
-                key={key}
-                onPress={() => setTab(key as 'new' | 'saved')}
-                flex={1}
-                borderRadius="0"
-                bg={tab === key ? '$background' : 'transparent'}
-                paddingVertical="$3"
-                paddingHorizontal="$3"
-                justifyContent="center"
-              >
-                <Text
-                  fontSize="$5"
-                  textAlign="center"
-                  fontWeight="600"
-                  color={tab === key ? '$color' : '$gray10'}
-                >
-                  {label}
-                </Text>
-              </Button>
-            ))}
+        <YStack
+          w="100%"
+          maxWidth={400}
+          br="$4"
+          overflow="hidden"
+          bg="$background"
+          p="$4"
+        >
+          {/* Header */}
+          <XStack w="100%" ai="center" jc="space-between" mb="$3">
+            <Spacer size="$5" />
+            <Text fontSize="$8" fontWeight="800" textAlign="center" flex={1}>
+              New Workout
+            </Text>
+            <Pressable onPress={onClose} hitSlop={10} style={{ padding: 4 }}>
+              <X size={20} color="gray" />
+            </Pressable>
           </XStack>
 
           {/* Content */}
-          <YStack bg="$background" p="$4" gap="$4">
-            {tab === 'saved' ? (
-              <FavoritesTab saved={saved} loading={loading} onSelectTemplate={handleLoadTemplate} />
-            ) : (
-              <>
-                <WorkoutTitleHeader
-                  title={title}
-                  onChangeTitle={text => {
-                    setTitle(text)
-                    if (text.trim()) {
-                      setMissingTitle(false)
-                      setFeedback('')
-                    }
-                  }}
-                  onReset={resetForm}
-                  isFavorited={alreadyFavorited}
-                  onFavorite={handleSaveTemplate}
-                />
+          {step === 'choose' ? (
+            <WorkoutModeChooser
+              onChooseNew={() => {
+                setExercises([
+                 
+                ])
+                setTitle('')
+                setFeedback('')
+                setMissingTitle(false)
+                setExerciseErrors({})
+                setExpandedIndex(0)
+                setStep('form')
+              }}
+              onChooseFavorite={() => {
+                if (saved.length > 0) {
+                  setShowFavoritesSheet(true)
+                } else {
+                  setFeedback('No saved workouts available.')
+                }
+              }}
+              feedback={feedback}
+            />
+          ) : (
+            <>
+              <WorkoutTitleHeader
+                title={title}
+                onChangeTitle={text => {
+                  setTitle(text)
+                  if (text.trim()) {
+                    setMissingTitle(false)
+                    setFeedback('')
+                  }
+                }}
+                onReset={resetForm}
+                isFavorited={alreadyFavorited}
+                onFavorite={handleSaveWorkout}
+              />
 
-                {title.trim().length === 0 && (
-                  <Text fontSize="$4" color="$gray10" textAlign="center">
-                    Enter new workout title or select workout template from favorites tab
-                  </Text>
-                )}
-
-                {title.trim().length > 0 && (
-                  <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                    <YStack gap="$6" pb="$8">
-                      {exercises.map((exercise, index) => (
-                        <AddExerciseCard
-                          key={index}
-                          index={index}
-                          exercise={exercise}
-                          expanded={expandedIndex === index}
-                          onToggleExpand={toggleExpand}
-                          onChangeName={handleChangeName}
-                          onChangeType={handleChangeType}
-                          onAddSet={handleAddSet}
-                          onRemoveSet={handleRemoveSet}
-                          onChangeSet={handleChangeSet}
-                          onRemove={handleRemoveExercise}
-                          onSave={exercise => handleSaveExercise(exercise, index)}
-                          error={exerciseErrors[index]}
-                          isSaved={savedExercises.some(
-                            ex => ex.name.toLowerCase() === exercise.name.trim().toLowerCase()
-                          )}
-                        />
-                      ))}
-
-                      <ExerciseControls
-                        savedExercises={savedExercises}
-                        loading={loadingSavedExercises}
-                        onAddExercise={handleAddExercise}
-                        onAddFavoriteExercise={handleAddFavoriteExercise}
+              {title.trim().length > 0 && (
+                <ScrollView
+                  style={{ maxHeight: 400 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <YStack gap="$6" py="$8">
+                    {exercises.map((exercise, index) => (
+                      <AddExerciseCard
+                        key={index}
+                        index={index}
+                        exercise={exercise}
+                        expanded={expandedIndex === index}
+                        onToggleExpand={toggleExpand}
+                        onChangeName={handleChangeName}
+                        onChangeType={handleChangeType}
+                        onAddSet={handleAddSet}
+                        onRemoveSet={handleRemoveSet}
+                        onChangeSet={handleChangeSet}
+                        onRemove={handleRemoveExercise}
+                        onSave={exercise =>
+                          handleSaveExercise(exercise, index)
+                        }
+                        error={exerciseErrors[index]}
+                        isSaved={savedExercises.some(
+                          ex =>
+                            ex.name.toLowerCase() ===
+                            exercise.name.trim().toLowerCase()
+                        )}
                       />
-                    </YStack>
-                  </ScrollView>
-                )}
-              </>
-            )}
-            {feedback !== '' && (
-              <Text color="$red10" fontSize="$4" textAlign="center">
-                {feedback}
-              </Text>
-            )}
-            {tab === 'new' && <FinalActions onCancel={onClose} onSubmit={handleSubmit} />}
-          </YStack>
+                    ))}
+                    <ExerciseControls
+                      savedExercises={savedExercises}
+                      loading={loadingSavedExercises}
+                      onAddExercise={handleAddExercise}
+                      onAddFavoriteExercise={handleAddFavoriteExercise}
+                    />
+                  </YStack>
+                </ScrollView>
+              )}
+
+              {feedback !== '' && (
+                <Text color="$red10" fontSize="$4" textAlign="center" mt="$5">
+                  {feedback}
+                </Text>
+              )}
+
+              <FinalActions onCancel={onClose} onSubmit={handleSubmit} />
+            </>
+          )}
         </YStack>
-      </View>
-    </Modal>
-  )
+      </YStack>
+    )}
+   <FavoriteWorkoutSheet
+  open={showFavoritesSheet}
+  onOpenChange={setShowFavoritesSheet}
+  favorites={saved}
+  onSelect={(workout) => handleLoadTemplate(workout)}
+/><ExerciseTypeSheet
+  open={showTypeSheet}
+  onOpenChange={setShowTypeSheet}
+  onSelect={handleAddExerciseOfType}
+/>
+
+
+
+  </>
+)
+
 }

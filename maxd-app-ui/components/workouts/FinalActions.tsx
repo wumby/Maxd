@@ -8,7 +8,7 @@ export function FinalActions({
   onSubmit: () => void
 }) {
   return (
-    <XStack gap="$2">
+    <XStack gap="$2" mt="$5">
       <Button flex={1} onPress={onCancel}>
         Cancel
       </Button>

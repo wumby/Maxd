@@ -189,8 +189,6 @@ export default function WeightTab() {
           <MonthlyHistory visible onClose={() => setViewMode(null)} weights={weights} />
         )}
       </Suspense>
-
-      {/* Log Weight Modal */}
       <Modal
         animationType="fade"
         transparent

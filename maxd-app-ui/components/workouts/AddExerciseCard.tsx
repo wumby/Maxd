@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { YStack, XStack, Text, Button, Input, Separator } from 'tamagui'
-import { Trash2, ChevronDown } from '@tamagui/lucide-icons'
+import { Trash2, ChevronDown, Clock } from '@tamagui/lucide-icons'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { ExerciseTypeSheet } from './ExerciseTypeSheet'
+import { TimerPickerModal } from 'react-native-timer-picker'
 
 const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
 
@@ -34,7 +36,10 @@ export function AddExerciseCard({
   isSaved: boolean
   error?: string
 }) {
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
+  const [showTypeSheet, setShowTypeSheet] = useState(false)
+  const [showDurationPicker, setShowDurationPicker] = useState(false)
+  const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null)
+
   const rotation = useSharedValue(expanded ? 180 : 0)
 
   useEffect(() => {
@@ -45,9 +50,18 @@ export function AddExerciseCard({
     transform: [{ rotateZ: `${rotation.value}deg` }],
   }))
 
+  function formatDuration(seconds: number) {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+
+    return [h > 0 ? `${h}h` : '', m > 0 ? `${m}m` : '', s > 0 ? `${s}s` : '']
+      .filter(Boolean)
+      .join(' ')
+  }
+
   return (
     <YStack gap="$3">
-      {/* Header with title, star, chevron, and delete */}
       <XStack jc="space-between" ai="center">
         <XStack ai="center" gap="$2" flex={1}>
           <Text fontWeight="600" fontSize="$6">
@@ -74,7 +88,6 @@ export function AddExerciseCard({
             </Text>
           )}
 
-          {/* Exercise Name + Type Dropdown */}
           <XStack gap="$2">
             <Input
               flex={3}
@@ -83,29 +96,20 @@ export function AddExerciseCard({
               onChangeText={text => onChangeName(index, text)}
               returnKeyType="done"
             />
-            <Button flex={1} size="$3" onPress={() => setShowTypeDropdown(prev => !prev)}>
+            <Button flex={1} size="$3" onPress={() => setShowTypeSheet(true)}>
               {exercise.type}
             </Button>
           </XStack>
 
-          {showTypeDropdown && (
-            <YStack gap="$1">
-              {EXERCISE_TYPES.map(type => (
-                <Button
-                  key={type}
-                  chromeless
-                  onPress={() => {
-                    onChangeType(index, type)
-                    setShowTypeDropdown(false)
-                  }}
-                >
-                  {type}
-                </Button>
-              ))}
-            </YStack>
-          )}
+          <ExerciseTypeSheet
+            open={showTypeSheet}
+            onOpenChange={setShowTypeSheet}
+            onSelect={type => {
+              onChangeType(index, type)
+              setShowTypeSheet(false)
+            }}
+          />
 
-          {/* Sets */}
           {exercise.sets.map((set: any, setIndex: number) => {
             const isLast = setIndex === exercise.sets.length - 1
             return (
@@ -131,23 +135,30 @@ export function AddExerciseCard({
                       />
                     )}
                   </>
-                ) : (
-                  <>
-                    <Input
-                      flex={1}
-                      placeholder="Duration (min)"
-                      value={set.duration}
-                      onChangeText={val => onChangeSet(index, setIndex, 'duration', val)}
-                      returnKeyType="done"
-                    />
-                    <Input
-                      flex={1}
-                      placeholder="Distance (mi)"
-                      value={set.distance}
-                      onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
-                      returnKeyType="done"
-                    />
-                  </>
+                ) : (<>
+  <Button
+    size="$3"
+    icon={Clock}
+    flex={1.2}
+    onPress={() => {
+      setShowDurationPicker(true)
+      setActiveSetIndex(setIndex)
+    }}
+  >
+    {set.durationSeconds
+      ? formatDuration(Number(set.durationSeconds))
+      : 'Pick Duration'}
+  </Button>
+
+  <Input
+    flex={1}
+    keyboardType="numeric"
+    placeholder="Distance (mi)"
+    value={set.distance || ''}
+    onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
+    returnKeyType="done"
+  /></>
+
                 )}
 
                 {!isLast && (
@@ -176,6 +187,19 @@ export function AddExerciseCard({
           })}
         </YStack>
       )}
+
+      <TimerPickerModal
+        visible={showDurationPicker}
+        onConfirm={({ hours, minutes, seconds }) => {
+          if (activeSetIndex !== null) {
+            const totalSeconds = hours * 3600 + minutes * 60 + seconds
+            onChangeSet(index, activeSetIndex, 'durationSeconds', String(totalSeconds))
+          }
+          setShowDurationPicker(false)
+        }}
+        onCancel={() => setShowDurationPicker(false)}
+        setIsVisible={setShowDurationPicker}
+      />
 
       <Separator />
     </YStack>
