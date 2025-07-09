@@ -17,10 +17,11 @@ export function ExerciseControls({
 
   return (
     <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems="center">
-      <Button onPress={onAddExercise}>+ Add Exercise</Button>
+      <Button onPress={onAddExercise}>+ New Exercise</Button>
       <Text>or</Text>
       <YStack>
-        <Button onPress={() => setShowExerciseSheet(true)}>+ From Favorites</Button>
+         
+        <Button onPress={() => setShowExerciseSheet(true)}>★ From Favorites</Button>
 
         <FavoriteExerciseSheet
           open={showExerciseSheet}

@@ -12,10 +12,8 @@ import { FinalActions } from './FinalActions'
 import { WorkoutModeChooser } from './WorkoutModeChooser'
 import { X } from '@tamagui/lucide-icons'
 import { FavoriteWorkoutSheet } from './FavoriteWorkoutSheet'
-import { ScreenContainer } from '../ScreenContainer'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
-import { DurationPickerSheet } from './DurationPickerSheet'
 
 export default function NewWorkoutModal({
   visible,
@@ -36,6 +34,7 @@ export default function NewWorkoutModal({
   const { token } = useAuth()
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
   const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
+const [workoutDate, setWorkoutDate] = useState(new Date())
 
   const toggleExpand = (index: number) => {
     setExpandedIndex(prev => (prev === index ? null : index))
@@ -367,6 +366,7 @@ const insets = useSafeAreaInsets()
                 setMissingTitle(false)
                 setExerciseErrors({})
                 setExpandedIndex(0)
+                setWorkoutDate(new Date())
                 setStep('form')
               }}
               onChooseFavorite={() => {
@@ -377,6 +377,8 @@ const insets = useSafeAreaInsets()
                 }
               }}
               feedback={feedback}
+               workoutDate={workoutDate}
+  setWorkoutDate={setWorkoutDate}
             />
           ) : (
             <>

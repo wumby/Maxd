@@ -4,6 +4,7 @@ import { Trash2, ChevronDown, Clock } from '@tamagui/lucide-icons'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
 import { TimerPickerModal } from 'react-native-timer-picker'
+import { DistanceUnitSheet } from './DistanceUnitSheet'
 
 const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
 
@@ -39,6 +40,8 @@ export function AddExerciseCard({
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [showDurationPicker, setShowDurationPicker] = useState(false)
   const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null)
+const [showDistanceUnitSheet, setShowDistanceUnitSheet] = useState(false)
+const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(null)
 
   const rotation = useSharedValue(expanded ? 180 : 0)
 
@@ -61,6 +64,7 @@ export function AddExerciseCard({
   }
 
   return (
+  <>
     <YStack gap="$3">
       <XStack jc="space-between" ai="center">
         <XStack ai="center" gap="$2" flex={1}>
@@ -89,16 +93,26 @@ export function AddExerciseCard({
           )}
 
           <XStack gap="$2">
-            <Input
-              flex={3}
-              placeholder="Exercise name"
-              value={exercise.name}
-              onChangeText={text => onChangeName(index, text)}
-              returnKeyType="done"
-            />
-            <Button flex={1} size="$3" onPress={() => setShowTypeSheet(true)}>
-              {exercise.type}
-            </Button>
+            <YStack flex={2}>
+              <Text fontSize="$2" color="$gray10" pb="$1">
+                Exercise Name
+              </Text>
+              <Input
+                placeholder="Exercise name"
+                value={exercise.name}
+                onChangeText={text => onChangeName(index, text)}
+                returnKeyType="done"
+              />
+            </YStack>
+
+            <YStack flex={1}>
+              <Text fontSize="$2" color="$gray10" pb="$1">
+                Type
+              </Text>
+              <Button f={1} onPress={() => setShowTypeSheet(true)}>
+                {exercise.type}
+              </Button>
+            </YStack>
           </XStack>
 
           <ExerciseTypeSheet
@@ -113,75 +127,117 @@ export function AddExerciseCard({
           {exercise.sets.map((set: any, setIndex: number) => {
             const isLast = setIndex === exercise.sets.length - 1
             return (
-              <XStack key={setIndex} gap="$2" flexWrap="wrap" ai="center">
+              <XStack
+                key={setIndex}
+                gap="$3"
+                flexWrap="wrap"
+                ai="flex-start"
+                w="100%"
+                jc="space-between"
+              >
                 {['weights', 'bodyweight'].includes(exercise.type) ? (
                   <>
-                    <Input
-                      flex={1}
-                      keyboardType="numeric"
-                      placeholder="Reps"
-                      value={set.reps}
-                      onChangeText={val => onChangeSet(index, setIndex, 'reps', val)}
-                      returnKeyType="done"
-                    />
-                    {exercise.type === 'weights' && (
+                    <YStack flex={1}>
+                      <Text fontSize="$2" color="$gray10" pb="$1">
+                        Reps
+                      </Text>
                       <Input
-                        flex={1}
                         keyboardType="numeric"
-                        placeholder="Weight (lbs)"
-                        value={set.weight}
-                        onChangeText={val => onChangeSet(index, setIndex, 'weight', val)}
+                        value={set.reps}
+                        onChangeText={val => onChangeSet(index, setIndex, 'reps', val)}
                         returnKeyType="done"
                       />
+                    </YStack>
+
+                    {exercise.type === 'weights' && (
+                      <YStack flex={1}>
+                        <Text fontSize="$2" color="$gray10" pb="$1">
+                          Weight (lbs)
+                        </Text>
+                        <Input
+                          keyboardType="numeric"
+                          value={set.weight}
+                          onChangeText={val => onChangeSet(index, setIndex, 'weight', val)}
+                          returnKeyType="done"
+                        />
+                      </YStack>
                     )}
                   </>
-                ) : (<>
-  <Button
-    size="$3"
-    icon={Clock}
-    flex={1.2}
-    onPress={() => {
-      setShowDurationPicker(true)
-      setActiveSetIndex(setIndex)
-    }}
-  >
-    {set.durationSeconds
-      ? formatDuration(Number(set.durationSeconds))
-      : 'Pick Duration'}
-  </Button>
+                ) : (
+                  <>
+                  <XStack gap="$4" w="80%" ai="flex-start">
+  {/* Duration */}
+  <YStack flex={1} gap="$2">
+    <Text fontSize="$2" color="$gray10">
+      Duration
+    </Text>
+    <Button
+      size="$3"
+      onPress={() => {
+        setShowDurationPicker(true)
+        setActiveSetIndex(setIndex)
+      }}
+      justifyContent="flex-start"
+      w="100%"
+    >
+      {set.duration
+        ? formatDuration(Number(set.duration))
+        : 'Pick Duration'}
+    </Button>
+  </YStack>
 
-  <Input
-    flex={1}
-    keyboardType="numeric"
-    placeholder="Distance (mi)"
-    value={set.distance || ''}
-    onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
-    returnKeyType="done"
-  /></>
+  {/* Distance */}
+  <YStack flex={2} gap="$2">
+    <Text fontSize="$2" color="$gray10">
+      Distance
+    </Text>
+    <Input
+      keyboardType="numeric"
+      placeholder="e.g. 2.5"
+      value={set.distance || ''}
+      onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
+      returnKeyType="done"
+    />
+    <XStack gap="$2" flexWrap="wrap" mt="$1">
+      {['mi', 'km', 'm', 'steps'].map(unit => (
+        <Button
+          key={unit}
+          size="$2"
+          theme={set.distance_unit === unit ? 'active' : 'alt2'}
+          onPress={() => onChangeSet(index, setIndex, 'distance_unit', unit)}
+        >
+          {unit}
+        </Button>
+      ))}
+    </XStack>
+  </YStack>
+</XStack>
 
+                  </>
                 )}
 
-                {!isLast && (
+                <YStack ai="center" gap="$1">
+                  <Text fontSize="$1" color="$gray10">
+                    {isLast ? 'Add Set' : 'Remove'}
+                  </Text>
                   <Button
                     chromeless
                     size="$4"
-                    icon={Trash2}
-                    onPress={() => onRemoveSet(index, setIndex)}
-                  />
-                )}
-
-                {isLast && (
-                  <Button
-                    chromeless
-                    size="$4"
-                    onPress={() => onAddSet(index)}
-                    accessibilityLabel="Add Set"
+                    icon={!isLast ? Trash2 : undefined}
+                    onPress={() =>
+                      isLast
+                        ? onAddSet(index)
+                        : onRemoveSet(index, setIndex)
+                    }
+                    accessibilityLabel={isLast ? 'Add Set' : 'Remove Set'}
                   >
-                    <Text fontSize="$7" fontWeight="700">
-                      +
-                    </Text>
+                    {isLast && (
+                      <Text fontSize="$7" fontWeight="700">
+                        +
+                      </Text>
+                    )}
                   </Button>
-                )}
+                </YStack>
               </XStack>
             )
           })}
@@ -193,7 +249,7 @@ export function AddExerciseCard({
         onConfirm={({ hours, minutes, seconds }) => {
           if (activeSetIndex !== null) {
             const totalSeconds = hours * 3600 + minutes * 60 + seconds
-            onChangeSet(index, activeSetIndex, 'durationSeconds', String(totalSeconds))
+            onChangeSet(index, activeSetIndex, 'duration', String(totalSeconds))
           }
           setShowDurationPicker(false)
         }}
@@ -203,5 +259,25 @@ export function AddExerciseCard({
 
       <Separator />
     </YStack>
-  )
+
+    {distanceUnitSetIndex !== null && (
+      <DistanceUnitSheet
+        open={showDistanceUnitSheet}
+        onOpenChange={open => {
+          setShowDistanceUnitSheet(open)
+          if (!open) setDistanceUnitSetIndex(null)
+        }}
+        current={exercise.sets[distanceUnitSetIndex]?.distance_unit}
+        onSelect={unit => {
+          if (distanceUnitSetIndex !== null) {
+            onChangeSet(index, distanceUnitSetIndex, 'distance_unit', unit)
+          }
+        }}
+      />
+    )}
+  </>
+)
+
+
+
 }

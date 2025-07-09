@@ -41,7 +41,17 @@ export default function SignupScreen() {
   }
 
   return (
-    <YStack f={1} jc="center" ai="center" p="$4" bg="$background" gap="$4" w="100%">
+   <YStack f={1} bg="$background">
+  <YStack
+    f={1}
+    jc="flex-start"
+    ai="center"
+    p="$4"
+    pt="$15"
+    gap="$4"
+    w="100%"
+    style={{ flexGrow: 0.33 }} // roughly top third
+  >
       <Text fontSize="$9" fontWeight="700">
         Create Account
       </Text>
@@ -86,6 +96,7 @@ export default function SignupScreen() {
           Already have an account? Log in
         </Text>
       </Pressable>
+    </YStack>
     </YStack>
   )
 }

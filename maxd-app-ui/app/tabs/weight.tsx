@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
-import { Button, YStack, Text, Input, XStack, useThemeName } from 'tamagui'
-import { Modal, View } from 'react-native'
+import { Button, YStack, Text, Input, XStack, useThemeName, Separator, Sheet } from 'tamagui'
+import { Modal, Platform, View } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
@@ -12,6 +12,7 @@ import { CardsTop } from '@/components/weights/CardsTop'
 import { useIsFocused } from '@react-navigation/native'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
+import { X } from '@tamagui/lucide-icons'
 
 const AnimatedYStack = Animated.createAnimatedComponent(YStack)
 const History = lazy(() => import('@/components/weights/History'))
@@ -22,6 +23,8 @@ const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChart
 export default function WeightTab() {
   const { token } = useAuth()
   const [duplicateWarning, setDuplicateWarning] = useState(false)
+  const [inputError, setInputError] = useState('')
+
   const { weightUnit } = usePreferences()
 
   const router = useRouter()
@@ -36,6 +39,9 @@ export default function WeightTab() {
   const isFocused = useIsFocused()
   const params = useLocalSearchParams()
   const shouldLog = params.log === '1'
+  const [showDateSheet, setShowDateSheet] = useState(false)
+const [tempDate, setTempDate] = useState(selectedDate)
+
 
   useEffect(() => {
     if (shouldLog) {
@@ -83,7 +89,7 @@ export default function WeightTab() {
     const rawInput = parseFloat(weight)
 
     if (isNaN(rawInput) || rawInput <= 0) {
-      showToast('Please enter a valid weight')
+      setInputError('Please enter a valid weight')
       return
     }
 
@@ -111,6 +117,7 @@ export default function WeightTab() {
       if (!res.ok) throw new Error(created.error || 'Failed to log weight')
 
       setDuplicateWarning(false)
+      setInputError('')
       showToast('Weight added!')
       setWeight('')
       setSelectedDate(new Date())
@@ -189,60 +196,134 @@ export default function WeightTab() {
           <MonthlyHistory visible onClose={() => setViewMode(null)} weights={weights} />
         )}
       </Suspense>
-      <Modal
-        animationType="fade"
-        transparent
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
+     <Sheet
+  open={modalVisible}
+  onOpenChange={setModalVisible}
+  snapPoints={[85]}
+  dismissOnSnapToBottom
+  modal
+>
+  <Sheet.Handle />
+  <Sheet.Overlay />
+  <Sheet.Frame bg="$background" p="$4">
+    <YStack gap="$4" w="100%" maxWidth={400}>
+      <Text fontSize="$6" fontWeight="700">
+        Enter New Weight
+      </Text>
+
+      <YStack>
+        <Text fontSize="$2" color="$gray10" pb="$1">
+          Weight
+        </Text>
+        <Input
+  keyboardType="numeric"
+  placeholder="e.g. 175.5"
+  value={weight}
+  onChangeText={(val) => {
+    setWeight(val)
+    setDuplicateWarning(false)
+    setInputError('')
+  }}
+  returnKeyType="done"
+/>
+
+      </YStack>
+
+      <YStack>
+        <Text fontSize="$2" color="$gray10" pb="$1">
+          Date
+        </Text>
+        <Button
+          justifyContent="flex-start"
+          chromeless
+          borderWidth={1}
+          borderColor="$gray5"
+          borderRadius="$3"
+          px="$3"
+          py="$2"
+          onPress={() => {
+            setTempDate(selectedDate)
+            setShowDateSheet(true)
+            setDuplicateWarning(false)
+            setInputError('')
           }}
         >
-          <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700">
-              Enter New Weight
-            </Text>
+          <Text fontSize="$4">
+            {selectedDate.toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Text>
+        </Button>
+      </YStack>
 
-            <Input
-              keyboardType="numeric"
-              placeholder="e.g. 175.5"
-              value={weight}
-              onChangeText={setWeight}
-              returnKeyType="done"
-            />
+     {inputError !== '' && (
+  <Text color="$red10" textAlign="center" fontSize="$4">
+    {inputError}
+  </Text>
+)}
 
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              maximumDate={new Date()}
-              onChange={(_, date) => {
-                if (date) setSelectedDate(date)
-              }}
-            />
-            {duplicateWarning && (
-              <Text color="$red10" textAlign="center" fontSize="$4">
-                You’ve already logged a weight for this day!
-              </Text>
-            )}
+{duplicateWarning && (
+  <Text color="$red10" textAlign="center" fontSize="$4">
+    You’ve already logged a weight for this day!
+  </Text>
+)}
 
-            <XStack gap="$2">
-              <Button flex={1} onPress={() => setModalVisible(false)}>
-                Cancel
-              </Button>
-              <Button flex={1} onPress={handleLogWeight} theme="active">
-                Submit
-              </Button>
-            </XStack>
-          </YStack>
-        </View>
-      </Modal>
+      <XStack gap="$2">
+        <Button flex={1} onPress={() => setModalVisible(false)}>
+          Cancel
+        </Button>
+        <Button flex={1} onPress={handleLogWeight} theme="active">
+          Submit
+        </Button>
+      </XStack>
+    </YStack>
+  </Sheet.Frame>
+</Sheet>
+<Sheet
+  open={showDateSheet}
+  onOpenChange={setShowDateSheet}
+  snapPoints={[50]}
+  dismissOnSnapToBottom
+  modal
+>
+  <Sheet.Handle />
+  <Sheet.Overlay />
+  <Sheet.Frame bg="$background" p="$4">
+    
+    <XStack jc="space-between" ai="center" mb="$3">
+      <Button chromeless icon={X} onPress={() => setShowDateSheet(false)}>
+        Cancel
+      </Button>
+      <Button
+        onPress={() => {
+          setSelectedDate(tempDate)
+          setShowDateSheet(false)
+        }}
+      >
+        Done
+      </Button>
+    </XStack>
+
+    <Separator mb="$3" />
+
+    <YStack f={1} ai="center" jc="center">
+      <DateTimePicker
+        value={tempDate}
+        mode="date"
+        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+        onChange={(event, date) => {
+          if (date) setTempDate(date)
+        }}
+        style={{ width: 300 }}
+        maximumDate={new Date()}
+      />
+    </YStack>
+  </Sheet.Frame>
+</Sheet>
+
+
     </>
   )
 }

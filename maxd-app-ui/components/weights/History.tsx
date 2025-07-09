@@ -122,7 +122,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
   const { token } = useAuth()
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const { showToast } = useToast()
-
+  const {weightUnit} = usePreferences();
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(uniqueYears).sort((a, b) => b - a)
@@ -176,40 +176,48 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
   }
 
   const handleEditStart = (weight: WeightEntry) => {
-    setEditingWeight(weight)
-    setEditInput(weight.value.toString())
-  }
+  setEditingWeight(weight)
 
-  const handleEditSave = async () => {
-    if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
-    const parsedValue = Number(editInput)
-    try {
-      const res = await fetch(`${API_URL}/weights/${editingWeight.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ value: parsedValue }),
-      })
+  const inputVal =
+    weightUnit === 'lb' ? WeightUtil.kgToLbs(weight.value).toFixed(1) : weight.value.toString()
 
-      const updated = await res.json()
-      if (!res.ok) throw new Error(updated.error || 'Failed to update')
+  setEditInput(inputVal)
+}
 
-      setWeights(prev =>
-        prev.map(w =>
-          w.id === editingWeight.id
-            ? { ...w, value: updated.value, created_at: updated.created_at }
-            : w
-        )
+
+ const handleEditSave = async () => {
+  if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
+
+  const parsedValue = Number(editInput)
+  const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsedValue) : parsedValue
+
+  try {
+    const res = await fetch(`${API_URL}/weights/${editingWeight.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ value: valueInKg }),
+    })
+
+    const updated = await res.json()
+    if (!res.ok) throw new Error(updated.error || 'Failed to update')
+
+    setWeights(prev =>
+      prev.map(w =>
+        w.id === editingWeight.id
+          ? { ...w, value: updated.value, created_at: updated.created_at }
+          : w
       )
+    )
 
-      setEditingWeight(null)
-      setEditInput('')
-    } catch (err) {
-      console.error('Failed to update weight:', err)
-    }
+    setEditingWeight(null)
+    setEditInput('')
+  } catch (err) {
+    console.error('Failed to update weight:', err)
   }
+}
 
   if (!visible) return null
 
@@ -338,13 +346,14 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             <Text fontSize="$6" fontWeight="700" color="$color">
               Edit Weight
             </Text>
-            <Input
-              keyboardType="numeric"
-              placeholder="e.g. 175.5"
-              value={editInput}
-              onChangeText={setEditInput}
-              returnKeyType="done"
-            />
+          <Input
+  keyboardType="numeric"
+  placeholder={weightUnit === 'lb' ? 'e.g. 175.5 (lb)' : 'e.g. 79.6 (kg)'}
+  value={editInput}
+  onChangeText={setEditInput}
+  returnKeyType="done"
+/>
+
             <XStack gap="$2">
               <Button flex={1} onPress={() => setEditingWeight(null)}>
                 Cancel

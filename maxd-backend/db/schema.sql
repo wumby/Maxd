@@ -53,11 +53,11 @@ CREATE TABLE sets (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   reps INTEGER,
   weight NUMERIC,
-  duration INTEGER,  -- duration in seconds (e.g. 60s plank)
-  distance NUMERIC,  -- distance in meters or km (e.g. for running)
+  duration INTEGER,
+  distance NUMERIC,
+  distance_unit TEXT CHECK (distance_unit IN ('mi', 'km', 'm', 'steps')),
   created_at TIMESTAMP DEFAULT NOW()
 );
-
 
 -- SAVED EXERCISES
 CREATE TABLE saved_exercises (
