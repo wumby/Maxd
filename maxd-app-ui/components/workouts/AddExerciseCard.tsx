@@ -5,6 +5,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
 import { TimerPickerModal } from 'react-native-timer-picker'
 import { DistanceUnitSheet } from './DistanceUnitSheet'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
 
@@ -44,7 +46,7 @@ const [showDistanceUnitSheet, setShowDistanceUnitSheet] = useState(false)
 const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(null)
 
   const rotation = useSharedValue(expanded ? 180 : 0)
-
+const { weightUnit } = usePreferences()
   useEffect(() => {
     rotation.value = withTiming(expanded ? 180 : 0, { duration: 200 })
   }, [expanded])
@@ -152,14 +154,15 @@ const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(
                     {exercise.type === 'weights' && (
                       <YStack flex={1}>
                         <Text fontSize="$2" color="$gray10" pb="$1">
-                          Weight (lbs)
+                          Weight ({weightUnit})
                         </Text>
-                        <Input
+                           <Input
                           keyboardType="numeric"
                           value={set.weight}
                           onChangeText={val => onChangeSet(index, setIndex, 'weight', val)}
                           returnKeyType="done"
                         />
+
                       </YStack>
                     )}
                   </>

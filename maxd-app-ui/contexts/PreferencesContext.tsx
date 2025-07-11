@@ -17,7 +17,7 @@ type PreferencesContextType = Preferences & {
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined)
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light')
+  const [theme, setThemeState] = useState<Theme>('dark')
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>('lb')
 
   useEffect(() => {

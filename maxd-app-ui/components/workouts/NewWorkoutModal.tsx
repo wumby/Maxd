@@ -14,13 +14,17 @@ import { X } from '@tamagui/lucide-icons'
 import { FavoriteWorkoutSheet } from './FavoriteWorkoutSheet'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import WeightUtil from '@/util/weightConversion'
 
 export default function NewWorkoutModal({
   visible,
-  onClose,
+  onCancel,
+  onSubmit,
 }: {
   visible: boolean
-  onClose: () => void
+  onCancel: () => void
+  onSubmit: () => void
 }) {
   const [step, setStep] = useState<'choose' | 'form'>('choose')
   const [title, setTitle] = useState('')
@@ -35,7 +39,7 @@ export default function NewWorkoutModal({
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
   const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
 const [workoutDate, setWorkoutDate] = useState(new Date())
-
+const { weightUnit } = usePreferences()
   const toggleExpand = (index: number) => {
     setExpandedIndex(prev => (prev === index ? null : index))
   }
@@ -152,12 +156,23 @@ const [workoutDate, setWorkoutDate] = useState(new Date())
       .map(ex => ({
         name: ex.name.trim(),
         type: ex.type,
-        sets: ex.sets.map((set: any) => ({
-          reps: parseInt(set.reps) || null,
-          weight: parseFloat(set.weight) || null,
-          duration: set.duration || null,
-          distance: set.distance || null,
-        })),
+       sets: ex.sets.map((set: any) => {
+  const raw = parseFloat(set.weight)
+  const weightInKg = isNaN(raw)
+    ? null
+    : weightUnit === 'lb'
+    ? WeightUtil.lbsToKg(raw)
+    : raw
+
+  return {
+    reps: parseInt(set.reps) || null,
+    weight: weightInKg,
+    duration: set.duration || null,
+    distance: set.distance || null,
+    distance_unit: set.distance_unit || null,
+  }
+})
+,
       }))
       .filter(ex => ex.sets.length > 0)
 
@@ -177,7 +192,7 @@ const [workoutDate, setWorkoutDate] = useState(new Date())
       })
       if (!res.ok) throw new Error()
       resetForm()
-      onClose()
+      onSubmit()
     } catch (err) {
       console.error('Workout save failed', err)
       setFeedback('Error saving workout')
@@ -290,7 +305,7 @@ const [workoutDate, setWorkoutDate] = useState(new Date())
         body: JSON.stringify({
           name,
           type: exercise.type,
-          sets: exercise.sets,
+         sets: exercise.sets,
         }),
       })
 
@@ -349,7 +364,7 @@ const insets = useSafeAreaInsets()
             <Text fontSize="$8" fontWeight="800" textAlign="center" flex={1}>
               New Workout
             </Text>
-            <Pressable onPress={onClose} hitSlop={10} style={{ padding: 4 }}>
+            <Pressable onPress={onCancel} hitSlop={10} style={{ padding: 4 }}>
               <X size={20} color="gray" />
             </Pressable>
           </XStack>
@@ -442,7 +457,7 @@ const insets = useSafeAreaInsets()
                 </Text>
               )}
 
-              <FinalActions onCancel={onClose} onSubmit={handleSubmit} />
+              <FinalActions onCancel={onCancel} onSubmit={handleSubmit} />
             </>
           )}
         </YStack>

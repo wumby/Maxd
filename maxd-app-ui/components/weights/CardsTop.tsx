@@ -61,7 +61,7 @@ export function CardsTop({ onChartPress, onMonthlyPress, weights = [] }: Props) 
         <YStack gap="$3" f={1} jc="space-between">
           <XStack jc="space-between" ai="center">
             <Text fontWeight="800" fontSize="$7">
-              Graph
+              History
             </Text>
             <Expand size="$1" color="$gray9" />
           </XStack>
