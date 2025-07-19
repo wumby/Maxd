@@ -1,12 +1,12 @@
-import { useState, useCallback, lazy, Suspense, useEffect, useMemo } from 'react'
+import { useState, useCallback, lazy, Suspense, useEffect, useMemo, useRef } from 'react'
 import { YStack, Text, Button } from 'tamagui'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
-import NewWorkoutModal from '@/components/workouts/NewWorkoutModal'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { WorkoutCardsBottom } from '@/components/workouts/WorkoutCardsBottom'
 import ExerciseHistory from '@/components/workouts/ExerciseHistory'
+import NewWorkout from '@/components/workouts/NewWorkout'
 
 const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'))
 
@@ -19,7 +19,7 @@ export default function WorkoutsTab() {
   const params = useLocalSearchParams()
   const shouldLog = params.log === '1'
 
-   const fetchWorkouts = useCallback(async () => {
+  const fetchWorkouts = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/workouts`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -31,70 +31,82 @@ export default function WorkoutsTab() {
     }
   }, [token])
 
-  useEffect(() => {
-    if (shouldLog) {
-      setModalVisible(true)
-      router.replace('/tabs/workouts')
-    }
-  }, [shouldLog])
+  useFocusEffect(
+    useCallback(() => {
+      if (params?.log === '1') {
+        setViewMode('new')
+        router.replace('/tabs/workouts') 
+      }
+    }, [params?.log])
+  )
 
   useFocusEffect(
     useCallback(() => {
       setViewMode(null)
       fetchWorkouts()
+
+      return () => {
+        setModalVisible(false)
+        setViewMode(null) // Ensures reset on blur too
+      }
     }, [fetchWorkouts])
   )
-  const lastWorkout = workouts[0];
+
+  const lastWorkout = workouts[0]
   const flattenedExercises = useMemo(() => {
-  return workouts.flatMap(w =>
-    (w.exercises || []).map((ex: any) => ({
-      ...ex,
-      created_at: w.created_at,
-    }))
-  )
-}, [workouts])
+    return workouts.flatMap(w =>
+      (w.exercises || []).map((ex: any) => ({
+        ...ex,
+        created_at: w.created_at,
+      }))
+    )
+  }, [workouts])
 
   return (
     <>
       {viewMode === null && (
-        <ScreenContainer>
-     <YStack f={1} jc="space-evenly" gap="$4">
-                <Text>I want my cards here</Text>
-    
-                <YStack ai="center" gap="$6">
-                  <Text fontSize="$9" fontWeight="700">
-                    Last: {lastWorkout?.title || 'None'}
-                  </Text>
-                  <Button size="$4" onPress={() => setModalVisible(true)}>
-                    Log New Workout
-                  </Button>
-                </YStack>
-    
-               <WorkoutCardsBottom
-               key={workouts.length}
-  workouts={workouts}
-  onWorkoutsPress={() => setViewMode('workouts')}
-  onExercisesPress={() => setViewMode('exercises')}
-/>
+        <ScreenContainer >
+          <YStack f={1} jc="space-evenly" gap="$4">
+            <Text>I want my cards here</Text>
 
-              </YStack>
-  </ScreenContainer>
+            <YStack ai="center" gap="$6">
+              <Text fontSize="$9" fontWeight="700">
+                Last: {lastWorkout?.title || 'None'}
+              </Text>
+              <Button size="$4" onPress={() => setViewMode('new')}>
+                Log New Workout
+              </Button>
+            </YStack>
+
+            <WorkoutCardsBottom
+              key={workouts.length}
+              workouts={workouts}
+              onWorkoutsPress={() => setViewMode('workouts')}
+              onExercisesPress={() => setViewMode('exercises')}
+            />
+          </YStack>
+        </ScreenContainer>
       )}
-
-      <NewWorkoutModal visible={modalVisible}  onCancel={() => setModalVisible(false)}
-  onSubmit={() => {
-    setModalVisible(false)
-    fetchWorkouts()
-  }} />
       {viewMode === 'workouts' && (
         <Suspense fallback={<Text p="$4">Loading workout history...</Text>}>
           <WorkoutHistory workouts={workouts} onClose={() => setViewMode(null)} />
         </Suspense>
       )}
 
-       {viewMode === 'exercises' && (
-        <Suspense fallback={<Text p="$4">Loading workout history...</Text>}>
+      {viewMode === 'exercises' && (
+        <Suspense fallback={<Text p="$4">Loading Exercises history...</Text>}>
           <ExerciseHistory exercises={flattenedExercises} onClose={() => setViewMode(null)} />
+        </Suspense>
+      )}
+      {viewMode === 'new' && (
+        <Suspense fallback={<Text p="$4">Loading New Workout...</Text>}>
+          <NewWorkout
+            onCancel={() => setViewMode(null)}
+            onSubmit={() => {
+              setViewMode(null)
+              fetchWorkouts()
+            }}
+          />
         </Suspense>
       )}
     </>

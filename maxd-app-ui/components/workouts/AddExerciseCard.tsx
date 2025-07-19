@@ -42,11 +42,11 @@ export function AddExerciseCard({
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [showDurationPicker, setShowDurationPicker] = useState(false)
   const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null)
-const [showDistanceUnitSheet, setShowDistanceUnitSheet] = useState(false)
-const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(null)
+  const [showDistanceUnitSheet, setShowDistanceUnitSheet] = useState(false)
+  const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(null)
 
   const rotation = useSharedValue(expanded ? 180 : 0)
-const { weightUnit } = usePreferences()
+  const { weightUnit } = usePreferences()
   useEffect(() => {
     rotation.value = withTiming(expanded ? 180 : 0, { duration: 200 })
   }, [expanded])
@@ -66,221 +66,210 @@ const { weightUnit } = usePreferences()
   }
 
   return (
-  <>
-    <YStack gap="$3">
-      <XStack jc="space-between" ai="center">
-        <XStack ai="center" gap="$2" flex={1}>
-          <Text fontWeight="600" fontSize="$6">
-            {exercise.name.trim() || 'New Exercise'}
-          </Text>
-          <Button chromeless size="$2" onPress={() => onSave(exercise)}>
-            <Text fontSize="$5">{isSaved ? '★' : '☆'}</Text>
-          </Button>
-          <Button chromeless size="$3" onPress={() => onToggleExpand(index)}>
-            <Animated.View style={animatedChevronStyle}>
-              <ChevronDown size={20} />
-            </Animated.View>
-          </Button>
-        </XStack>
-
-        <Button chromeless size="$2" icon={Trash2} onPress={() => onRemove(index)} />
-      </XStack>
-
-      {expanded && (
-        <YStack gap="$3">
-          {error && (
-            <Text color="$red10" fontSize="$4">
-              {error}
+    <>
+      <YStack gap="$3">
+        <XStack jc="space-between" ai="center">
+          <XStack ai="center" gap="$2" flex={1}>
+            <Text fontWeight="600" fontSize="$6">
+              {exercise.name.trim() || 'New Exercise'}
             </Text>
-          )}
-
-          <XStack gap="$2">
-            <YStack flex={2}>
-              <Text fontSize="$2" color="$gray10" pb="$1">
-                Exercise Name
-              </Text>
-              <Input
-                placeholder="Exercise name"
-                value={exercise.name}
-                onChangeText={text => onChangeName(index, text)}
-                returnKeyType="done"
-              />
-            </YStack>
-
-            <YStack flex={1}>
-              <Text fontSize="$2" color="$gray10" pb="$1">
-                Type
-              </Text>
-              <Button f={1} onPress={() => setShowTypeSheet(true)}>
-                {exercise.type}
-              </Button>
-            </YStack>
+            <Button chromeless size="$2" onPress={() => onSave(exercise)}>
+              <Text fontSize="$5">{isSaved ? '★' : '☆'}</Text>
+            </Button>
+            <Button chromeless size="$3" onPress={() => onToggleExpand(index)}>
+              <Animated.View style={animatedChevronStyle}>
+                <ChevronDown size={20} />
+              </Animated.View>
+            </Button>
           </XStack>
 
-          <ExerciseTypeSheet
-            open={showTypeSheet}
-            onOpenChange={setShowTypeSheet}
-            onSelect={type => {
-              onChangeType(index, type)
-              setShowTypeSheet(false)
-            }}
-          />
+          <Button chromeless size="$2" icon={Trash2} onPress={() => onRemove(index)} />
+        </XStack>
 
-          {exercise.sets.map((set: any, setIndex: number) => {
-            const isLast = setIndex === exercise.sets.length - 1
-            return (
-              <XStack
-                key={setIndex}
-                gap="$3"
-                flexWrap="wrap"
-                ai="flex-start"
-                w="100%"
-                jc="space-between"
-              >
-                {['weights', 'bodyweight'].includes(exercise.type) ? (
-                  <>
-                    <YStack flex={1}>
-                      <Text fontSize="$2" color="$gray10" pb="$1">
-                        Reps
-                      </Text>
-                      <Input
-                        keyboardType="numeric"
-                        value={set.reps}
-                        onChangeText={val => onChangeSet(index, setIndex, 'reps', val)}
-                        returnKeyType="done"
-                      />
-                    </YStack>
+        {expanded && (
+          <YStack gap="$3">
+            {error && (
+              <Text color="$red10" fontSize="$4">
+                {error}
+              </Text>
+            )}
 
-                    {exercise.type === 'weights' && (
+            <XStack gap="$2">
+              <YStack flex={2}>
+                <Text fontSize="$2" color="$gray10" pb="$1">
+                  Exercise Name
+                </Text>
+                <Input
+                  placeholder="Exercise name"
+                  value={exercise.name}
+                  onChangeText={text => onChangeName(index, text)}
+                  returnKeyType="done"
+                />
+              </YStack>
+
+              <YStack flex={1}>
+                <Text fontSize="$2" color="$gray10" pb="$1">
+                  Type
+                </Text>
+                <Button f={1} onPress={() => setShowTypeSheet(true)}>
+                  {exercise.type}
+                </Button>
+              </YStack>
+            </XStack>
+
+            <ExerciseTypeSheet
+              open={showTypeSheet}
+              onOpenChange={setShowTypeSheet}
+              onSelect={type => {
+                onChangeType(index, type)
+                setShowTypeSheet(false)
+              }}
+            />
+
+            {exercise.sets.map((set: any, setIndex: number) => {
+              const isLast = setIndex === exercise.sets.length - 1
+              return (
+                <XStack
+                  key={setIndex}
+                  gap="$3"
+                  flexWrap="wrap"
+                  ai="flex-start"
+                  w="100%"
+                  jc="space-between"
+                >
+                  {['weights', 'bodyweight'].includes(exercise.type) ? (
+                    <>
                       <YStack flex={1}>
                         <Text fontSize="$2" color="$gray10" pb="$1">
-                          Weight ({weightUnit})
+                          Reps
                         </Text>
-                           <Input
+                        <Input
                           keyboardType="numeric"
-                          value={set.weight}
-                          onChangeText={val => onChangeSet(index, setIndex, 'weight', val)}
+                          value={set.reps}
+                          onChangeText={val => onChangeSet(index, setIndex, 'reps', val)}
                           returnKeyType="done"
                         />
-
                       </YStack>
-                    )}
-                  </>
-                ) : (
-                  <>
-                  <XStack gap="$4" w="80%" ai="flex-start">
-  {/* Duration */}
-  <YStack flex={1} gap="$2">
-    <Text fontSize="$2" color="$gray10">
-      Duration
-    </Text>
-    <Button
-      size="$3"
-      onPress={() => {
-        setShowDurationPicker(true)
-        setActiveSetIndex(setIndex)
-      }}
-      justifyContent="flex-start"
-      w="100%"
-    >
-      {set.duration
-        ? formatDuration(Number(set.duration))
-        : 'Pick Duration'}
-    </Button>
-  </YStack>
 
-  {/* Distance */}
-  <YStack flex={2} gap="$2">
-    <Text fontSize="$2" color="$gray10">
-      Distance
-    </Text>
-    <Input
-      keyboardType="numeric"
-      placeholder="e.g. 2.5"
-      value={set.distance || ''}
-      onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
-      returnKeyType="done"
-    />
-    <XStack gap="$2" flexWrap="wrap" mt="$1">
-      {['mi', 'km', 'm', 'steps'].map(unit => (
-        <Button
-          key={unit}
-          size="$2"
-          theme={set.distance_unit === unit ? 'active' : 'alt2'}
-          onPress={() => onChangeSet(index, setIndex, 'distance_unit', unit)}
-        >
-          {unit}
-        </Button>
-      ))}
-    </XStack>
-  </YStack>
-</XStack>
+                      {exercise.type === 'weights' && (
+                        <YStack flex={1}>
+                          <Text fontSize="$2" color="$gray10" pb="$1">
+                            Weight ({weightUnit})
+                          </Text>
+                          <Input
+                            keyboardType="numeric"
+                            value={set.weight}
+                            onChangeText={val => onChangeSet(index, setIndex, 'weight', val)}
+                            returnKeyType="done"
+                          />
+                        </YStack>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <XStack gap="$4" w="80%" ai="flex-start">
+                        {/* Duration */}
+                        <YStack flex={1} gap="$2">
+                          <Text fontSize="$2" color="$gray10">
+                            Duration
+                          </Text>
+                          <Button
+                            size="$3"
+                            onPress={() => {
+                              setShowDurationPicker(true)
+                              setActiveSetIndex(setIndex)
+                            }}
+                            justifyContent="flex-start"
+                            w="100%"
+                          >
+                            {set.duration ? formatDuration(Number(set.duration)) : 'Pick Duration'}
+                          </Button>
+                        </YStack>
 
-                  </>
-                )}
+                        {/* Distance */}
+                        <YStack flex={2} gap="$2">
+                          <Text fontSize="$2" color="$gray10">
+                            Distance
+                          </Text>
+                          <Input
+                            keyboardType="numeric"
+                            placeholder="e.g. 2.5"
+                            value={set.distance || ''}
+                            onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
+                            returnKeyType="done"
+                          />
+                          <XStack gap="$2" flexWrap="wrap" mt="$1">
+                            {['mi', 'km', 'm', 'steps'].map(unit => (
+                              <Button
+                                key={unit}
+                                size="$2"
+                                theme={set.distance_unit === unit ? 'active' : 'alt2'}
+                                onPress={() => onChangeSet(index, setIndex, 'distance_unit', unit)}
+                              >
+                                {unit}
+                              </Button>
+                            ))}
+                          </XStack>
+                        </YStack>
+                      </XStack>
+                    </>
+                  )}
 
-                <YStack ai="center" gap="$1">
-                  <Text fontSize="$1" color="$gray10">
-                    {isLast ? 'Add Set' : 'Remove'}
-                  </Text>
-                  <Button
-                    chromeless
-                    size="$4"
-                    icon={!isLast ? Trash2 : undefined}
-                    onPress={() =>
-                      isLast
-                        ? onAddSet(index)
-                        : onRemoveSet(index, setIndex)
-                    }
-                    accessibilityLabel={isLast ? 'Add Set' : 'Remove Set'}
-                  >
-                    {isLast && (
-                      <Text fontSize="$7" fontWeight="700">
-                        +
-                      </Text>
-                    )}
-                  </Button>
-                </YStack>
-              </XStack>
-            )
-          })}
-        </YStack>
+                  <YStack ai="center" gap="$1">
+                    <Text fontSize="$1" color="$gray10">
+                      {isLast ? 'Add Set' : 'Remove'}
+                    </Text>
+                    <Button
+                      chromeless
+                      size="$4"
+                      icon={!isLast ? Trash2 : undefined}
+                      onPress={() => (isLast ? onAddSet(index) : onRemoveSet(index, setIndex))}
+                      accessibilityLabel={isLast ? 'Add Set' : 'Remove Set'}
+                    >
+                      {isLast && (
+                        <Text fontSize="$7" fontWeight="700">
+                          +
+                        </Text>
+                      )}
+                    </Button>
+                  </YStack>
+                </XStack>
+              )
+            })}
+          </YStack>
+        )}
+
+        <TimerPickerModal
+          visible={showDurationPicker}
+          onConfirm={({ hours, minutes, seconds }) => {
+            if (activeSetIndex !== null) {
+              const totalSeconds = hours * 3600 + minutes * 60 + seconds
+              onChangeSet(index, activeSetIndex, 'duration', String(totalSeconds))
+            }
+            setShowDurationPicker(false)
+          }}
+          onCancel={() => setShowDurationPicker(false)}
+          setIsVisible={setShowDurationPicker}
+        />
+
+        <Separator />
+      </YStack>
+
+      {distanceUnitSetIndex !== null && (
+        <DistanceUnitSheet
+          open={showDistanceUnitSheet}
+          onOpenChange={open => {
+            setShowDistanceUnitSheet(open)
+            if (!open) setDistanceUnitSetIndex(null)
+          }}
+          current={exercise.sets[distanceUnitSetIndex]?.distance_unit}
+          onSelect={unit => {
+            if (distanceUnitSetIndex !== null) {
+              onChangeSet(index, distanceUnitSetIndex, 'distance_unit', unit)
+            }
+          }}
+        />
       )}
-
-      <TimerPickerModal
-        visible={showDurationPicker}
-        onConfirm={({ hours, minutes, seconds }) => {
-          if (activeSetIndex !== null) {
-            const totalSeconds = hours * 3600 + minutes * 60 + seconds
-            onChangeSet(index, activeSetIndex, 'duration', String(totalSeconds))
-          }
-          setShowDurationPicker(false)
-        }}
-        onCancel={() => setShowDurationPicker(false)}
-        setIsVisible={setShowDurationPicker}
-      />
-
-      <Separator />
-    </YStack>
-
-    {distanceUnitSetIndex !== null && (
-      <DistanceUnitSheet
-        open={showDistanceUnitSheet}
-        onOpenChange={open => {
-          setShowDistanceUnitSheet(open)
-          if (!open) setDistanceUnitSetIndex(null)
-        }}
-        current={exercise.sets[distanceUnitSetIndex]?.distance_unit}
-        onSelect={unit => {
-          if (distanceUnitSetIndex !== null) {
-            onChangeSet(index, distanceUnitSetIndex, 'distance_unit', unit)
-          }
-        }}
-      />
-    )}
-  </>
-)
-
-
-
+    </>
+  )
 }

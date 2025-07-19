@@ -13,15 +13,9 @@ export function ExerciseTypeSheet({
   onSelect: (type: ExerciseType) => void
 }) {
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[70]}
-      dismissOnSnapToBottom
-    >
+    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[70]} dismissOnSnapToBottom>
       <Sheet.Overlay />
-      <Sheet.Handle />
+      <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
           <Text fontSize="$6" fontWeight="800" textAlign="center">

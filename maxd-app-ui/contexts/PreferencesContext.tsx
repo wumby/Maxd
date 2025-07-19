@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import * as SecureStore from 'expo-secure-store'
+import { useColorScheme } from 'react-native'
 
 type Theme = 'light' | 'dark'
 type WeightUnit = 'kg' | 'lb'
@@ -17,7 +18,10 @@ type PreferencesContextType = Preferences & {
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined)
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const systemColorScheme = useColorScheme()
+  const systemTheme: Theme = systemColorScheme === 'dark' ? 'dark' : 'light'
+
+  const [theme, setThemeState] = useState<Theme>('light') 
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>('lb')
 
   useEffect(() => {
@@ -25,9 +29,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       const storedTheme = await SecureStore.getItemAsync('theme')
       const storedWeightUnit = await SecureStore.getItemAsync('weightUnit')
 
-      if (storedTheme === 'light' || storedTheme === 'dark') {
-        setThemeState(storedTheme)
-      }
+      setThemeState(
+        storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme
+      )
 
       if (storedWeightUnit === 'kg' || storedWeightUnit === 'lb') {
         setWeightUnitState(storedWeightUnit)
@@ -35,7 +39,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     }
 
     loadPrefs()
-  }, [])
+  }, [systemTheme])
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme)

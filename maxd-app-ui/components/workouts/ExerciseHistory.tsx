@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react'
 import {
-  YStack, Text, ScrollView, XStack, Card, Separator, Button, Sheet, useTheme, useThemeName
+  YStack,
+  Text,
+  ScrollView,
+  XStack,
+  Card,
+  Separator,
+  Button,
+  Sheet,
+  useTheme,
+  useThemeName,
 } from 'tamagui'
 import { ChevronDown, ChevronUp, ChevronLeft, Filter } from '@tamagui/lucide-icons'
 import { Pressable } from 'react-native'
@@ -87,7 +96,9 @@ export default function ExerciseHistory({
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
               <ChevronLeft size={20} color={theme.color.val} />
-              <Text fontSize="$5" fontWeight="600" color="$color">Back</Text>
+              <Text fontSize="$5" fontWeight="600" color="$color">
+                Back
+              </Text>
             </XStack>
           </Pressable>
 
@@ -96,7 +107,9 @@ export default function ExerciseHistory({
           </Button>
         </XStack>
 
-        <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">Exercises</Text>
+        <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
+          Exercises
+        </Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <XStack gap="$2" mb="$3" px="$4">
@@ -131,7 +144,8 @@ export default function ExerciseHistory({
         </ScrollView>
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
-          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filterYear === 'All Years' ? 'all years' : filterYear}
         </Text>
       </YStack>
@@ -144,20 +158,23 @@ export default function ExerciseHistory({
 
             return (
               <Card key={i} elevate bg="$color2" p="$4" gap="$3" br="$6">
-  <YStack>
-    <Text fontSize="$6" fontWeight="700">{ex.name}</Text>
-    <Text fontSize="$3" color="$gray10">{date}</Text>
-  </YStack>
+                <YStack>
+                  <Text fontSize="$6" fontWeight="700">
+                    {ex.name}
+                  </Text>
+                  <Text fontSize="$3" color="$gray10">
+                    {date}
+                  </Text>
+                </YStack>
 
-  <YStack mt="$3" gap="$2">
-    {ex.sets?.map((set: any, j: number) => (
-      <Text key={j} fontSize="$4" color="$gray10">
-        {renderSetLine(ex.type, set, weightUnit)}
-      </Text>
-    ))}
-  </YStack>
-</Card>
-
+                <YStack mt="$3" gap="$2">
+                  {ex.sets?.map((set: any, j: number) => (
+                    <Text key={j} fontSize="$4" color="$gray10">
+                      {renderSetLine(ex.type, set, weightUnit)}
+                    </Text>
+                  ))}
+                </YStack>
+              </Card>
             )
           })}
         </YStack>
@@ -168,7 +185,9 @@ export default function ExerciseHistory({
         <Sheet.Frame>
           <Sheet.Handle />
           <YStack gap="$3" p="$4">
-            <Text fontSize="$6" fontWeight="700">Filter by Exercise</Text>
+            <Text fontSize="$6" fontWeight="700">
+              Filter by Exercise
+            </Text>
             <Button size="$3" chromeless onPress={() => setFilterExercise(null)}>
               All Exercises
             </Button>

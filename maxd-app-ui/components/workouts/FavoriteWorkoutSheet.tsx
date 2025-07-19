@@ -1,12 +1,6 @@
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
-import {
-  Card,
-  Input,
-  ScrollView,
-  Text,
-  YStack,
-} from 'tamagui'
+import { Card, Input, ScrollView, Text, YStack } from 'tamagui'
 
 interface FavoriteWorkout {
   id?: number
@@ -28,9 +22,7 @@ export function FavoriteWorkoutSheet({
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filtered = favorites.filter(w =>
-    w.title.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filtered = favorites.filter(w => w.title.toLowerCase().includes(searchQuery.toLowerCase()))
 
   return (
     <Sheet
@@ -42,7 +34,7 @@ export function FavoriteWorkoutSheet({
       zIndex={100_000}
     >
       <Sheet.Overlay />
-      <Sheet.Handle />
+      <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
           <Text fontSize="$6" fontWeight="800" textAlign="center">

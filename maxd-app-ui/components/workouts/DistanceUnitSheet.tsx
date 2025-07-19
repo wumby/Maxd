@@ -19,7 +19,7 @@ export function DistanceUnitSheet({
       <Sheet.Overlay />
       <Sheet.Frame bg="$background" p="$4">
         <YStack gap="$3">
-          <Text fontSize="$7" fontWeight="600" ta='center' mb="$3">
+          <Text fontSize="$7" fontWeight="600" ta="center" mb="$3">
             Select Distance Unit
           </Text>
           {DISTANCE_UNITS.map(unit => (

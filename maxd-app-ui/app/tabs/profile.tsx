@@ -8,20 +8,17 @@ import {
   XStack,
   Switch,
   Input,
-  Adapt,
-  Select,
-  Sheet,
 } from 'tamagui'
 import React, { useEffect, useState } from 'react'
-import { Alert, Pressable } from 'react-native'
-import { LogOut, Moon, Sun, Trash2 } from '@tamagui/lucide-icons'
+import { Alert } from 'react-native'
+import { LogOut, Trash2 } from '@tamagui/lucide-icons'
 import { API_URL } from '@/env'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
 
 export default function ProfileTab() {
   const { user, token, logout, updateUser } = useAuth()
-  const { theme, setTheme, weightUnit, setWeightUnit } = usePreferences()
+  const { weightUnit, setWeightUnit } = usePreferences()
   const [editMode, setEditMode] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -89,10 +86,6 @@ export default function ProfileTab() {
     ])
   }
 
-  const handleThemeToggle = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
-
   return (
     <ScreenContainer>
       <YStack f={1} bg="$background" p="$4" space="$4" pt="$6">
@@ -126,7 +119,7 @@ export default function ProfileTab() {
             </XStack>
 
             <Separator />
-            {/* Name Row */}
+
             {/* Name Row */}
             <XStack ai="center" jc="flex-start" mb="$2">
               <Text fontSize="$6" color="$gray12" w={80}>
@@ -207,25 +200,6 @@ export default function ProfileTab() {
               </Text>
             </XStack>
           </XStack>
-
-          <XStack ai="center" jc="space-between" mt="$3">
-            <Text fontSize="$5">Theme</Text>
-            <XStack ai="center" gap="$2">
-              <Sun size={16} opacity={theme === 'light' ? 1 : 0.4} />
-
-              <Switch
-                size="$3"
-                checked={theme === 'dark'}
-                onCheckedChange={handleThemeToggle}
-                bg="$gray5" // neutral consistent track color
-                borderRadius="$10"
-              >
-                <Switch.Thumb backgroundColor="$color8" borderRadius={999} />
-              </Switch>
-
-              <Moon size={16} opacity={theme === 'dark' ? 1 : 0.4} />
-            </XStack>
-          </XStack>
         </Card>
 
         {!editMode && (
@@ -239,7 +213,7 @@ export default function ProfileTab() {
               <Button size="$5" onPress={() => setEditMode(false)}>
                 Cancel
               </Button>
-              <Button size="$5" theme="active" onPress={handleSave}>
+              <Button size="$5" theme="active" onPress={handleSave} disabled={loading}>
                 Save
               </Button>
             </XStack>

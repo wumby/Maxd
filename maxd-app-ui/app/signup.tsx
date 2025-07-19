@@ -41,62 +41,62 @@ export default function SignupScreen() {
   }
 
   return (
-   <YStack f={1} bg="$background">
-  <YStack
-    f={1}
-    jc="flex-start"
-    ai="center"
-    p="$4"
-    pt="$15"
-    gap="$4"
-    w="100%"
-    style={{ flexGrow: 0.33 }} // roughly top third
-  >
-      <Text fontSize="$9" fontWeight="700">
-        Create Account
-      </Text>
-
-      <Input
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        maxLength={30}
-        size="$6"
-        autoCapitalize="words"
-        w={'100%'}
-        returnKeyType="done"
-      />
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        size="$6"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        w={'100%'}
-        returnKeyType="done"
-      />
-      <Input
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        size="$6"
-        w={'100%'}
-        returnKeyType="done"
-      />
-
-      <Button size="$4" theme="active" onPress={handleSignup} disabled={loading} w={'100%'}>
-        {loading ? <Spinner size="small" color="$color" /> : 'Sign Up'}
-      </Button>
-
-      <Separator />
-      <Pressable hitSlop={15} onPress={() => router.push('/login')}>
-        <Text fontSize="$4" color="$blue10">
-          Already have an account? Log in
+    <YStack f={1} bg="$background">
+      <YStack
+        f={1}
+        jc="flex-start"
+        ai="center"
+        p="$4"
+        pt="$15"
+        gap="$4"
+        w="100%"
+        style={{ flexGrow: 0.33 }} // roughly top third
+      >
+        <Text fontSize="$9" fontWeight="700">
+          Create Account
         </Text>
-      </Pressable>
-    </YStack>
+
+        <Input
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+          maxLength={30}
+          size="$6"
+          autoCapitalize="words"
+          w={'100%'}
+          returnKeyType="done"
+        />
+        <Input
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          size="$6"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          w={'100%'}
+          returnKeyType="done"
+        />
+        <Input
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          size="$6"
+          w={'100%'}
+          returnKeyType="done"
+        />
+
+        <Button size="$4" theme="active" onPress={handleSignup} disabled={loading} w={'100%'}>
+          {loading ? <Spinner size="small" color="$color" /> : 'Sign Up'}
+        </Button>
+
+        <Separator />
+        <Pressable hitSlop={15} onPress={() => router.push('/login')}>
+          <Text fontSize="$4" color="$blue10">
+            Already have an account? Log in
+          </Text>
+        </Pressable>
+      </YStack>
     </YStack>
   )
 }

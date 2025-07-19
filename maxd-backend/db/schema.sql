@@ -17,8 +17,10 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  goal_mode TEXT CHECK (goal_mode IN ('lose', 'gain', 'track')) DEFAULT 'track'
 );
+
 
 -- WEIGHTS
 CREATE TABLE weights (

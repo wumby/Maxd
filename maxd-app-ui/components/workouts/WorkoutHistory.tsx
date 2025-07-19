@@ -1,5 +1,16 @@
 import { useState, useMemo } from 'react'
-import { YStack, Text, Button, ScrollView, XStack, Card, Separator, View, useTheme, useThemeName } from 'tamagui'
+import {
+  YStack,
+  Text,
+  Button,
+  ScrollView,
+  XStack,
+  Card,
+  Separator,
+  View,
+  useTheme,
+  useThemeName,
+} from 'tamagui'
 import { ChevronDown, ChevronUp, ChevronLeft } from '@tamagui/lucide-icons'
 import { FlatList, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -39,9 +50,7 @@ export default function WorkoutHistory({
 
     if (selected.length === 0 || range === 'all') return null
 
-    const latestDate = new Date(
-      Math.max(...selected.map(w => new Date(w.created_at).getTime()))
-    )
+    const latestDate = new Date(Math.max(...selected.map(w => new Date(w.created_at).getTime())))
 
     const cutoff = new Date(latestDate)
     if (range === '30d') cutoff.setDate(cutoff.getDate() - 30)
@@ -127,7 +136,8 @@ export default function WorkoutHistory({
         </ScrollView>
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
-          Showing {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
+          Showing{' '}
+          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
           {filter === 'All Years' ? 'all years' : filter}
         </Text>
       </YStack>

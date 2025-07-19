@@ -23,6 +23,7 @@ interface HistoryProps {
   weights: WeightEntry[]
   setWeights: React.Dispatch<React.SetStateAction<WeightEntry[]>>
 }
+// [...] all your imports remain the same
 
 const HistoryItem = React.memo(
   ({
@@ -34,6 +35,7 @@ const HistoryItem = React.memo(
     theme,
     onEdit,
     onDelete,
+    goalMode,
   }: {
     item: WeightEntry
     prev: WeightEntry | undefined
@@ -43,6 +45,7 @@ const HistoryItem = React.memo(
     theme: ReturnType<typeof useTheme>
     onEdit: (w: WeightEntry) => void
     onDelete: (id: number) => void
+    goalMode?: string
   }) => {
     const delta = prev ? item.value - prev.value : 0
     const screenWidth = Dimensions.get('window').width
@@ -57,6 +60,15 @@ const HistoryItem = React.memo(
       const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(num) : num
       return converted.toFixed(1)
     }
+
+    const getDeltaColor = () => {
+  if (!prev || goalMode === 'track') return '$gray10'
+  if (delta === 0) return '$gray10'
+  if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
+  if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
+  return '$gray10'
+}
+
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
@@ -74,7 +86,6 @@ const HistoryItem = React.memo(
               <Text fontSize="$5" fontWeight="600" color="$color">
                 {convertWeight(item.value)} {weightUnit}
               </Text>
-
               <Text fontSize="$2" color="$gray10">
                 {new Date(item.created_at).toLocaleDateString('en-US', {
                   weekday: 'short',
@@ -86,20 +97,22 @@ const HistoryItem = React.memo(
             </YStack>
 
             {editMode ? (
-              <XStack gap="$5">
-                <Pressable onPress={() => onEdit(item)}>
-                  <Edit3 size={20} color={theme.color.val} />
-                </Pressable>
-                <Pressable onPress={() => onDelete(item.id)}>
-                  <Trash2 size={20} color="red" />
-                </Pressable>
-              </XStack>
-            ) : prev ? (
-              <Text color={delta > 0 ? 'red' : 'green'} fontSize="$3">
-                {delta > 0 ? '+' : ''}
-                {convertWeight(Math.abs(delta))} {weightUnit}
-              </Text>
-            ) : null}
+  <XStack gap="$5">
+    <Pressable onPress={() => onEdit(item)}>
+      <Edit3 size={20} color={theme.color.val} />
+    </Pressable>
+    <Pressable onPress={() => onDelete(item.id)}>
+      <Trash2 size={20} color="red" />
+    </Pressable>
+  </XStack>
+) : prev ? (
+  <Text color={getDeltaColor()} fontSize="$3">
+    {delta === 0
+      ? '±0'
+      : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
+  </Text>
+) : null}
+
           </XStack>
         </Card>
       </Animated.View>
@@ -108,7 +121,11 @@ const HistoryItem = React.memo(
 )
 HistoryItem.displayName = 'HistoryItem'
 
+
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
+  const { user } = useAuth()
+const goalMode = user?.goal_mode 
+
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
@@ -122,7 +139,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
   const { token } = useAuth()
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const { showToast } = useToast()
-  const {weightUnit} = usePreferences();
+  const { weightUnit } = usePreferences()
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(uniqueYears).sort((a, b) => b - a)
@@ -176,48 +193,47 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
   }
 
   const handleEditStart = (weight: WeightEntry) => {
-  setEditingWeight(weight)
+    setEditingWeight(weight)
 
-  const inputVal =
-    weightUnit === 'lb' ? WeightUtil.kgToLbs(weight.value).toFixed(1) : weight.value.toString()
+    const inputVal =
+      weightUnit === 'lb' ? WeightUtil.kgToLbs(weight.value).toFixed(1) : weight.value.toString()
 
-  setEditInput(inputVal)
-}
-
-
- const handleEditSave = async () => {
-  if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
-
-  const parsedValue = Number(editInput)
-  const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsedValue) : parsedValue
-
-  try {
-    const res = await fetch(`${API_URL}/weights/${editingWeight.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ value: valueInKg }),
-    })
-
-    const updated = await res.json()
-    if (!res.ok) throw new Error(updated.error || 'Failed to update')
-
-    setWeights(prev =>
-      prev.map(w =>
-        w.id === editingWeight.id
-          ? { ...w, value: updated.value, created_at: updated.created_at }
-          : w
-      )
-    )
-
-    setEditingWeight(null)
-    setEditInput('')
-  } catch (err) {
-    console.error('Failed to update weight:', err)
+    setEditInput(inputVal)
   }
-}
+
+  const handleEditSave = async () => {
+    if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
+
+    const parsedValue = Number(editInput)
+    const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsedValue) : parsedValue
+
+    try {
+      const res = await fetch(`${API_URL}/weights/${editingWeight.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ value: valueInKg }),
+      })
+
+      const updated = await res.json()
+      if (!res.ok) throw new Error(updated.error || 'Failed to update')
+
+      setWeights(prev =>
+        prev.map(w =>
+          w.id === editingWeight.id
+            ? { ...w, value: updated.value, created_at: updated.created_at }
+            : w
+        )
+      )
+
+      setEditingWeight(null)
+      setEditInput('')
+    } catch (err) {
+      console.error('Failed to update weight:', err)
+    }
+  }
 
   if (!visible) return null
 
@@ -304,27 +320,29 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
       </YStack>
 
       <FlatList
-        data={filtered}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-        ListEmptyComponent={
-          <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
-            No entries
-          </Text>
-        }
-        renderItem={({ item, index }) => (
-          <HistoryItem
-            item={item}
-            prev={filtered[index + 1]}
-            index={index}
-            editMode={editMode}
-            isDark={isDark}
-            theme={theme}
-            onEdit={handleEditStart}
-            onDelete={confirmDelete}
-          />
-        )}
-      />
+  data={filtered}
+  keyExtractor={item => item.id.toString()}
+  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+  ListEmptyComponent={
+    <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
+      No entries
+    </Text>
+  }
+  renderItem={({ item, index }) => (
+    <HistoryItem
+      item={item}
+      prev={filtered[index + 1]}
+      index={index}
+      editMode={editMode}
+      isDark={isDark}
+      theme={theme}
+      onEdit={handleEditStart}
+      onDelete={confirmDelete}
+      goalMode={goalMode}
+    />
+  )}
+/>
+
 
       {/* Edit Modal */}
       <Modal
@@ -346,13 +364,13 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             <Text fontSize="$6" fontWeight="700" color="$color">
               Edit Weight
             </Text>
-          <Input
-  keyboardType="numeric"
-  placeholder={weightUnit === 'lb' ? 'e.g. 175.5 (lb)' : 'e.g. 79.6 (kg)'}
-  value={editInput}
-  onChangeText={setEditInput}
-  returnKeyType="done"
-/>
+            <Input
+              keyboardType="numeric"
+              placeholder={weightUnit === 'lb' ? 'e.g. 175.5 (lb)' : 'e.g. 79.6 (kg)'}
+              value={editInput}
+              onChangeText={setEditInput}
+              returnKeyType="done"
+            />
 
             <XStack gap="$2">
               <Button flex={1} onPress={() => setEditingWeight(null)}>

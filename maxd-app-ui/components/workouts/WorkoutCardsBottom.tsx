@@ -8,19 +8,17 @@ interface Props {
   workouts?: { name?: string; created_at: string; exercises?: { name: string }[] }[]
 }
 
-export function WorkoutCardsBottom({
-  onWorkoutsPress,
-  onExercisesPress,
-  workouts = [],
-}: Props) {
+export function WorkoutCardsBottom({ onWorkoutsPress, onExercisesPress, workouts = [] }: Props) {
   const latestThreeWorkouts = workouts.slice(0, 3)
 
   const latestExercises = useMemo(() => {
     return workouts
-      .flatMap(w => (w.exercises || []).map(ex => ({
-        name: ex.name,
-        date: w.created_at,
-      })))
+      .flatMap(w =>
+        (w.exercises || []).map(ex => ({
+          name: ex.name,
+          date: w.created_at,
+        }))
+      )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3)
   }, [workouts])

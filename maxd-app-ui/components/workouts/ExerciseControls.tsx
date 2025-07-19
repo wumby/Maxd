@@ -13,23 +13,5 @@ export function ExerciseControls({
   onAddExercise: () => void
   onAddFavoriteExercise: (exercise: any) => void
 }) {
-  const [showExerciseSheet, setShowExerciseSheet] = useState(false)
-
-  return (
-    <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems="center">
-      <Button onPress={onAddExercise}>+ New Exercise</Button>
-      <Text>or</Text>
-      <YStack>
-         
-        <Button onPress={() => setShowExerciseSheet(true)}>★ From Favorites</Button>
-
-        <FavoriteExerciseSheet
-          open={showExerciseSheet}
-          onOpenChange={setShowExerciseSheet}
-          favorites={savedExercises}
-          onSelect={onAddFavoriteExercise}
-        />
-      </YStack>
-    </XStack>
-  )
+  return <></>
 }

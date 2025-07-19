@@ -26,54 +26,53 @@ export default function LoginScreen() {
   }
 
   return (
-   <YStack f={1} bg="$background">
-  <YStack
-    f={1}
-    jc="flex-start"
-    ai="center"
-    p="$4"
-    pt="$15"
-    gap="$4"
-    w="100%"
-    style={{ flexGrow: 0.33 }} // roughly top third
-  >
-    <Text fontSize="$9" fontWeight="700">
-      Log In
-    </Text>
+    <YStack f={1} bg="$background">
+      <YStack
+        f={1}
+        jc="flex-start"
+        ai="center"
+        p="$4"
+        pt="$15"
+        gap="$4"
+        w="100%"
+        style={{ flexGrow: 0.33 }} // roughly top third
+      >
+        <Text fontSize="$9" fontWeight="700">
+          Log In
+        </Text>
 
-    <Input
-      placeholder="Email"
-      value={email}
-      onChangeText={setEmail}
-      autoCapitalize="none"
-      keyboardType="email-address"
-      size="$6"
-      fontSize="$5"
-      w="100%"
-      returnKeyType="done"
-    />
-    <Input
-      placeholder="Password"
-      value={password}
-      onChangeText={setPassword}
-      secureTextEntry
-      size="$6"
-      fontSize="$5"
-      w="100%"
-      returnKeyType="done"
-    />
+        <Input
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          size="$6"
+          fontSize="$5"
+          w="100%"
+          returnKeyType="done"
+        />
+        <Input
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          size="$6"
+          fontSize="$5"
+          w="100%"
+          returnKeyType="done"
+        />
 
-    <Button size="$4" theme="active" onPress={handleLogin} disabled={loading} w="100%">
-      {loading ? <Spinner size="small" color="$color" /> : 'Login'}
-    </Button>
+        <Button size="$4" theme="active" onPress={handleLogin} disabled={loading} w="100%">
+          {loading ? <Spinner size="small" color="$color" /> : 'Login'}
+        </Button>
 
-    <Pressable onPress={() => router.push('/signup')} hitSlop={15}>
-      <Text fontSize="$4" color="$blue10" mt="$2">
-        Don’t have an account? Sign up
-      </Text>
-    </Pressable>
-  </YStack>
-</YStack>
-
+        <Pressable onPress={() => router.push('/signup')} hitSlop={15}>
+          <Text fontSize="$4" color="$blue10" mt="$2">
+            Don’t have an account? Sign up
+          </Text>
+        </Pressable>
+      </YStack>
+    </YStack>
   )
 }

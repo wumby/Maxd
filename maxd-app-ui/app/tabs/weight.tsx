@@ -1,54 +1,68 @@
 import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
-import { Button, YStack, Text, Input, XStack, useThemeName, Separator, Sheet } from 'tamagui'
-import { Modal, Platform, View } from 'react-native'
+import {
+  Button,
+  YStack,
+  Text,
+  XStack,
+  useThemeName,
+} from 'tamagui'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import Animated, { FadeIn } from 'react-native-reanimated'
 import { CardsBottom } from '@/components/weights/CardsBottom'
 import { useToast } from '@/contexts/ToastContextProvider'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import { CardsTop } from '@/components/weights/CardsTop'
-import { useIsFocused } from '@react-navigation/native'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
-import { X } from '@tamagui/lucide-icons'
+import { Pencil } from '@tamagui/lucide-icons'
+import { ScreenContainer } from '@/components/ScreenContainer'
+import { DatePickerSheet } from '@/components/weights/DatePickerSheet'
+import { GoalModeSheet } from '@/components/weights/GoalModeSheet'
+import { EnterWeightSheet } from '@/components/weights/EnterWeightSheet'
 
-const AnimatedYStack = Animated.createAnimatedComponent(YStack)
 const History = lazy(() => import('@/components/weights/History'))
 const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
 const ChartWebView = lazy(() => import('@/components/weights/ChartWebView'))
 const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChartWebView'))
 
 export default function WeightTab() {
-  const { token } = useAuth()
   const [duplicateWarning, setDuplicateWarning] = useState(false)
-  const [inputError, setInputError] = useState('')
-
   const { weightUnit } = usePreferences()
-
   const router = useRouter()
   const { showToast } = useToast()
-  const [weight, setWeight] = useState('')
-  const [modalVisible, setModalVisible] = useState(false)
   const [weights, setWeights] = useState<{ id: number; value: number; created_at: string }[]>([])
   const [viewMode, setViewMode] = useState<
     'chart' | 'monthlyChart' | 'history' | 'monthlyHistory' | null
   >(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const isFocused = useIsFocused()
+  const [showDateSheet, setShowDateSheet] = useState(false)
+  const [tempDate, setTempDate] = useState(selectedDate)
+  const [goalModeSheetVisible, setGoalModeSheetVisible] = useState(false)
+  const [showWeightSheet, setShowWeightSheet] = useState(false)
+  const { user, token } = useAuth()
   const params = useLocalSearchParams()
   const shouldLog = params.log === '1'
-  const [showDateSheet, setShowDateSheet] = useState(false)
-const [tempDate, setTempDate] = useState(selectedDate)
+const [inputError, setInputError] = useState('')
 
+  const goalLabel = useMemo(() => {
+    if (!user?.goal_mode) return null
+    switch (user.goal_mode) {
+      case 'lose':
+        return 'Goal: Lose weight'
+      case 'gain':
+        return 'Goal: Gain weight'
+      default:
+        return 'Goal: Just tracking'
+    }
+  }, [user?.goal_mode])
 
   useEffect(() => {
     if (shouldLog) {
-      setModalVisible(true)
+      setShowWeightSheet(true)
       router.replace('/tabs/weight')
     }
   }, [shouldLog])
+
   useFocusEffect(
     useCallback(() => {
       setViewMode(null)
@@ -70,6 +84,7 @@ const [tempDate, setTempDate] = useState(selectedDate)
             setWeights([])
             return
           }
+
           setWeights(
             data.map(w => ({
               ...w,
@@ -81,19 +96,21 @@ const [tempDate, setTempDate] = useState(selectedDate)
           setWeights([])
         }
       }
+
       fetchWeights()
     }, [token])
   )
 
-  const handleLogWeight = async () => {
-    const rawInput = parseFloat(weight)
+  const handleLogWeight = async (entered: string) => {
+    const rawInput = parseFloat(entered)
 
     if (isNaN(rawInput) || rawInput <= 0) {
-      setInputError('Please enter a valid weight')
+      showToast('Invalid weight', 'warn')
       return
     }
 
     const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
+
     try {
       const res = await fetch(`${API_URL}/weights`, {
         method: 'POST',
@@ -110,18 +127,13 @@ const [tempDate, setTempDate] = useState(selectedDate)
       const created = await res.json()
 
       if (res.status === 409) {
-        setDuplicateWarning(true)
+        showToast('You already logged a weight today', 'warn')
         return
       }
 
       if (!res.ok) throw new Error(created.error || 'Failed to log weight')
 
-      setDuplicateWarning(false)
-      setInputError('')
       showToast('Weight added!')
-      setWeight('')
-      setSelectedDate(new Date())
-      setModalVisible(false)
       setWeights(prev =>
         [...prev, created].sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -143,15 +155,10 @@ const [tempDate, setTempDate] = useState(selectedDate)
 
   const themeName = useThemeName()
   if (!themeName) return null
+
   return (
     <>
-      <AnimatedYStack
-        f={1}
-        backgroundColor="$background"
-        p="$4"
-        key={`weight-tab-${themeName}-${isFocused ? 'focused' : 'unfocused'}`}
-        entering={FadeIn.duration(500)}
-      >
+      <ScreenContainer>
         {viewMode === null && (
           <YStack f={1} jc="space-evenly" gap="$4">
             <CardsTop
@@ -160,11 +167,28 @@ const [tempDate, setTempDate] = useState(selectedDate)
               weights={weights}
             />
 
-            <YStack ai="center" gap="$6">
+            <YStack ai="center" gap="$4">
               <Text fontSize="$9" fontWeight="700">
                 Current: {currentWeight}
               </Text>
-              <Button size="$4" onPress={() => setModalVisible(true)}>
+
+              {goalLabel && (
+                <XStack ai="center" gap="$2">
+                  <Text fontSize="$5" color="$gray10">
+                    {goalLabel}
+                  </Text>
+                  <Button
+                    chromeless
+                    size="$2"
+                    onPress={() => setGoalModeSheetVisible(true)}
+                    icon={Pencil}
+                  />
+                </XStack>
+              )}
+            </YStack>
+
+            <YStack ai="center">
+              <Button size="$5" onPress={() => setShowWeightSheet(true)}>
                 Enter New Weight
               </Button>
             </YStack>
@@ -176,7 +200,8 @@ const [tempDate, setTempDate] = useState(selectedDate)
             />
           </YStack>
         )}
-      </AnimatedYStack>
+      </ScreenContainer>
+
       <Suspense fallback={null}>
         {viewMode === 'chart' && (
           <ChartWebView onBack={() => setViewMode(null)} weights={weights} />
@@ -196,134 +221,30 @@ const [tempDate, setTempDate] = useState(selectedDate)
           <MonthlyHistory visible onClose={() => setViewMode(null)} weights={weights} />
         )}
       </Suspense>
-     <Sheet
-  open={modalVisible}
-  onOpenChange={setModalVisible}
-  snapPoints={[85]}
-  dismissOnSnapToBottom
-  modal
->
-  <Sheet.Handle />
-  <Sheet.Overlay />
-  <Sheet.Frame bg="$background" p="$4">
-    <YStack gap="$4" w="100%" maxWidth={400}>
-      <Text fontSize="$6" fontWeight="700">
-        Enter New Weight
-      </Text>
 
-      <YStack>
-        <Text fontSize="$2" color="$gray10" pb="$1">
-          Weight
-        </Text>
-        <Input
-  keyboardType="numeric"
-  placeholder="e.g. 175.5"
-  value={weight}
-  onChangeText={(val) => {
-    setWeight(val)
-    setDuplicateWarning(false)
-    setInputError('')
-  }}
-  returnKeyType="done"
+      <EnterWeightSheet
+  open={showWeightSheet}
+  onOpenChange={setShowWeightSheet}
+  onSubmit={handleLogWeight}
+  selectedDate={selectedDate}
+  setShowDateSheet={setShowDateSheet}
+  setTempDate={setTempDate}
+  duplicateWarning={duplicateWarning}
+  inputError={inputError}
+  setDuplicateWarning={setDuplicateWarning}
+  setInputError={setInputError}
 />
 
-      </YStack>
 
-      <YStack>
-        <Text fontSize="$2" color="$gray10" pb="$1">
-          Date
-        </Text>
-        <Button
-          justifyContent="flex-start"
-          chromeless
-          borderWidth={1}
-          borderColor="$gray5"
-          borderRadius="$3"
-          px="$3"
-          py="$2"
-          onPress={() => {
-            setTempDate(selectedDate)
-            setShowDateSheet(true)
-            setDuplicateWarning(false)
-            setInputError('')
-          }}
-        >
-          <Text fontSize="$4">
-            {selectedDate.toLocaleDateString(undefined, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </Text>
-        </Button>
-      </YStack>
-
-     {inputError !== '' && (
-  <Text color="$red10" textAlign="center" fontSize="$4">
-    {inputError}
-  </Text>
-)}
-
-{duplicateWarning && (
-  <Text color="$red10" textAlign="center" fontSize="$4">
-    You’ve already logged a weight for this day!
-  </Text>
-)}
-
-      <XStack gap="$2">
-        <Button flex={1} onPress={() => setModalVisible(false)}>
-          Cancel
-        </Button>
-        <Button flex={1} onPress={handleLogWeight} theme="active">
-          Submit
-        </Button>
-      </XStack>
-    </YStack>
-  </Sheet.Frame>
-</Sheet>
-<Sheet
-  open={showDateSheet}
-  onOpenChange={setShowDateSheet}
-  snapPoints={[50]}
-  dismissOnSnapToBottom
-  modal
->
-  <Sheet.Handle />
-  <Sheet.Overlay />
-  <Sheet.Frame bg="$background" p="$4">
-    
-    <XStack jc="space-between" ai="center" mb="$3">
-      <Button chromeless icon={X} onPress={() => setShowDateSheet(false)}>
-        Cancel
-      </Button>
-      <Button
-        onPress={() => {
-          setSelectedDate(tempDate)
-          setShowDateSheet(false)
-        }}
-      >
-        Done
-      </Button>
-    </XStack>
-
-    <Separator mb="$3" />
-
-    <YStack f={1} ai="center" jc="center">
-      <DateTimePicker
-        value={tempDate}
-        mode="date"
-        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-        onChange={(event, date) => {
-          if (date) setTempDate(date)
-        }}
-        style={{ width: 300 }}
-        maximumDate={new Date()}
+      <DatePickerSheet
+        open={showDateSheet}
+        onOpenChange={setShowDateSheet}
+        tempDate={tempDate}
+        setTempDate={setTempDate}
+        setSelectedDate={setSelectedDate}
       />
-    </YStack>
-  </Sheet.Frame>
-</Sheet>
 
-
+      <GoalModeSheet open={goalModeSheetVisible} onOpenChange={setGoalModeSheetVisible} />
     </>
   )
 }

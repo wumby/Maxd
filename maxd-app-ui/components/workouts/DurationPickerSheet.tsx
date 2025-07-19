@@ -17,13 +17,7 @@ export function DurationPickerSheet({
   const range = (count: number) => Array.from({ length: count }, (_, i) => i)
 
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[60]}
-      dismissOnSnapToBottom
-    >
+    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[60]} dismissOnSnapToBottom>
       <Sheet.Frame p="$4" bg="$background">
         <Sheet.Handle />
 
