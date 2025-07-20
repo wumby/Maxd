@@ -35,7 +35,7 @@ export default function WorkoutsTab() {
     useCallback(() => {
       if (params?.log === '1') {
         setViewMode('new')
-        router.replace('/tabs/workouts') 
+        router.replace('/tabs/workouts')
       }
     }, [params?.log])
   )
@@ -65,7 +65,7 @@ export default function WorkoutsTab() {
   return (
     <>
       {viewMode === null && (
-        <ScreenContainer >
+        <ScreenContainer>
           <YStack f={1} jc="space-evenly" gap="$4">
             <Text>I want my cards here</Text>
 
@@ -73,7 +73,7 @@ export default function WorkoutsTab() {
               <Text fontSize="$9" fontWeight="700">
                 Last: {lastWorkout?.title || 'None'}
               </Text>
-              <Button size="$4" onPress={() => setViewMode('new')}>
+              <Button size="$5" onPress={() => setViewMode('new')}>
                 Log New Workout
               </Button>
             </YStack>

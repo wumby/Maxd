@@ -39,18 +39,12 @@ export function EnterWeightSheet({
   }
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[85]}
-      dismissOnSnapToBottom
-      modal
-    >
-      <Sheet.Handle />
+    <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[85]} dismissOnSnapToBottom modal>
       <Sheet.Overlay />
+      <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame bg="$background" p="$4">
         <YStack gap="$4" w="100%" maxWidth={400}>
-          <Text fontSize="$8" fontWeight="700" textAlign='center'>
+          <Text fontSize="$8" fontWeight="700" textAlign="center">
             Enter New Weight
           </Text>
 
@@ -62,7 +56,7 @@ export function EnterWeightSheet({
               keyboardType="numeric"
               placeholder="e.g. 175.5"
               value={weight}
-              onChangeText={(val) => {
+              onChangeText={val => {
                 setWeight(val)
                 setDuplicateWarning(false)
                 setInputError('')
@@ -75,31 +69,30 @@ export function EnterWeightSheet({
             <Text fontSize="$2" color="$gray10" pb="$1">
               Date
             </Text>
-           <Button
-  justifyContent="flex-start"
-  chromeless
-  borderWidth={1}
-  borderColor="$gray5"
-  borderRadius="$3"
-  px="$3"
-  py="$2"
-  onPress={() => {
-    Keyboard.dismiss()
-    setTempDate(selectedDate)
-    setShowDateSheet(true)
-    setDuplicateWarning(false)
-    setInputError('')
-  }}
->
-  <Text fontSize="$4">
-    {selectedDate.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })}
-  </Text>
-</Button>
-
+            <Button
+              justifyContent="flex-start"
+              chromeless
+              borderWidth={1}
+              borderColor="$gray5"
+              borderRadius="$3"
+              px="$3"
+              py="$2"
+              onPress={() => {
+                Keyboard.dismiss()
+                setTempDate(selectedDate)
+                setShowDateSheet(true)
+                setDuplicateWarning(false)
+                setInputError('')
+              }}
+            >
+              <Text fontSize="$4">
+                {selectedDate.toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </Text>
+            </Button>
           </YStack>
 
           {inputError !== '' && (

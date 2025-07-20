@@ -90,13 +90,12 @@ export function FinalActions({
               value={tempDate}
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-             onChange={(_, selectedDate) => {
-              console.log(selectedDate)
-  if (selectedDate) {
-    setTempDate(selectedDate)
-  }
-}}
-
+              onChange={(_, selectedDate) => {
+                console.log(selectedDate)
+                if (selectedDate) {
+                  setTempDate(selectedDate)
+                }
+              }}
               maximumDate={new Date()}
             />
           </YStack>

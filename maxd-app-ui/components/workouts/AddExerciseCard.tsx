@@ -1,14 +1,21 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { YStack, XStack, Text, Button, Input, Separator } from 'tamagui'
 import { Trash2, ChevronDown, Clock } from '@tamagui/lucide-icons'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
-import { TimerPickerModal } from 'react-native-timer-picker'
+import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import { DistanceUnitSheet } from './DistanceUnitSheet'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
+import { DurationPickerSheet } from './DurationPickerSheet'
 
 const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
+const distanceUnitLabels: Record<'mi' | 'km' | 'm' | 'steps', string> = {
+  mi: 'Miles',
+  km: 'Kilometers',
+  m: 'Meters',
+  steps: 'Steps',
+}
 
 export function AddExerciseCard({
   exercise,
@@ -111,7 +118,7 @@ export function AddExerciseCard({
                 <Text fontSize="$2" color="$gray10" pb="$1">
                   Type
                 </Text>
-                <Button f={1} onPress={() => setShowTypeSheet(true)}>
+                <Button f={1} onPress={() => setShowTypeSheet(true)} iconAfter={ChevronDown}>
                   {exercise.type}
                 </Button>
               </YStack>
@@ -198,18 +205,20 @@ export function AddExerciseCard({
                             onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
                             returnKeyType="done"
                           />
-                          <XStack gap="$2" flexWrap="wrap" mt="$1">
-                            {['mi', 'km', 'm', 'steps'].map(unit => (
-                              <Button
-                                key={unit}
-                                size="$2"
-                                theme={set.distance_unit === unit ? 'active' : 'alt2'}
-                                onPress={() => onChangeSet(index, setIndex, 'distance_unit', unit)}
-                              >
-                                {unit}
-                              </Button>
-                            ))}
-                          </XStack>
+
+                          <Button
+                            size="$3"
+                            onPress={() => {
+                              setShowDistanceUnitSheet(true)
+                              setDistanceUnitSetIndex(setIndex)
+                            }}
+                            iconAfter={ChevronDown}
+                            justifyContent="space-between"
+                          >
+                            {distanceUnitLabels[
+                              set.distance_unit as keyof typeof distanceUnitLabels
+                            ] || 'Miles'}
+                          </Button>
                         </YStack>
                       </XStack>
                     </>
@@ -238,18 +247,14 @@ export function AddExerciseCard({
             })}
           </YStack>
         )}
-
-        <TimerPickerModal
-          visible={showDurationPicker}
-          onConfirm={({ hours, minutes, seconds }) => {
+        <DurationPickerSheet
+          open={showDurationPicker}
+          onOpenChange={setShowDurationPicker}
+          onConfirm={totalSeconds => {
             if (activeSetIndex !== null) {
-              const totalSeconds = hours * 3600 + minutes * 60 + seconds
               onChangeSet(index, activeSetIndex, 'duration', String(totalSeconds))
             }
-            setShowDurationPicker(false)
           }}
-          onCancel={() => setShowDurationPicker(false)}
-          setIsVisible={setShowDurationPicker}
         />
 
         <Separator />

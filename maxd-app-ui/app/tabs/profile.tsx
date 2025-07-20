@@ -1,14 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext'
-import {
-  YStack,
-  Text,
-  Button,
-  Card,
-  Separator,
-  XStack,
-  Switch,
-  Input,
-} from 'tamagui'
+import { YStack, Text, Button, Card, Separator, XStack, Switch, Input } from 'tamagui'
 import React, { useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { LogOut, Trash2 } from '@tamagui/lucide-icons'

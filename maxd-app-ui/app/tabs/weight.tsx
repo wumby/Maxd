@@ -1,11 +1,5 @@
 import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
-import {
-  Button,
-  YStack,
-  Text,
-  XStack,
-  useThemeName,
-} from 'tamagui'
+import { Button, YStack, Text, XStack, useThemeName } from 'tamagui'
 import { useAuth } from '@/contexts/AuthContext'
 import { API_URL } from '@/env'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
@@ -42,7 +36,7 @@ export default function WeightTab() {
   const { user, token } = useAuth()
   const params = useLocalSearchParams()
   const shouldLog = params.log === '1'
-const [inputError, setInputError] = useState('')
+  const [inputError, setInputError] = useState('')
 
   const goalLabel = useMemo(() => {
     if (!user?.goal_mode) return null
@@ -223,18 +217,17 @@ const [inputError, setInputError] = useState('')
       </Suspense>
 
       <EnterWeightSheet
-  open={showWeightSheet}
-  onOpenChange={setShowWeightSheet}
-  onSubmit={handleLogWeight}
-  selectedDate={selectedDate}
-  setShowDateSheet={setShowDateSheet}
-  setTempDate={setTempDate}
-  duplicateWarning={duplicateWarning}
-  inputError={inputError}
-  setDuplicateWarning={setDuplicateWarning}
-  setInputError={setInputError}
-/>
-
+        open={showWeightSheet}
+        onOpenChange={setShowWeightSheet}
+        onSubmit={handleLogWeight}
+        selectedDate={selectedDate}
+        setShowDateSheet={setShowDateSheet}
+        setTempDate={setTempDate}
+        duplicateWarning={duplicateWarning}
+        inputError={inputError}
+        setDuplicateWarning={setDuplicateWarning}
+        setInputError={setInputError}
+      />
 
       <DatePickerSheet
         open={showDateSheet}

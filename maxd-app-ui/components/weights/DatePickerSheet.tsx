@@ -18,7 +18,6 @@ export function DatePickerSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[50]} dismissOnSnapToBottom modal>
-      
       <Sheet.Overlay />
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame bg="$background" p="$4">

@@ -17,11 +17,10 @@ function InnerApp() {
       <PortalProvider>
         <ToastContextProvider>
           <TabTransitionProvider>
-             <AuthProvider>
-            <Slot />
-          </AuthProvider>
+            <AuthProvider>
+              <Slot />
+            </AuthProvider>
           </TabTransitionProvider>
-         
         </ToastContextProvider>
       </PortalProvider>
     </TamaguiProvider>

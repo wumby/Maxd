@@ -21,7 +21,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const systemColorScheme = useColorScheme()
   const systemTheme: Theme = systemColorScheme === 'dark' ? 'dark' : 'light'
 
-  const [theme, setThemeState] = useState<Theme>('light') 
+  const [theme, setThemeState] = useState<Theme>('light')
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>('lb')
 
   useEffect(() => {
@@ -29,9 +29,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       const storedTheme = await SecureStore.getItemAsync('theme')
       const storedWeightUnit = await SecureStore.getItemAsync('weightUnit')
 
-      setThemeState(
-        storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme
-      )
+      setThemeState(storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme)
 
       if (storedWeightUnit === 'kg' || storedWeightUnit === 'lb') {
         setWeightUnitState(storedWeightUnit)

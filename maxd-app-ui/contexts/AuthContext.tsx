@@ -90,16 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateUser = async (newUser: any) => {
-  const cleanedUser: User = {
-    name: newUser.name ?? user?.name ?? '',
-    email: newUser.email ?? user?.email ?? '',
-    goal_mode: newUser.goal_mode ?? user?.goal_mode ?? 'track',
+    const cleanedUser: User = {
+      name: newUser.name ?? user?.name ?? '',
+      email: newUser.email ?? user?.email ?? '',
+      goal_mode: newUser.goal_mode ?? user?.goal_mode ?? 'track',
+    }
+
+    setUser(cleanedUser)
+    await SecureStore.setItemAsync('user', JSON.stringify(cleanedUser))
   }
-
-  setUser(cleanedUser)
-  await SecureStore.setItemAsync('user', JSON.stringify(cleanedUser))
-}
-
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout, authLoaded, updateUser }}>

@@ -62,13 +62,12 @@ const HistoryItem = React.memo(
     }
 
     const getDeltaColor = () => {
-  if (!prev || goalMode === 'track') return '$gray10'
-  if (delta === 0) return '$gray10'
-  if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
-  if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
-  return '$gray10'
-}
-
+      if (!prev || goalMode === 'track') return '$gray10'
+      if (delta === 0) return '$gray10'
+      if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
+      if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
+      return '$gray10'
+    }
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
@@ -97,22 +96,21 @@ const HistoryItem = React.memo(
             </YStack>
 
             {editMode ? (
-  <XStack gap="$5">
-    <Pressable onPress={() => onEdit(item)}>
-      <Edit3 size={20} color={theme.color.val} />
-    </Pressable>
-    <Pressable onPress={() => onDelete(item.id)}>
-      <Trash2 size={20} color="red" />
-    </Pressable>
-  </XStack>
-) : prev ? (
-  <Text color={getDeltaColor()} fontSize="$3">
-    {delta === 0
-      ? '±0'
-      : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
-  </Text>
-) : null}
-
+              <XStack gap="$5">
+                <Pressable onPress={() => onEdit(item)}>
+                  <Edit3 size={20} color={theme.color.val} />
+                </Pressable>
+                <Pressable onPress={() => onDelete(item.id)}>
+                  <Trash2 size={20} color="red" />
+                </Pressable>
+              </XStack>
+            ) : prev ? (
+              <Text color={getDeltaColor()} fontSize="$3">
+                {delta === 0
+                  ? '±0'
+                  : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
+              </Text>
+            ) : null}
           </XStack>
         </Card>
       </Animated.View>
@@ -121,10 +119,9 @@ const HistoryItem = React.memo(
 )
 HistoryItem.displayName = 'HistoryItem'
 
-
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
   const { user } = useAuth()
-const goalMode = user?.goal_mode 
+  const goalMode = user?.goal_mode
 
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
@@ -320,29 +317,28 @@ const goalMode = user?.goal_mode
       </YStack>
 
       <FlatList
-  data={filtered}
-  keyExtractor={item => item.id.toString()}
-  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-  ListEmptyComponent={
-    <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
-      No entries
-    </Text>
-  }
-  renderItem={({ item, index }) => (
-    <HistoryItem
-      item={item}
-      prev={filtered[index + 1]}
-      index={index}
-      editMode={editMode}
-      isDark={isDark}
-      theme={theme}
-      onEdit={handleEditStart}
-      onDelete={confirmDelete}
-      goalMode={goalMode}
-    />
-  )}
-/>
-
+        data={filtered}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+        ListEmptyComponent={
+          <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
+            No entries
+          </Text>
+        }
+        renderItem={({ item, index }) => (
+          <HistoryItem
+            item={item}
+            prev={filtered[index + 1]}
+            index={index}
+            editMode={editMode}
+            isDark={isDark}
+            theme={theme}
+            onEdit={handleEditStart}
+            onDelete={confirmDelete}
+            goalMode={goalMode}
+          />
+        )}
+      />
 
       {/* Edit Modal */}
       <Modal

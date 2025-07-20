@@ -32,7 +32,6 @@ router.post('/', requireAuth, async (req, res) => {
 // Get all saved workouts for the user
 router.get('/', requireAuth, async (req, res) => {
   const userId = (req.user as any).userId
-
   try {
     const result = await db.query(
       `SELECT * FROM saved_workouts

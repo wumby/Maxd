@@ -4,7 +4,6 @@ import { requireAuth } from '../middleware/auth'
 
 const router = Router()
 
-
 router.post('/', requireAuth, async (req, res) => {
   const userId = (req.user as any).userId
   const { title, exercises, created_at } = req.body
@@ -27,8 +26,8 @@ router.post('/', requireAuth, async (req, res) => {
     const workoutCount = parseInt(countRes.rows[0].count)
 
     if (workoutCount >= 3) {
-      res.status(400).json({ error: 'Limit of 3 workouts per day reached' });
-      return ;
+      res.status(400).json({ error: 'Limit of 3 workouts per day reached' })
+      return 
     }
 
     // Insert workout
@@ -54,11 +53,12 @@ router.post('/', requireAuth, async (req, res) => {
         const weight = set.weight !== undefined ? parseFloat(set.weight) : null
         const duration = isFinite(parseInt(set.duration)) ? parseInt(set.duration) : null
         const distance = isFinite(parseFloat(set.distance)) ? parseFloat(set.distance) : null
+        const distanceUnit = set.distance_unit || null
 
         await db.query(
-          `INSERT INTO sets (exercise_id, reps, weight, duration, distance)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [exerciseId, reps, weight, duration, distance]
+          `INSERT INTO sets (exercise_id, user_id, reps, weight, duration, distance, distance_unit)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [exerciseId, userId, reps, weight, duration, distance, distanceUnit]
         )
       }
     }
@@ -69,6 +69,7 @@ router.post('/', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to save workout' })
   }
 })
+
 
 
 

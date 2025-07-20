@@ -45,7 +45,8 @@ export function GoalModeSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[60]} dismissOnSnapToBottom>
-        <Sheet.Handle backgroundColor="$gray6" />
+      <Sheet.Overlay />
+      <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" gap="$4">
         <Text fontSize="$8" fontWeight="700" textAlign="center">
           Edit Goal

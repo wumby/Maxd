@@ -39,7 +39,6 @@ router.get('/me', requireAuth, async (req, res) => {
 router.patch('/me', requireAuth, async (req, res) => {
   const userId = (req.user as any).userId
   const { name, email, goal_mode } = req.body
-
   if (
     goal_mode &&
     !['lose', 'gain', 'track'].includes(goal_mode)
@@ -47,7 +46,6 @@ router.patch('/me', requireAuth, async (req, res) => {
     res.status(400).json({ error: 'Invalid goal_mode' })
     return 
   }
-
   const fields = [
     name && { column: 'name', value: name },
     email && { column: 'email', value: email },
@@ -58,24 +56,20 @@ router.patch('/me', requireAuth, async (req, res) => {
      res.status(400).json({ error: 'No valid fields to update' })
      return 
   }
-
   const setClause = fields
     .map((field, index) => `${field.column} = $${index + 1}`)
     .join(', ')
 
   const values = fields.map(f => f.value)
-
   try {
     const result = await db.query(
       `UPDATE users SET ${setClause} WHERE id = $${fields.length + 1} RETURNING id, name, email, goal_mode`,
       [...values, userId]
     )
-
     if (result.rowCount === 0) {
       res.status(404).json({ error: 'User not found' })
       return 
     }
-
     res.json(result.rows[0])
   } catch (err) {
     console.error(err)

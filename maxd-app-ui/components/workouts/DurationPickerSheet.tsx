@@ -1,5 +1,6 @@
+import { Picker } from '@react-native-picker/picker'
+import { Sheet, YStack, XStack, Button, Text } from 'tamagui'
 import { useState } from 'react'
-import { Sheet, YStack, XStack, ScrollView, Text, Button } from 'tamagui'
 
 export function DurationPickerSheet({
   open,
@@ -7,78 +8,80 @@ export function DurationPickerSheet({
   onConfirm,
 }: {
   open: boolean
-  onOpenChange: (val: boolean) => void
-  onConfirm: (duration: { hours: number; minutes: number; seconds: number }) => void
+  onOpenChange: (open: boolean) => void
+  onConfirm: (totalSeconds: number) => void
 }) {
   const [hours, setHours] = useState(0)
   const [minutes, setMinutes] = useState(0)
   const [seconds, setSeconds] = useState(0)
 
-  const range = (count: number) => Array.from({ length: count }, (_, i) => i)
+  const handleConfirm = () => {
+    const total = hours * 3600 + minutes * 60 + seconds
+    onConfirm(total)
+    onOpenChange(false)
+  }
+
+  const renderPickerItems = (range: number) =>
+    Array.from({ length: range }, (_, i) => <Picker.Item key={i} label={`${i}`} value={i} />)
 
   return (
-    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[60]} dismissOnSnapToBottom>
+    <Sheet
+      modal
+      open={open}
+      onOpenChange={onOpenChange}
+      snapPoints={[60]}
+      dismissOnSnapToBottom
+      disableDrag
+    >
+      <Sheet.Overlay />
       <Sheet.Frame p="$4" bg="$background">
-        <Sheet.Handle />
-
         <YStack gap="$4">
-          <Text fontSize="$6" fontWeight="800" textAlign="center">
+          <Text fontSize="$8" fontWeight="600" textAlign="center">
             Select Duration
           </Text>
 
-          <XStack jc="space-between" gap="$4">
-            {/* Hours */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ height: 150 }}>
-              {range(24).map(h => (
-                <Button
-                  key={h}
-                  chromeless
-                  onPress={() => setHours(h)}
-                  backgroundColor={h === hours ? '$gray5' : 'transparent'}
-                >
-                  {h}h
-                </Button>
-              ))}
-            </ScrollView>
+          <XStack gap="$4" jc="space-between">
+            <YStack flex={1}>
+              <Text fontSize="$4" color="$gray10" textAlign="center">
+                Hours
+              </Text>
+              <Picker
+                selectedValue={hours}
+                onValueChange={val => setHours(val)}
+                style={{ color: 'white', backgroundColor: 'transparent' }}
+              >
+                {renderPickerItems(24)}
+              </Picker>
+            </YStack>
 
-            {/* Minutes */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ height: 150 }}>
-              {range(60).map(m => (
-                <Button
-                  key={m}
-                  chromeless
-                  onPress={() => setMinutes(m)}
-                  backgroundColor={m === minutes ? '$gray5' : 'transparent'}
-                >
-                  {m}m
-                </Button>
-              ))}
-            </ScrollView>
+            <YStack flex={1}>
+              <Text fontSize="$4" color="$gray10" textAlign="center">
+                Minutes
+              </Text>
+              <Picker
+                selectedValue={minutes}
+                onValueChange={val => setMinutes(val)}
+                style={{ color: 'white', backgroundColor: 'transparent' }}
+              >
+                {renderPickerItems(60)}
+              </Picker>
+            </YStack>
 
-            {/* Seconds */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ height: 150 }}>
-              {range(60).map(s => (
-                <Button
-                  key={s}
-                  chromeless
-                  onPress={() => setSeconds(s)}
-                  backgroundColor={s === seconds ? '$gray5' : 'transparent'}
-                >
-                  {s}s
-                </Button>
-              ))}
-            </ScrollView>
+            <YStack flex={1}>
+              <Text fontSize="$4" color="$gray10" textAlign="center">
+                Seconds
+              </Text>
+              <Picker
+                selectedValue={seconds}
+                onValueChange={val => setSeconds(val)}
+                style={{ color: 'white', backgroundColor: 'transparent' }}
+              >
+                {renderPickerItems(60)}
+              </Picker>
+            </YStack>
           </XStack>
 
-          <Button
-            size="$4"
-            onPress={() => {
-              onConfirm({ hours, minutes, seconds })
-              onOpenChange(false)
-            }}
-          >
-            Confirm
-          </Button>
+          <Button onPress={handleConfirm}>Confirm</Button>
         </YStack>
       </Sheet.Frame>
     </Sheet>

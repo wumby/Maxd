@@ -12,7 +12,6 @@ router.post('/signup', async (req, res) => {
     res.status(400).json({ error: 'Missing name, email, or password' })
     return
   }
-
   try {
     const hash = await bcrypt.hash(password, 10)
     const result = await db.query(
@@ -38,7 +37,6 @@ router.post('/login', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
-
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;

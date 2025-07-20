@@ -15,8 +15,8 @@ export const TabTransitionProvider = ({ children }: { children: React.ReactNode 
   const [prevTab, setPrevTab] = useState(0)
 
   const updateTab = (newTab: number) => {
-    setPrevTab(currentTab)       // store current as previous
-    setCurrentTab(newTab)        // then update current
+    setPrevTab(currentTab) // store current as previous
+    setCurrentTab(newTab) // then update current
   }
 
   return (

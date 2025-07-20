@@ -207,7 +207,7 @@ function renderSetLine(type: string, set: any, unit: 'kg' | 'lb') {
       return `${set.reps || '--'} reps`
     case 'cardio': {
       const distance = set.distance || '--'
-      const unitLabel = set.distanceUnit || 'mi'
+      const unitLabel = set.distance_unit || 'mi'
       const duration = formatDuration(set.duration || set.durationSeconds)
       return `${distance} ${unitLabel} in ${duration}`
     }
