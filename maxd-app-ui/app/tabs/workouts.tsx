@@ -1,25 +1,25 @@
-import { useState, useCallback, lazy, Suspense, useEffect, useMemo, useRef } from 'react'
-import { YStack, Text, Button } from 'tamagui'
+import { useState, useCallback, lazy, Suspense, useMemo } from 'react'
+import { YStack, Text, Button, Spinner } from 'tamagui'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { WorkoutCardsBottom } from '@/components/workouts/WorkoutCardsBottom'
-import ExerciseHistory from '@/components/workouts/ExerciseHistory'
 import NewWorkout from '@/components/workouts/NewWorkout'
 
-const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'))
+const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'));
+const ExerciseHistory = lazy(() => import('@/components/workouts/ExerciseHistory'));
 
 export default function WorkoutsTab() {
   const router = useRouter()
   const [workouts, setWorkouts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'new' | 'workouts' | 'exercises' | null>(null)
-  const { token } = useAuth()
-  const [modalVisible, setModalVisible] = useState(false)
+  const { token } = useAuth();
   const params = useLocalSearchParams()
-  const shouldLog = params.log === '1'
 
   const fetchWorkouts = useCallback(async () => {
+    setLoading(true)
     try {
       const res = await fetch(`${API_URL}/workouts`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -28,6 +28,8 @@ export default function WorkoutsTab() {
       setWorkouts(data)
     } catch (err) {
       console.error('Failed to fetch workouts:', err)
+    } finally {
+      setLoading(false)
     }
   }, [token])
 
@@ -46,8 +48,7 @@ export default function WorkoutsTab() {
       fetchWorkouts()
 
       return () => {
-        setModalVisible(false)
-        setViewMode(null) // Ensures reset on blur too
+        setViewMode(null)
       }
     }, [fetchWorkouts])
   )
@@ -62,9 +63,18 @@ export default function WorkoutsTab() {
     )
   }, [workouts])
 
+  if (loading) {
+    return (
+      <ScreenContainer>
+        <YStack f={1} jc="center" ai="center">
+        </YStack>
+      </ScreenContainer>
+    )
+  }
+
   return (
     <>
-      {viewMode === null && (
+      {(viewMode === null && !loading) && (
         <ScreenContainer>
           <YStack f={1} jc="space-evenly" gap="$4">
             <Text>I want my cards here</Text>
@@ -87,17 +97,41 @@ export default function WorkoutsTab() {
           </YStack>
         </ScreenContainer>
       )}
-      {viewMode === 'workouts' && (
-        <Suspense fallback={<Text p="$4">Loading workout history...</Text>}>
-          <WorkoutHistory workouts={workouts} onClose={() => setViewMode(null)} />
-        </Suspense>
-      )}
+
+    {viewMode === 'workouts' && (
+  <ScreenContainer>
+    <Suspense fallback={ <YStack
+      f={1}
+      minHeight="100%"
+      px="$4"
+      bg="$background"
+      jc="center"
+      ai="center"
+    >
+      <Spinner size="large" />
+    </YStack>}>
+      <WorkoutHistory workouts={workouts} onClose={() => setViewMode(null)} />
+    </Suspense>
+  </ScreenContainer>
+)}
+
+
 
       {viewMode === 'exercises' && (
-        <Suspense fallback={<Text p="$4">Loading Exercises history...</Text>}>
+        <Suspense fallback={<YStack
+      f={1}
+      minHeight="100%"
+      px="$4"
+      bg="$background"
+      jc="center"
+      ai="center"
+    >
+      <Spinner size="large" />
+    </YStack>}>
           <ExerciseHistory exercises={flattenedExercises} onClose={() => setViewMode(null)} />
         </Suspense>
       )}
+
       {viewMode === 'new' && (
         <Suspense fallback={<Text p="$4">Loading New Workout...</Text>}>
           <NewWorkout

@@ -260,19 +260,64 @@ export default function NewWorkout({
       }))
     }
   }
+const handleLoadTemplate = (template: any) => {
+  const mappedExercises = template.exercises.map((ex: any) => ({
+    name: ex.name,
+    type: ex.type,
+    sets: ex.sets.map((set: any) => {
+      const rawWeight = set.weight ?? null
+      const displayWeight =
+        weightUnit === 'lb' && rawWeight != null
+          ? Math.round(WeightUtil.kgToLbs(rawWeight))
+          : rawWeight != null
+          ? Math.round(rawWeight)
+          : null
 
-  const handleLoadTemplate = (template: any) => {
-    setTitle(template.title)
-    setExercises(template.exercises)
-    setStep('form')
-    setFeedback('')
-    setExpandedIndex(0)
-  }
+      return {
+        reps: set.reps?.toString() ?? '',
+        weight: displayWeight?.toString() ?? '',
+        duration: set.durationSeconds?.toString?.() ?? '',
+        distance: set.distance?.toString() ?? '',
+        distance_unit: set.distance_unit ?? 'mi',
+      }
+    }),
+  }))
 
-  const handleAddFavoriteExercise = (exercise: any) => {
-    setExercises(prev => [...prev, { ...exercise }])
-    setExpandedIndex(exercises.length)
+  setTitle(template.title)
+  setExercises(mappedExercises)
+  setStep('form')
+  setFeedback('')
+  setExpandedIndex(0)
+}
+
+
+
+const handleAddFavoriteExercise = (exercise: any) => {
+  const mapped = {
+    ...exercise,
+    sets: exercise.sets.map((set: any) => {
+      const rawWeight = set.weight ?? null
+      const displayWeight =
+        weightUnit === 'lb' && rawWeight != null
+          ? Math.round(WeightUtil.kgToLbs(rawWeight))
+          : rawWeight != null
+          ? Math.round(rawWeight)
+          : null
+      return {
+        reps: set.reps?.toString() ?? '',
+        weight: displayWeight?.toString() ?? '',
+        duration: set.durationSeconds?.toString?.() ?? '',
+        distance: set.distance?.toString() ?? '',
+        distance_unit: set.distance_unit ?? 'mi',
+      }
+    }),
   }
+  setExercises(prev => [...prev, mapped])
+  setExpandedIndex(exercises.length)
+}
+
+
+
 
   return (
     <ScreenContainer>
