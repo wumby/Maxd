@@ -1,6 +1,6 @@
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
-import { Card, Input, ScrollView, Text, YStack } from 'tamagui'
+import { Button, Card, Input, ScrollView, Text, XStack, YStack } from 'tamagui'
 
 interface Exercise {
   id?: number
@@ -32,12 +32,12 @@ export function FavoriteExerciseSheet({
       snapPoints={[70]}
       dismissOnSnapToBottom
       zIndex={100000}
+      disableDrag
     >
-      <Sheet.Overlay />
-      <Sheet.Handle backgroundColor="$gray6" />
+      <Sheet.Overlay />=
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
-          <Text fontSize="$6" fontWeight="800" textAlign="center">
+          <Text fontSize="$8" fontWeight="800" textAlign="center">
             Select a Favorite Exercise
           </Text>
 
@@ -49,38 +49,36 @@ export function FavoriteExerciseSheet({
             mb="$3"
           />
 
-          <ScrollView style={{ maxHeight: 300 }}>
-            <YStack gap="$3">
-              {filtered.map((exercise, i) => (
-                <Card
-                  key={i}
-                  elevate
-                  p="$4"
-                  br="$4"
-                  bg="$background"
-                  pressStyle={{ scale: 0.98 }}
-                  onPress={() => {
-                    onSelect(exercise)
-                    onOpenChange(false)
-                  }}
-                >
-                  <YStack>
-                    <Text fontSize="$5" fontWeight="600">
-                      {exercise.name}
-                    </Text>
-                    <Text fontSize="$3" color="$gray10">
-                      {exercise.type}
-                    </Text>
-                  </YStack>
-                </Card>
-              ))}
-              {filtered.length === 0 && (
-                <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
-                  No exercises found
-                </Text>
-              )}
-            </YStack>
-          </ScrollView>
+          <ScrollView>
+  <YStack gap="$3">
+    {filtered.map((exercise, i) => (
+      <Button
+        key={i}
+        size="$5"
+        onPress={() => {
+          onSelect(exercise)
+          onOpenChange(false)
+        }}
+        px="$4"
+        py="$3"
+        br="$4"
+      >
+        <XStack ai="center" jc="center" gap="$2" w="100%">
+          <Text fontSize="$5" fontWeight="600">
+            {exercise.name}
+          </Text>
+        </XStack>
+      </Button>
+    ))}
+
+    {filtered.length === 0 && (
+      <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
+        No exercises found
+      </Text>
+    )}
+  </YStack>
+</ScrollView>
+
         </YStack>
       </Sheet.Frame>
     </Sheet>

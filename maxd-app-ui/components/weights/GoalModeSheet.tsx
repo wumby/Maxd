@@ -1,8 +1,8 @@
 import { Sheet } from '@tamagui/sheet'
 import { Button, Text, YStack } from 'tamagui'
 import { Alert } from 'react-native'
-import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
+import { updateGoalMode } from '@/services/weightService'
 
 export function GoalModeSheet({
   open,
@@ -15,32 +15,13 @@ export function GoalModeSheet({
 
   const handleSelectGoal = async (mode: 'lose' | 'gain' | 'track') => {
     try {
-      if (!token) {
-        console.warn('No token available')
-        Alert.alert('Error', 'You are not logged in.')
-        return
-      }
-
-      const res = await fetch(`${API_URL}/users/me`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ goal_mode: mode }),
-      })
-
-      const responseText = await res.text()
-      console.log('PATCH /users/me', res.status, responseText)
-
-      if (!res.ok) throw new Error(responseText)
-
-      const updated = JSON.parse(responseText)
+      if (!token) throw new Error('You are not logged in.')
+      const updated = await updateGoalMode(token, mode)
       await updateUser(updated)
       onOpenChange(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating goal_mode:', err)
-      Alert.alert('Error', 'Could not update goal.')
+      Alert.alert('Error', err.message || 'Could not update goal.')
     }
   }
 

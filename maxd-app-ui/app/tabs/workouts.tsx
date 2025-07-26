@@ -1,11 +1,11 @@
 import { useState, useCallback, lazy, Suspense, useMemo } from 'react'
 import { YStack, Text, Button, Spinner } from 'tamagui'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { WorkoutCardsBottom } from '@/components/workouts/WorkoutCardsBottom'
 import NewWorkout from '@/components/workouts/NewWorkout'
+import { fetchWorkouts } from '@/services/workoutService'
 
 const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'));
 const ExerciseHistory = lazy(() => import('@/components/workouts/ExerciseHistory'));
@@ -18,20 +18,17 @@ export default function WorkoutsTab() {
   const { token } = useAuth();
   const params = useLocalSearchParams()
 
-  const fetchWorkouts = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/workouts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      setWorkouts(data)
-    } catch (err) {
-      console.error('Failed to fetch workouts:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
+const fetchData = useCallback(async () => {
+  setLoading(true)
+  try {
+    const data = await fetchWorkouts(token!)
+    setWorkouts(data)
+  } catch (err) {
+    console.error('Failed to fetch workouts:', err)
+  } finally {
+    setLoading(false)
+  }
+}, [token])
 
   useFocusEffect(
     useCallback(() => {
@@ -42,26 +39,32 @@ export default function WorkoutsTab() {
     }, [params?.log])
   )
 
-  useFocusEffect(
-    useCallback(() => {
-      setViewMode(null)
-      fetchWorkouts()
+ useFocusEffect(
+  useCallback(() => {
+    setViewMode(null)
+    fetchData()
 
-      return () => {
-        setViewMode(null)
-      }
-    }, [fetchWorkouts])
-  )
+    return () => {
+      setViewMode(null)
+    }
+  }, [fetchData])
+)
+
 
   const lastWorkout = workouts[0]
-  const flattenedExercises = useMemo(() => {
-    return workouts.flatMap(w =>
-      (w.exercises || []).map((ex: any) => ({
-        ...ex,
-        created_at: w.created_at,
-      }))
-    )
-  }, [workouts])
+const flattenedExercises = useMemo(() => {
+  return workouts.flatMap(w =>
+    (w.exercises || []).map((ex: any) => ({
+      id: ex.id,
+      name: ex.name,
+      type: ex.type,
+      sets: ex.sets,
+      created_at: w.created_at,
+    }))
+  )
+}, [workouts])
+
+
 
   if (loading) {
     return (
@@ -110,7 +113,7 @@ export default function WorkoutsTab() {
     >
       <Spinner size="large" />
     </YStack>}>
-      <WorkoutHistory workouts={workouts} onClose={() => setViewMode(null)} />
+      <WorkoutHistory workouts={workouts} onClose={() => setViewMode(null)} setWorkouts={setWorkouts} />
     </Suspense>
   </ScreenContainer>
 )}
@@ -128,7 +131,12 @@ export default function WorkoutsTab() {
     >
       <Spinner size="large" />
     </YStack>}>
-          <ExerciseHistory exercises={flattenedExercises} onClose={() => setViewMode(null)} />
+          <ExerciseHistory
+  exercises={flattenedExercises}
+  onClose={() => setViewMode(null)}
+  setWorkouts={setWorkouts}
+/>
+
         </Suspense>
       )}
 
@@ -138,7 +146,7 @@ export default function WorkoutsTab() {
             onCancel={() => setViewMode(null)}
             onSubmit={() => {
               setViewMode(null)
-              fetchWorkouts()
+              fetchData()
             }}
           />
         </Suspense>

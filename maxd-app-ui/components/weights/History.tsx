@@ -10,6 +10,7 @@ import { YearFilterItem } from './YearFilterItem'
 import { useToast } from '@/contexts/ToastContextProvider'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
+import { deleteWeightEntry, updateWeightEntry } from '@/services/weightService'
 
 interface WeightEntry {
   id: number
@@ -72,47 +73,47 @@ const HistoryItem = React.memo(
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
         <Card
-          p="$3"
-          mb="$2"
-          elevate
-          bordered
-          bg="$background"
-          borderRadius={0}
-          width={screenWidth - 32}
-        >
-          <XStack jc="space-between" ai="center">
-            <YStack>
-              <Text fontSize="$5" fontWeight="600" color="$color">
-                {convertWeight(item.value)} {weightUnit}
-              </Text>
-              <Text fontSize="$2" color="$gray10">
-                {new Date(item.created_at).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </Text>
-            </YStack>
+  p="$4"
+  mb="$4"
+  elevate
+  bg="$color2"
+  br="$6"
+  width={screenWidth - 32}
+>
+  <XStack jc="space-between" ai="center">
+    <YStack>
+      <Text fontSize="$6" fontWeight="700" color="$color">
+        {convertWeight(item.value)} {weightUnit}
+      </Text>
+      <Text fontSize="$3" color="$gray10">
+        {new Date(item.created_at).toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })}
+      </Text>
+    </YStack>
 
-            {editMode ? (
-              <XStack gap="$5">
-                <Pressable onPress={() => onEdit(item)}>
-                  <Edit3 size={20} color={theme.color.val} />
-                </Pressable>
-                <Pressable onPress={() => onDelete(item.id)}>
-                  <Trash2 size={20} color="red" />
-                </Pressable>
-              </XStack>
-            ) : prev ? (
-              <Text color={getDeltaColor()} fontSize="$3">
-                {delta === 0
-                  ? '±0'
-                  : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
-              </Text>
-            ) : null}
-          </XStack>
-        </Card>
+    {editMode ? (
+      <XStack gap="$5">
+        <Pressable onPress={() => onEdit(item)}>
+          <Edit3 size={20} color={theme.color.val} />
+        </Pressable>
+        <Pressable onPress={() => onDelete(item.id)}>
+          <Trash2 size={20} color="red" />
+        </Pressable>
+      </XStack>
+    ) : prev ? (
+      <Text color={getDeltaColor()} fontSize="$3">
+        {delta === 0
+          ? '±0'
+          : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
+      </Text>
+    ) : null}
+  </XStack>
+</Card>
+
       </Animated.View>
     )
   }
@@ -174,10 +175,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
 
   const handleDelete = async (id: number) => {
     try {
-      await fetch(`${API_URL}/weights/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await deleteWeightEntry(token!, id)
       setWeights(prev => prev.filter(w => w.id !== id))
       showToast('Weight successfully deleted!')
     } catch (err) {
@@ -198,25 +196,12 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
     setEditInput(inputVal)
   }
 
-  const handleEditSave = async () => {
+   const handleEditSave = async () => {
     if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
-
     const parsedValue = Number(editInput)
     const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsedValue) : parsedValue
-
     try {
-      const res = await fetch(`${API_URL}/weights/${editingWeight.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ value: valueInKg }),
-      })
-
-      const updated = await res.json()
-      if (!res.ok) throw new Error(updated.error || 'Failed to update')
-
+      const updated = await updateWeightEntry(token!, editingWeight.id, valueInKg)
       setWeights(prev =>
         prev.map(w =>
           w.id === editingWeight.id

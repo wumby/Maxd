@@ -67,3 +67,27 @@ export async function createSavedExercise(
   if (!res.ok) throw new Error('Failed to save favorite exercise')
   return await res.json()
 }
+
+export async function deleteWorkout(token: string | null, id: number) {
+  if (!token) throw new Error('No token provided')
+
+  const res = await fetch(`${API_URL}/workouts/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) throw new Error('Failed to delete workout')
+}
+
+export async function fetchWorkouts(token: string) {
+  const res = await fetch(`${API_URL}/workouts`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch workouts')
+  return await res.json()
+}

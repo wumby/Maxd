@@ -5,39 +5,42 @@ import {
   ScrollView,
   XStack,
   Card,
-  Separator,
   Button,
-  Sheet,
   useTheme,
   useThemeName,
 } from 'tamagui'
-import { ChevronDown, ChevronUp, ChevronLeft, Filter } from '@tamagui/lucide-icons'
-import { Pressable } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScreenContainer } from '../ScreenContainer'
+import { ChevronLeft, ChevronDown, Trash2 } from '@tamagui/lucide-icons'
+import { Pressable, Modal, View } from 'react-native'
 import { YearFilterItem } from '../weights/YearFilterItem'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
-
+import Animated, { FadeInUp } from 'react-native-reanimated'
+import { ScreenContainer } from '../ScreenContainer'
+import { ExerciseFilterSheet } from './ExerciseFilterSheet'
+import { deleteExercise } from '@/services/exerciseService'
+import { useAuth } from '@/contexts/AuthContext'
 export default function ExerciseHistory({
   exercises,
   onClose,
+  setWorkouts,
 }: {
   exercises: any[]
   onClose: () => void
-}) {
+  setWorkouts: React.Dispatch<React.SetStateAction<any[]>>
+})
+{
   const { weightUnit } = usePreferences()
-  const [expanded, setExpanded] = useState<number | null>(null)
   const theme = useTheme()
   const isDark = useThemeName() === 'dark'
-  const insets = useSafeAreaInsets()
-  const bgColor = theme.background.val
+  const { token } = useAuth()
 
   const currentYear = new Date().getFullYear().toString()
   const [filterYear, setFilterYear] = useState<'All Years' | string>(currentYear)
   const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
   const [filterExercise, setFilterExercise] = useState<string | null>(null)
   const [showSheet, setShowSheet] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [confirmId, setConfirmId] = useState<number | null>(null)
 
   const years = useMemo(() => {
     const uniqueYears = new Set(exercises.map(e => new Date(e.created_at).getFullYear()))
@@ -75,22 +78,26 @@ export default function ExerciseHistory({
     })
   }, [exercises, filterYear, rangeCutoff, filterExercise])
 
-  const toggleExpand = (index: number) => {
-    setExpanded(expanded === index ? null : index)
+
+const handleDeleteExercise = async (exerciseId: number) => {
+  try {
+    await deleteExercise(token, exerciseId)
+    setWorkouts(prev =>
+      prev.map(workout => ({
+        ...workout,
+        exercises: workout.exercises.filter((ex: any) => ex.id !== exerciseId),
+      }))
+    )
+    setConfirmId(null)
+  } catch (err) {
+    console.error('Failed to delete exercise:', err)
   }
+}
+
+
 
   return (
-    <YStack
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      zIndex={100}
-      bg={bgColor}
-      paddingTop={insets.top}
-    >
-      {/* Header */}
+    <ScreenContainer>
       <YStack px="$4" pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
@@ -102,17 +109,24 @@ export default function ExerciseHistory({
             </XStack>
           </Pressable>
 
-          <Button size="$2" onPress={() => setShowSheet(true)} icon={Filter}>
-            Filter
+          <Button fontSize="$5" size="$2" onPress={() => setEditMode(prev => !prev)} chromeless>
+            {editMode ? 'Done' : 'Edit'}
           </Button>
         </XStack>
 
-        <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
-          Exercises
-        </Text>
+        <Animated.View entering={FadeInUp.duration(300)}>
+          <Pressable onPress={() => setShowSheet(true)}>
+            <XStack jc="center" ai="center" gap="$2">
+              <Text fontSize="$9" fontWeight="900" ta="center" color="$color">
+                {filterExercise || 'Exercises'}
+              </Text>
+              <ChevronDown size={20} color={theme.color.val} />
+            </XStack>
+          </Pressable>
+        </Animated.View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <XStack gap="$2" mb="$3" px="$4">
+          <XStack gap="$2" my="$3" px="$4">
             {['All Years', ...years.map(String)].map(val => (
               <YearFilterItem
                 key={val}
@@ -151,63 +165,83 @@ export default function ExerciseHistory({
       </YStack>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap="$4" pb="$8" px="$4">
+        <YStack gap="$4" pb="$8">
           {filtered.map((ex, i) => {
-            const isOpen = expanded === i
             const date = new Date(ex.created_at).toLocaleDateString()
-
             return (
-              <Card key={i} elevate bg="$color2" p="$4" gap="$3" br="$6">
-                <YStack>
-                  <Text fontSize="$6" fontWeight="700">
-                    {ex.name}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {date}
-                  </Text>
-                </YStack>
+              <Animated.View key={i} entering={FadeInUp.duration(300).delay(i * 40)}>
+                <Card elevate bg="$color2" p="$4" gap="$3" br="$6">
+                  <XStack jc="space-between" ai="center">
+                    <YStack>
+                      <Text fontSize="$6" fontWeight="700">
+                        {ex.name}
+                      </Text>
+                      <Text fontSize="$3" color="$gray10">
+                        {date}
+                      </Text>
+                    </YStack>
+                    {editMode && (
+                      <Pressable onPress={() => setConfirmId(ex.id)}>
+                        <Trash2 size={18} color="red" />
+                      </Pressable>
+                    )}
+                  </XStack>
 
-                <YStack mt="$3" gap="$2">
-                  {ex.sets?.map((set: any, j: number) => (
-                    <Text key={j} fontSize="$4" color="$gray10">
-                      {renderSetLine(ex.type, set, weightUnit)}
-                    </Text>
-                  ))}
-                </YStack>
-              </Card>
+                  <YStack mt="$3" gap="$2">
+                    {ex.sets?.map((set: any, j: number) => (
+                      <Text key={j} fontSize="$4" color="$gray10">
+                        {renderSetLine(ex.type, set, weightUnit)}
+                      </Text>
+                    ))}
+                  </YStack>
+                </Card>
+              </Animated.View>
             )
           })}
         </YStack>
       </ScrollView>
 
-      {/* Exercise Filter Sheet */}
-      <Sheet open={showSheet} onOpenChange={setShowSheet} snapPoints={[50]}>
-        <Sheet.Frame>
-          <Sheet.Handle />
-          <YStack gap="$3" p="$4">
-            <Text fontSize="$6" fontWeight="700">
-              Filter by Exercise
+      <ExerciseFilterSheet
+        open={showSheet}
+        onOpenChange={setShowSheet}
+        selectedExercise={filterExercise}
+        onSelect={setFilterExercise}
+        exerciseNames={exerciseNames}
+      />
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={confirmId !== null}
+        onRequestClose={() => setConfirmId(null)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}
+        >
+          <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
+            <Text fontSize="$6" fontWeight="700" color="$color">
+              Delete Exercise
             </Text>
-            <Button size="$3" chromeless onPress={() => setFilterExercise(null)}>
-              All Exercises
-            </Button>
-            {exerciseNames.map(name => (
-              <Button
-                key={name}
-                size="$3"
-                chromeless
-                onPress={() => {
-                  setFilterExercise(name)
-                  setShowSheet(false)
-                }}
-              >
-                {name}
+            <Text color="$gray10">Are you sure you want to delete this exercise?</Text>
+            <XStack gap="$2">
+              <Button flex={1} onPress={() => setConfirmId(null)}>
+                Cancel
               </Button>
-            ))}
+             <Button theme="active" flex={1} onPress={() => handleDeleteExercise(confirmId!)}>
+  Delete
+</Button>
+
+            </XStack>
           </YStack>
-        </Sheet.Frame>
-      </Sheet>
-    </YStack>
+        </View>
+      </Modal>
+    </ScreenContainer>
   )
 }
 
@@ -237,8 +271,13 @@ function renderSetLine(type: string, set: any, unit: 'kg' | 'lb') {
 }
 
 function formatDuration(seconds?: number) {
-  if (!seconds) return '--'
-  const m = Math.floor(seconds / 60)
+  if (!seconds || isNaN(seconds)) return '--'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60
-  return `${m}m ${s}s`
+  const parts = []
+  if (h) parts.push(`${h}h`)
+  if (m) parts.push(`${m}m`)
+  if (!h && !m) parts.push(`${s}s`)
+  return parts.join(' ')
 }

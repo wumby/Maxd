@@ -1,6 +1,6 @@
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
-import { Card, Input, ScrollView, Text, YStack } from 'tamagui'
+import { Button, Card, Input, ScrollView, Text, XStack, YStack } from 'tamagui'
 
 interface FavoriteWorkout {
   id?: number
@@ -37,7 +37,7 @@ export function FavoriteWorkoutSheet({
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
-          <Text fontSize="$6" fontWeight="800" textAlign="center">
+          <Text fontSize="$8" fontWeight="800" textAlign="center">
             Select a Favorite Workout
           </Text>
 
@@ -49,40 +49,38 @@ export function FavoriteWorkoutSheet({
             mb="$3"
           />
 
-          <ScrollView style={{ maxHeight: 300 }}>
-            <YStack gap="$3">
-              {filtered.map((workout, i) => (
-                <Card
-                  key={i}
-                  elevate
-                  p="$4"
-                  br="$4"
-                  bg="$background"
-                  pressStyle={{ scale: 0.98 }}
-                  onPress={() => {
-                    onSelect(workout)
-                    onOpenChange(false)
-                  }}
-                >
-                  <YStack>
-                    <Text fontSize="$5" fontWeight="600">
-                      {workout.title}
-                    </Text>
-                    {workout.created_at && (
-                      <Text fontSize="$3" color="$gray10">
-                        {new Date(workout.created_at).toLocaleDateString()}
-                      </Text>
-                    )}
-                  </YStack>
-                </Card>
-              ))}
-              {filtered.length === 0 && (
-                <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
-                  No workouts found
-                </Text>
-              )}
-            </YStack>
-          </ScrollView>
+          <ScrollView>
+  <YStack gap="$3">
+    {filtered.map((workout, i) => (
+   <Button
+  key={i}
+  size="$5"
+  onPress={() => {
+    onSelect(workout)
+    onOpenChange(false)
+  }}
+  px="$4"
+  py="$3"
+  br="$4"
+>
+  <XStack ai="center" jc="center" gap="$2" w="100%">
+    <Text fontSize="$5" fontWeight="600">
+      {workout.title}
+    </Text>
+  </XStack>
+</Button>
+
+
+    ))}
+
+    {filtered.length === 0 && (
+      <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
+        No workouts found
+      </Text>
+    )}
+  </YStack>
+</ScrollView>
+
         </YStack>
       </Sheet.Frame>
     </Sheet>

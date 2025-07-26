@@ -138,7 +138,6 @@ export default function NewWorkout({
         sets: ex.sets.map((set: any) => {
           const raw = parseFloat(set.weight)
           const weightInKg = isNaN(raw) ? null : weightUnit === 'lb' ? WeightUtil.lbsToKg(raw) : raw
-          console.log('distance_unit:', set.distance_unit)
 
           return {
             reps: parseInt(set.reps) || null,

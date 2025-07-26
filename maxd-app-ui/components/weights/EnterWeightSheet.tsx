@@ -1,7 +1,6 @@
 import { Sheet, YStack, XStack, Button, Input, Text } from 'tamagui'
 import { useState } from 'react'
 import { Alert, Keyboard } from 'react-native'
-import { X } from '@tamagui/lucide-icons'
 
 export function EnterWeightSheet({
   open,
@@ -10,9 +9,7 @@ export function EnterWeightSheet({
   selectedDate,
   setShowDateSheet,
   setTempDate,
-  duplicateWarning,
   inputError,
-  setDuplicateWarning,
   setInputError,
 }: {
   open: boolean
@@ -21,22 +18,20 @@ export function EnterWeightSheet({
   selectedDate: Date
   setShowDateSheet: (val: boolean) => void
   setTempDate: (val: Date) => void
-  duplicateWarning: boolean
   inputError: string
-  setDuplicateWarning: (val: boolean) => void
   setInputError: (msg: string) => void
 }) {
   const [weight, setWeight] = useState('')
-
   const handleSubmit = () => {
-    if (!weight.trim()) {
-      Alert.alert('Validation', 'Please enter a weight.')
-      return
-    }
-
-    onSubmit(weight)
-    onOpenChange(false)
+  if (!weight.trim()) {
+    setInputError('Please enter a weight.')
+    return
   }
+
+  // Let the parent handle submission and validation
+  onSubmit(weight)
+}
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[85]} dismissOnSnapToBottom modal>
@@ -58,7 +53,6 @@ export function EnterWeightSheet({
               value={weight}
               onChangeText={val => {
                 setWeight(val)
-                setDuplicateWarning(false)
                 setInputError('')
               }}
               returnKeyType="done"
@@ -81,7 +75,6 @@ export function EnterWeightSheet({
                 Keyboard.dismiss()
                 setTempDate(selectedDate)
                 setShowDateSheet(true)
-                setDuplicateWarning(false)
                 setInputError('')
               }}
             >
@@ -98,12 +91,6 @@ export function EnterWeightSheet({
           {inputError !== '' && (
             <Text color="$red10" textAlign="center" fontSize="$4">
               {inputError}
-            </Text>
-          )}
-
-          {duplicateWarning && (
-            <Text color="$red10" textAlign="center" fontSize="$4">
-              You’ve already logged a weight for this day!
             </Text>
           )}
 

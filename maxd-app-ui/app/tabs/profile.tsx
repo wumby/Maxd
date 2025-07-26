@@ -3,9 +3,9 @@ import { YStack, Text, Button, Card, Separator, XStack, Switch, Input } from 'ta
 import React, { useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { LogOut, Trash2 } from '@tamagui/lucide-icons'
-import { API_URL } from '@/env'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
+import { deleteUserProfile, updateUserProfile } from '@/services/userService'
 
 export default function ProfileTab() {
   const { user, token, logout, updateUser } = useAuth()
@@ -22,35 +22,24 @@ export default function ProfileTab() {
     }
   }, [editMode, user])
 
-  const handleSave = async () => {
-    if (!name.trim() || !email.trim()) {
-      Alert.alert('Validation', 'Name and email cannot be empty.')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const res = await fetch(`${API_URL}/users/me`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name, email }),
-      })
-
-      if (!res.ok) throw new Error('Failed to update profile')
-
-      const updatedUser = await res.json()
-      await updateUser(updatedUser)
-      setEditMode(false)
-    } catch (err) {
-      console.error(err)
-      Alert.alert('Error', 'Could not update profile.')
-    } finally {
-      setLoading(false)
-    }
+ const handleSave = async () => {
+  if (!name.trim() || !email.trim()) {
+    Alert.alert('Validation', 'Name and email cannot be empty.')
+    return
   }
+
+  try {
+    setLoading(true)
+    const updatedUser = await updateUserProfile(token!, name, email)
+    await updateUser(updatedUser)
+    setEditMode(false)
+  } catch (err) {
+    console.error(err)
+    Alert.alert('Error', 'Could not update profile.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   const handleDelete = () => {
     Alert.alert('Delete Profile', 'Are you sure you want to permanently delete your account?', [
@@ -59,20 +48,15 @@ export default function ProfileTab() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          try {
-            const res = await fetch(`${API_URL}/users/me`, {
-              method: 'DELETE',
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            })
-            if (!res.ok) throw new Error('Failed to delete account')
-            logout()
-          } catch (err) {
-            console.error(err)
-            Alert.alert('Error', 'Could not delete account.')
-          }
-        },
+  try {
+    await deleteUserProfile(token!)
+    logout()
+  } catch (err) {
+    console.error(err)
+    Alert.alert('Error', 'Could not delete account.')
+  }
+}
+
       },
     ])
   }

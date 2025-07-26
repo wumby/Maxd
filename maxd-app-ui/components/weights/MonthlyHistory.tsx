@@ -60,12 +60,12 @@ export default function MonthlySummary({
 
     filtered.forEach(({ created_at, value }) => {
       const date = new Date(created_at)
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` // e.g., "2025-06"
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(Number(value))
     })
 
-    const keys = Array.from(map.keys()).sort((a, b) => b.localeCompare(a)) // descending
+    const keys = Array.from(map.keys()).sort((a, b) => b.localeCompare(a))
 
     return keys.map(key => {
       const [year, month] = key.split('-').map(Number)
@@ -73,7 +73,7 @@ export default function MonthlySummary({
       const average = values.reduce((sum, v) => sum + v, 0) / values.length
       return {
         year,
-        month: month - 1, // JS Date uses 0-based months
+        month: month - 1,
         average,
         count: values.length,
       }
@@ -185,20 +185,20 @@ export default function MonthlySummary({
                 entering={FadeInUp.duration(300).delay(index * 40)}
               >
                 <Card
-                  p="$3"
-                  mb="$2"
                   elevate
-                  bordered
-                  bg="$background"
-                  borderRadius={0}
+                  bg="$color2"
+                  p="$4"
+                  gap="$3"
+                  br="$6"
+                  mb="$4"
                   width={SCREEN_WIDTH - 32}
                 >
                   <XStack jc="space-between" ai="center">
                     <YStack>
-                      <Text fontSize="$5" fontWeight="700" color="$color">
+                      <Text fontSize="$6" fontWeight="700">
                         {convertWeight(entry.average)} {weightUnit}
                       </Text>
-                      <Text fontSize="$2" color="$gray10">
+                      <Text fontSize="$3" color="$gray10">
                         {formatMonth(entry.year, entry.month)} • {entry.count} weight
                         {entry.count > 1 ? 's' : ''}
                       </Text>

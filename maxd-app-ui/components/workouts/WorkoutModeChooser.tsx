@@ -22,7 +22,10 @@ export function WorkoutModeChooser({
           iconAfter={false}
           onPress={onChooseNew}
         >
+          <Text>
+
           New
+          </Text>
         </Button>
         <Button
           size="$5"
@@ -32,7 +35,8 @@ export function WorkoutModeChooser({
           iconAfter={false}
           onPress={onChooseFavorite}
         >
-          Favorite
+          <Text>
+          Favorite</Text>
         </Button>
       </XStack>
 

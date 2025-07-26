@@ -7,6 +7,7 @@ import workoutRoutes from './routes/workouts.routes'
 import userRoutes from './routes/users.routes'
 import savedExercisesRoutes from './routes/savedExercises.routes'
 import savedWorkoutsRoutes from './routes/savedWorkouts.routes'
+import exercisesRoutes from './routes/exercises.routes'
 dotenv.config();
 
 const app = express();
@@ -16,6 +17,7 @@ app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/weights', weightRoutes);
 app.use('/workouts', workoutRoutes);
+app.use('/exercises', exercisesRoutes);
 app.use('/saved-exercises', savedExercisesRoutes)
 app.use('/saved-workouts', savedWorkoutsRoutes)
 const PORT = process.env.PORT || 3001;

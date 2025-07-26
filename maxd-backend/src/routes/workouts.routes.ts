@@ -40,11 +40,12 @@ router.post('/', requireAuth, async (req, res) => {
 
     for (const exercise of exercises) {
       const { name, type = 'weights', sets } = exercise
-
+      
       const exerciseRes = await db.query(
-        'INSERT INTO exercises (workout_id, name, type) VALUES ($1, $2, $3) RETURNING id',
-        [workoutId, name, type]
-      )
+  'INSERT INTO exercises (workout_id, user_id, name, type) VALUES ($1, $2, $3, $4) RETURNING id',
+  [workoutId, userId, name, type]
+)
+
 
       const exerciseId = exerciseRes.rows[0].id
 
@@ -72,14 +73,14 @@ router.post('/', requireAuth, async (req, res) => {
 
 
 
-
 router.get('/', requireAuth, async (req, res) => {
-  const userId = (req.user as any).userId
+  const userId = (req.user as any).userId;
 
   try {
     const result = await db.query(
       `SELECT w.id, w.created_at, w.title,
               json_agg(json_build_object(
+                'id', e.id,
                 'name', e.name,
                 'type', e.type,
                 'sets', (
@@ -87,7 +88,8 @@ router.get('/', requireAuth, async (req, res) => {
                     'reps', s.reps,
                     'weight', s.weight,
                     'duration', s.duration,
-                    'distance', s.distance
+                    'distance', s.distance,
+                    'distance_unit', s.distance_unit
                   ))
                   FROM sets s
                   WHERE s.exercise_id = e.id
@@ -99,14 +101,56 @@ router.get('/', requireAuth, async (req, res) => {
        GROUP BY w.id
        ORDER BY w.created_at DESC`,
       [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching workouts:', err);
+    res.status(500).json({ error: 'Failed to fetch workouts' });
+  }
+});
+
+
+
+router.delete('/:id', requireAuth, async (req, res) => {
+  const userId = (req.user as any).userId
+  const workoutId = parseInt(req.params.id)
+
+  if (isNaN(workoutId)) {
+    res.status(400).json({ error: 'Invalid workout ID' })
+    return 
+  }
+
+  try {
+    // Check if the workout belongs to the user
+    const workoutRes = await db.query(
+      'SELECT id FROM workouts WHERE id = $1 AND user_id = $2',
+      [workoutId, userId]
     )
 
-    res.json(result.rows)
+    if (workoutRes.rowCount === 0) {
+      res.status(404).json({ error: 'Workout not found' })
+      return 
+    }
+
+    // Delete associated sets → exercises → workout
+    await db.query(
+      `DELETE FROM sets WHERE exercise_id IN (
+        SELECT id FROM exercises WHERE workout_id = $1
+      )`,
+      [workoutId]
+    )
+
+    await db.query('DELETE FROM exercises WHERE workout_id = $1', [workoutId])
+    await db.query('DELETE FROM workouts WHERE id = $1 AND user_id = $2', [workoutId, userId])
+
+    res.status(200).json({ message: 'Workout deleted' })
   } catch (err) {
-    console.error('Error fetching workouts:', err)
-    res.status(500).json({ error: 'Failed to fetch workouts' })
+    console.error('Error deleting workout:', err)
+    res.status(500).json({ error: 'Failed to delete workout' })
   }
 })
+
 
 
 

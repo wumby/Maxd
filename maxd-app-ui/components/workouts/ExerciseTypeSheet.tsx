@@ -18,14 +18,14 @@ export function ExerciseTypeSheet({
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
-          <Text fontSize="$6" fontWeight="800" textAlign="center">
+          <Text fontSize="$8" fontWeight="800" textAlign="center">
             Select Exercise Type
           </Text>
 
           {(['weights', 'bodyweight', 'cardio'] as const).map(type => (
             <Button
               key={type}
-              size="$4"
+              size="$5"
               onPress={() => {
                 onSelect(type)
                 onOpenChange(false)

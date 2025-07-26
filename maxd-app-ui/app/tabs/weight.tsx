@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
 import { Button, YStack, Text, XStack, useThemeName } from 'tamagui'
 import { useAuth } from '@/contexts/AuthContext'
-import { API_URL } from '@/env'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { CardsBottom } from '@/components/weights/CardsBottom'
 import { useToast } from '@/contexts/ToastContextProvider'
@@ -13,6 +12,7 @@ import { ScreenContainer } from '@/components/ScreenContainer'
 import { DatePickerSheet } from '@/components/weights/DatePickerSheet'
 import { GoalModeSheet } from '@/components/weights/GoalModeSheet'
 import { EnterWeightSheet } from '@/components/weights/EnterWeightSheet'
+import { fetchWeights, logWeight } from '@/services/weightService'
 
 const History = lazy(() => import('@/components/weights/History'))
 const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
@@ -20,7 +20,6 @@ const ChartWebView = lazy(() => import('@/components/weights/ChartWebView'))
 const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChartWebView'))
 
 export default function WeightTab() {
-  const [duplicateWarning, setDuplicateWarning] = useState(false)
   const { weightUnit } = usePreferences()
   const router = useRouter()
   const { showToast } = useToast()
@@ -38,17 +37,20 @@ export default function WeightTab() {
   const shouldLog = params.log === '1'
   const [inputError, setInputError] = useState('')
 
-  const goalLabel = useMemo(() => {
-    if (!user?.goal_mode) return null
-    switch (user.goal_mode) {
-      case 'lose':
-        return 'Goal: Lose weight'
-      case 'gain':
-        return 'Goal: Gain weight'
-      default:
-        return 'Goal: Just tracking'
-    }
-  }, [user?.goal_mode])
+const goalLabel = useMemo(() => {
+  if (!user) return null
+  const mode = user.goal_mode || 'track'
+  switch (mode) {
+    case 'lose':
+      return 'Goal: Lose weight'
+    case 'gain':
+      return 'Goal: Gain weight'
+    case 'track':
+    default:
+      return 'Goal: Just tracking'
+  }
+}, [user])
+
 
   useEffect(() => {
     if (shouldLog) {
@@ -57,87 +59,56 @@ export default function WeightTab() {
     }
   }, [shouldLog])
 
-  useFocusEffect(
-    useCallback(() => {
-      setViewMode(null)
-      const fetchWeights = async () => {
-        try {
-          const res = await fetch(`${API_URL}/weights`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          const data = await res.json()
-
-          if (res.status === 401 || data.error === 'Invalid or expired token') {
-            console.warn('Token expired, logging out...')
-            router.replace('/login')
-            return
-          }
-
-          if (!Array.isArray(data)) {
-            console.error('Bad weights response:', data)
-            setWeights([])
-            return
-          }
-
-          setWeights(
-            data.map(w => ({
-              ...w,
-              value: typeof w.value === 'string' ? parseFloat(w.value) : w.value,
-            }))
-          )
-        } catch (err) {
+ useFocusEffect(
+  useCallback(() => {
+     if (!token) return 
+    setViewMode(null)
+    const getData = async () => {
+      try {
+        const data = await fetchWeights(token)
+        setWeights(data)
+      } catch (err: any) {
+        if (err.message === 'Invalid or expired token') {
+          router.replace('/login')
+        } else {
           console.error('Error fetching weights:', err)
           setWeights([])
         }
       }
-
-      fetchWeights()
-    }, [token])
-  )
-
-  const handleLogWeight = async (entered: string) => {
-    const rawInput = parseFloat(entered)
-
-    if (isNaN(rawInput) || rawInput <= 0) {
-      showToast('Invalid weight', 'warn')
-      return
     }
+    getData()
+  }, [token])
+)
 
-    const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
-
-    try {
-      const res = await fetch(`${API_URL}/weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          value: weightInKg,
-          date: selectedDate.toISOString(),
-        }),
-      })
-
-      const created = await res.json()
-
-      if (res.status === 409) {
-        showToast('You already logged a weight today', 'warn')
-        return
-      }
-
-      if (!res.ok) throw new Error(created.error || 'Failed to log weight')
-
-      showToast('Weight added!')
-      setWeights(prev =>
-        [...prev, created].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-      )
-    } catch (_e) {
-      showToast('Error logging weight', 'warn')
-    }
+const handleLogWeight = async (entered: string) => {
+   if (!token) return 
+  const rawInput = parseFloat(entered)
+  if (isNaN(rawInput) || rawInput <= 0) {
+    setInputError('Please enter a valid weight')
+    return
   }
 
+  const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
+
+  try {
+    const created = await logWeight({
+      token,
+      weightInKg,
+      date: selectedDate.toISOString(),
+    })
+
+    setShowWeightSheet(false)
+    showToast('Weight added!')
+
+    setWeights(prev =>
+      [...prev, created].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+    )
+  } catch (err: any) {
+    setInputError(err.message || 'Error logging weight')
+  }
+}
   const currentWeight = useMemo(() => {
     if (weights.length === 0) return '--'
     const val = Number(weights[0].value)
@@ -223,12 +194,9 @@ export default function WeightTab() {
         selectedDate={selectedDate}
         setShowDateSheet={setShowDateSheet}
         setTempDate={setTempDate}
-        duplicateWarning={duplicateWarning}
         inputError={inputError}
-        setDuplicateWarning={setDuplicateWarning}
         setInputError={setInputError}
       />
-
       <DatePickerSheet
         open={showDateSheet}
         onOpenChange={setShowDateSheet}
@@ -236,7 +204,6 @@ export default function WeightTab() {
         setTempDate={setTempDate}
         setSelectedDate={setSelectedDate}
       />
-
       <GoalModeSheet open={goalModeSheetVisible} onOpenChange={setGoalModeSheetVisible} />
     </>
   )
