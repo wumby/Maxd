@@ -50,35 +50,34 @@ export function FavoriteExerciseSheet({
           />
 
           <ScrollView>
-  <YStack gap="$3">
-    {filtered.map((exercise, i) => (
-      <Button
-        key={i}
-        size="$5"
-        onPress={() => {
-          onSelect(exercise)
-          onOpenChange(false)
-        }}
-        px="$4"
-        py="$3"
-        br="$4"
-      >
-        <XStack ai="center" jc="center" gap="$2" w="100%">
-          <Text fontSize="$5" fontWeight="600">
-            {exercise.name}
-          </Text>
-        </XStack>
-      </Button>
-    ))}
+            <YStack gap="$3">
+              {filtered.map((exercise, i) => (
+                <Button
+                  key={i}
+                  size="$5"
+                  onPress={() => {
+                    onSelect(exercise)
+                    onOpenChange(false)
+                  }}
+                  px="$4"
+                  py="$3"
+                  br="$4"
+                >
+                  <XStack ai="center" jc="center" gap="$2" w="100%">
+                    <Text fontSize="$5" fontWeight="600">
+                      {exercise.name}
+                    </Text>
+                  </XStack>
+                </Button>
+              ))}
 
-    {filtered.length === 0 && (
-      <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
-        No exercises found
-      </Text>
-    )}
-  </YStack>
-</ScrollView>
-
+              {filtered.length === 0 && (
+                <Text fontSize="$4" color="$gray10" textAlign="center" mt="$2">
+                  No exercises found
+                </Text>
+              )}
+            </YStack>
+          </ScrollView>
         </YStack>
       </Sheet.Frame>
     </Sheet>

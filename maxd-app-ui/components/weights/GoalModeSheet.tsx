@@ -35,16 +35,14 @@ export function GoalModeSheet({
             Select Your Goal
           </Text>
 
-          {([
-            { label: 'Lose Weight', value: 'lose' },
-            { label: 'Gain Weight', value: 'gain' },
-            { label: 'Just Track', value: 'track' },
-          ] as const).map(goal => (
-            <Button
-              key={goal.value}
-              size="$4"
-              onPress={() => handleSelectGoal(goal.value)}
-            >
+          {(
+            [
+              { label: 'Lose Weight', value: 'lose' },
+              { label: 'Gain Weight', value: 'gain' },
+              { label: 'Just Track', value: 'track' },
+            ] as const
+          ).map(goal => (
+            <Button key={goal.value} size="$4" onPress={() => handleSelectGoal(goal.value)}>
               {goal.label}
             </Button>
           ))}

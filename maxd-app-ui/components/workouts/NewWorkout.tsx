@@ -15,7 +15,8 @@ import WeightUtil from '@/util/weightConversion'
 import { Pressable } from 'react-native'
 import { ScreenContainer } from '../ScreenContainer'
 import { FavoriteExerciseSheet } from './FavoriteExerciseSheet'
-import { createWorkout, createSavedWorkout, createSavedExercise } from '@/services/workoutService'
+import { createWorkout } from '@/services/workoutService'
+import { createSavedExercise } from '@/services/savedWorkoutsService'
 
 export default function NewWorkout({
   onCancel,
@@ -186,41 +187,6 @@ export default function NewWorkout({
     }
   }
 
-  const alreadyFavorited = saved.some(
-    w => w.title.toLowerCase().trim() === title.toLowerCase().trim()
-  )
-
-  const handleSaveWorkout = async () => {
-    setFeedback('')
-    if (!title.trim()) {
-      setMissingTitle(true)
-      setFeedback('Workout title is required to save as favorite')
-      return
-    }
-
-    if (alreadyFavorited) {
-      setFeedback('This workout name is already in your favorites')
-      return
-    }
-
-    const payload = buildPayload()
-    if (payload.length === 0) {
-      setFeedback('Add at least one valid exercise to favorite')
-      return
-    }
-
-    try {
-      const newFavorite = await createSavedWorkout(token, {
-        title: title.trim(),
-        exercises: payload,
-      })
-      setSaved(prev => [newFavorite, ...prev])
-    } catch (err) {
-      console.error('Error saving favorite workout', err)
-      setFeedback('Error saving workout to favorites')
-    }
-  }
-
   const handleSaveExercise = async (exercise: any, index: number) => {
     const name = exercise.name.trim()
     const hasValidSet = exercise.sets.some(
@@ -259,64 +225,59 @@ export default function NewWorkout({
       }))
     }
   }
-const handleLoadTemplate = (template: any) => {
-  const mappedExercises = template.exercises.map((ex: any) => ({
-    name: ex.name,
-    type: ex.type,
-    sets: ex.sets.map((set: any) => {
-      const rawWeight = set.weight ?? null
-      const displayWeight =
-        weightUnit === 'lb' && rawWeight != null
-          ? Math.round(WeightUtil.kgToLbs(rawWeight))
-          : rawWeight != null
-          ? Math.round(rawWeight)
-          : null
+  const handleLoadTemplate = (template: any) => {
+    const mappedExercises = template.exercises.map((ex: any) => ({
+      name: ex.name,
+      type: ex.type,
+      sets: ex.sets.map((set: any) => {
+        const rawWeight = set.weight ?? null
+        const displayWeight =
+          weightUnit === 'lb' && rawWeight != null
+            ? Math.round(WeightUtil.kgToLbs(rawWeight))
+            : rawWeight != null
+              ? Math.round(rawWeight)
+              : null
 
-      return {
-        reps: set.reps?.toString() ?? '',
-        weight: displayWeight?.toString() ?? '',
-        duration: set.durationSeconds?.toString?.() ?? '',
-        distance: set.distance?.toString() ?? '',
-        distance_unit: set.distance_unit ?? 'mi',
-      }
-    }),
-  }))
+        return {
+          reps: set.reps?.toString() ?? '',
+          weight: displayWeight?.toString() ?? '',
+          duration: set.duration?.toString?.() ?? '',
+          distance: set.distance?.toString() ?? '',
+          distance_unit: set.distance_unit ?? 'mi',
+        }
+      }),
+    }))
 
-  setTitle(template.title)
-  setExercises(mappedExercises)
-  setStep('form')
-  setFeedback('')
-  setExpandedIndex(0)
-}
-
-
-
-const handleAddFavoriteExercise = (exercise: any) => {
-  const mapped = {
-    ...exercise,
-    sets: exercise.sets.map((set: any) => {
-      const rawWeight = set.weight ?? null
-      const displayWeight =
-        weightUnit === 'lb' && rawWeight != null
-          ? Math.round(WeightUtil.kgToLbs(rawWeight))
-          : rawWeight != null
-          ? Math.round(rawWeight)
-          : null
-      return {
-        reps: set.reps?.toString() ?? '',
-        weight: displayWeight?.toString() ?? '',
-        duration: set.durationSeconds?.toString?.() ?? '',
-        distance: set.distance?.toString() ?? '',
-        distance_unit: set.distance_unit ?? 'mi',
-      }
-    }),
+    setTitle(template.title)
+    setExercises(mappedExercises)
+    setStep('form')
+    setFeedback('')
+    setExpandedIndex(0)
   }
-  setExercises(prev => [...prev, mapped])
-  setExpandedIndex(exercises.length)
-}
 
-
-
+  const handleAddFavoriteExercise = (exercise: any) => {
+    const mapped = {
+      ...exercise,
+      sets: exercise.sets.map((set: any) => {
+        const rawWeight = set.weight ?? null
+        const displayWeight =
+          weightUnit === 'lb' && rawWeight != null
+            ? Math.round(WeightUtil.kgToLbs(rawWeight))
+            : rawWeight != null
+              ? Math.round(rawWeight)
+              : null
+        return {
+          reps: set.reps?.toString() ?? '',
+          weight: displayWeight?.toString() ?? '',
+          duration: set.duration?.toString?.() ?? '',
+          distance: set.distance?.toString() ?? '',
+          distance_unit: set.distance_unit ?? 'mi',
+        }
+      }),
+    }
+    setExercises(prev => [...prev, mapped])
+    setExpandedIndex(exercises.length)
+  }
 
   return (
     <ScreenContainer>
@@ -366,8 +327,6 @@ const handleAddFavoriteExercise = (exercise: any) => {
                 }
               }}
               onReset={resetForm}
-              isFavorited={alreadyFavorited}
-              onFavorite={handleSaveWorkout}
             />
 
             <YStack gap="$6" py="$4">

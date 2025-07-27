@@ -23,15 +23,14 @@ export function EnterWeightSheet({
 }) {
   const [weight, setWeight] = useState('')
   const handleSubmit = () => {
-  if (!weight.trim()) {
-    setInputError('Please enter a weight.')
-    return
+    if (!weight.trim()) {
+      setInputError('Please enter a weight.')
+      return
+    }
+
+    // Let the parent handle submission and validation
+    onSubmit(weight)
   }
-
-  // Let the parent handle submission and validation
-  onSubmit(weight)
-}
-
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[85]} dismissOnSnapToBottom modal>

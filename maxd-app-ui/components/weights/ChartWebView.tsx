@@ -80,93 +80,116 @@ export default function ChartWebView({
     .filter(Boolean)
 
   const chartHtml = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        html, body, #container, canvas {
-          margin: 0;
-          padding: 0;
-          height: 100%;
-          width: 100%;
-          background: ${bgColor};
-        }
-          #container {
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <style>
+      html, body, #container, canvas {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        background: ${bgColor};
+      }
+    #scroll-container {
+  width: 100%;
   height: 100%;
-  overflow: hidden;
-  padding-bottom: 1px; /* hides anti-aliasing artifacts */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: ${bgColor};
 }
-          
-      </style>
-    </head>
-    <body>
-      <div id="container">
-        <canvas id="chart"></canvas>
-      </div>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-      <script>
-        const ctx = document.getElementById('chart').getContext('2d');
-        const data = ${JSON.stringify(safeWeights)};
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            datasets: [{
-              label: 'Weight',
-              data: data,
-              borderColor: '${borderColor}',
-              backgroundColor: '${fillColor}',
-              tension: 0.3,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              fill: true
-            }]
+
+#container {
+  height: 100%;
+  width: max-content;
+  padding-bottom: 1px;
+}
+
+canvas {
+  min-width: ${Math.max(safeWeights.length * 10, 400)}px;
+  max-width: none;
+  height: 100%;
+}
+
+
+    </style>
+  </head>
+  <body>
+    <div id="scroll-container">
+  <div id="container">
+    <canvas id="chart" width="${Math.max(safeWeights.length * 10, 400)}"></canvas>
+  </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script>
+      const ctx = document.getElementById('chart').getContext('2d');
+      const data = ${JSON.stringify(safeWeights)};
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Weight',
+            data: data,
+            borderColor: '${borderColor}',
+            backgroundColor: '${fillColor}',
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+           x: {
+  type: 'time',
+  time: {
+    unit: '${range === 'all' ? 'month' : 'day'}',
+    tooltipFormat: 'MMM d, yyyy',
+    displayFormats: {
+      day: 'MMM d',
+      month: 'MMM',
+    }
+  },
+  ticks: {
+    
+    color: '${textColor}',
+  },
+  grid: { color: '${gridColor}' },
+  title: { display: true, text: 'Date', color: '${textColor}' }
+},
+
+            y: {
+              title: { display: true, text: 'Weight (${weightUnit})', color: '${textColor}' },
+              grid: { color: '${gridColor}' },
+              ticks: { color: '${textColor}' }
+            }
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'day',
-                  tooltipFormat: 'MMM d, yyyy',
-                  displayFormats: { day: 'MMM d' }
-                },
-                ticks: {
-                  autoSkip: true,
-                  maxTicksLimit: 7,
-                  color: '${textColor}'
-                },
-                grid: { color: '${gridColor}' },
-                title: { display: true, text: 'Date', color: '${textColor}' }
-              },
-              y: {
-                title: { display: true, text: 'Weight (${weightUnit})', color: '${textColor}' },
-                grid: { color: '${gridColor}' },
-                ticks: { color: '${textColor}' }
+          plugins: {
+            tooltip: {
+              mode: 'nearest',
+              intersect: false,
+              callbacks: {
+                label: function(ctx) {
+                  const y = ctx.raw.y;
+                  return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
+                }
               }
             },
-            plugins: {
-              tooltip: {
-                mode: 'nearest',
-                intersect: false,
-                callbacks: {
-                  label: function(ctx) {
-                    const y = ctx.raw.y;
-                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
-                  }
-                }
-              },
-              legend: { display: false }
-            }
+            legend: { display: false },
           }
-        });
-      </script>
-    </body>
-  </html>
-  `
+        }
+      });
+    </script>
+  </body>
+</html>
+`
 
   return (
     <YStack

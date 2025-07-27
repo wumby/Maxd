@@ -18,6 +18,7 @@
     "types",
     "global.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "util/seedWeights.js"
   ]
 }

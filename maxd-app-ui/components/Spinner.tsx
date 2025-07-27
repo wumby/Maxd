@@ -8,14 +8,7 @@ export function Spinner() {
   const height = Dimensions.get('window').height
 
   return (
-    <YStack
-      h={height}
-      pt={insets.top}
-      px="$4"
-      bg="$background"
-      jc="center"
-      ai="center"
-    >
+    <YStack h={height} pt={insets.top} px="$4" bg="$background" jc="center" ai="center">
       <TSpinner size="large" />
     </YStack>
   )

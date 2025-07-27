@@ -1,5 +1,4 @@
-import { API_URL } from "@/env"
-
+import { API_URL } from '@/env'
 
 export async function deleteExercise(token: string | null, exerciseId: number) {
   const res = await fetch(`${API_URL}/exercises/${exerciseId}`, {
@@ -7,7 +6,7 @@ export async function deleteExercise(token: string | null, exerciseId: number) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  });
+  })
 
   if (!res.ok) {
     const errorText = await res.text()

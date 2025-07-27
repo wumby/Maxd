@@ -16,30 +16,31 @@ export default function ProfileTab() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    console.log(token)
     if (editMode && user) {
       setName(user.name)
       setEmail(user.email)
     }
   }, [editMode, user])
 
- const handleSave = async () => {
-  if (!name.trim() || !email.trim()) {
-    Alert.alert('Validation', 'Name and email cannot be empty.')
-    return
-  }
+  const handleSave = async () => {
+    if (!name.trim() || !email.trim()) {
+      Alert.alert('Validation', 'Name and email cannot be empty.')
+      return
+    }
 
-  try {
-    setLoading(true)
-    const updatedUser = await updateUserProfile(token!, name, email)
-    await updateUser(updatedUser)
-    setEditMode(false)
-  } catch (err) {
-    console.error(err)
-    Alert.alert('Error', 'Could not update profile.')
-  } finally {
-    setLoading(false)
+    try {
+      setLoading(true)
+      const updatedUser = await updateUserProfile(token!, name, email)
+      await updateUser(updatedUser)
+      setEditMode(false)
+    } catch (err) {
+      console.error(err)
+      Alert.alert('Error', 'Could not update profile.')
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   const handleDelete = () => {
     Alert.alert('Delete Profile', 'Are you sure you want to permanently delete your account?', [
@@ -48,15 +49,14 @@ export default function ProfileTab() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-  try {
-    await deleteUserProfile(token!)
-    logout()
-  } catch (err) {
-    console.error(err)
-    Alert.alert('Error', 'Could not delete account.')
-  }
-}
-
+          try {
+            await deleteUserProfile(token!)
+            logout()
+          } catch (err) {
+            console.error(err)
+            Alert.alert('Error', 'Could not delete account.')
+          }
+        },
       },
     ])
   }

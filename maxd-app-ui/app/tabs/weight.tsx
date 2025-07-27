@@ -37,20 +37,19 @@ export default function WeightTab() {
   const shouldLog = params.log === '1'
   const [inputError, setInputError] = useState('')
 
-const goalLabel = useMemo(() => {
-  if (!user) return null
-  const mode = user.goal_mode || 'track'
-  switch (mode) {
-    case 'lose':
-      return 'Goal: Lose weight'
-    case 'gain':
-      return 'Goal: Gain weight'
-    case 'track':
-    default:
-      return 'Goal: Just tracking'
-  }
-}, [user])
-
+  const goalLabel = useMemo(() => {
+    if (!user) return null
+    const mode = user.goal_mode || 'track'
+    switch (mode) {
+      case 'lose':
+        return 'Goal: Lose weight'
+      case 'gain':
+        return 'Goal: Gain weight'
+      case 'track':
+      default:
+        return 'Goal: Just tracking'
+    }
+  }, [user])
 
   useEffect(() => {
     if (shouldLog) {
@@ -59,56 +58,56 @@ const goalLabel = useMemo(() => {
     }
   }, [shouldLog])
 
- useFocusEffect(
-  useCallback(() => {
-     if (!token) return 
-    setViewMode(null)
-    const getData = async () => {
-      try {
-        const data = await fetchWeights(token)
-        setWeights(data)
-      } catch (err: any) {
-        if (err.message === 'Invalid or expired token') {
-          router.replace('/login')
-        } else {
-          console.error('Error fetching weights:', err)
-          setWeights([])
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return
+      setViewMode(null)
+      const getData = async () => {
+        try {
+          const data = await fetchWeights(token)
+          setWeights(data)
+        } catch (err: any) {
+          if (err.message === 'Invalid or expired token') {
+            router.replace('/login')
+          } else {
+            console.error('Error fetching weights:', err)
+            setWeights([])
+          }
         }
       }
+      getData()
+    }, [token])
+  )
+
+  const handleLogWeight = async (entered: string) => {
+    if (!token) return
+    const rawInput = parseFloat(entered)
+    if (isNaN(rawInput) || rawInput <= 0) {
+      setInputError('Please enter a valid weight')
+      return
     }
-    getData()
-  }, [token])
-)
 
-const handleLogWeight = async (entered: string) => {
-   if (!token) return 
-  const rawInput = parseFloat(entered)
-  if (isNaN(rawInput) || rawInput <= 0) {
-    setInputError('Please enter a valid weight')
-    return
-  }
+    const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
 
-  const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
+    try {
+      const created = await logWeight({
+        token,
+        weightInKg,
+        date: selectedDate.toISOString(),
+      })
 
-  try {
-    const created = await logWeight({
-      token,
-      weightInKg,
-      date: selectedDate.toISOString(),
-    })
+      setShowWeightSheet(false)
+      showToast('Weight added!')
 
-    setShowWeightSheet(false)
-    showToast('Weight added!')
-
-    setWeights(prev =>
-      [...prev, created].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      setWeights(prev =>
+        [...prev, created].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
       )
-    )
-  } catch (err: any) {
-    setInputError(err.message || 'Error logging weight')
+    } catch (err: any) {
+      setInputError(err.message || 'Error logging weight')
+    }
   }
-}
   const currentWeight = useMemo(() => {
     if (weights.length === 0) return '--'
     const val = Number(weights[0].value)

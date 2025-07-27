@@ -55,7 +55,6 @@ export async function logWeight({
   return data
 }
 
-
 export async function updateGoalMode(token: string, goalMode: 'lose' | 'gain' | 'track') {
   if (!token) throw new Error('Missing token')
 

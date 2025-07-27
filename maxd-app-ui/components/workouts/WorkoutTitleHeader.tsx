@@ -5,34 +5,18 @@ export function WorkoutTitleHeader({
   title,
   onChangeTitle,
   onReset,
-  isFavorited,
-  onFavorite,
 }: {
   title: string
   onChangeTitle: (text: string) => void
   onReset: () => void
-  isFavorited: boolean
-  onFavorite: () => void
 }) {
   return (
     <YStack gap="$3">
-      {/* Top row: title preview + favorite + reset */}
+      {/* Top row: title preview + reset */}
       <XStack jc="space-between" ai="center">
-        <XStack ai="center" gap="$2">
-          <Text fontSize="$6" fontWeight="700">
-            {title.trim()}
-          </Text>
-          {title.trim().length > 0 && (
-            <Button
-              chromeless
-              size="$4"
-              icon={() => <Text fontSize="$6">{isFavorited ? '★' : '☆'}</Text>}
-              onPress={onFavorite}
-              disabled={isFavorited}
-              accessibilityLabel="Favorite workout"
-            />
-          )}
-        </XStack>
+        <Text fontSize="$6" fontWeight="700">
+          {title.trim()}
+        </Text>
 
         {title.trim() && (
           <Button chromeless size="$2" onPress={onReset}>

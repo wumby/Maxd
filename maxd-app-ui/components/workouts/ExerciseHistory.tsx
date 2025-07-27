@@ -1,16 +1,7 @@
-import { useMemo, useState } from 'react'
-import {
-  YStack,
-  Text,
-  ScrollView,
-  XStack,
-  Card,
-  Button,
-  useTheme,
-  useThemeName,
-} from 'tamagui'
+import { useMemo, useState, useCallback } from 'react'
+import { YStack, Text, XStack, Card, Button, useTheme, useThemeName } from 'tamagui'
 import { ChevronLeft, ChevronDown, Trash2 } from '@tamagui/lucide-icons'
-import { Pressable, Modal, View } from 'react-native'
+import { Pressable, Modal, View, FlatList, ScrollView } from 'react-native'
 import { YearFilterItem } from '../weights/YearFilterItem'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
@@ -19,6 +10,7 @@ import { ScreenContainer } from '../ScreenContainer'
 import { ExerciseFilterSheet } from './ExerciseFilterSheet'
 import { deleteExercise } from '@/services/exerciseService'
 import { useAuth } from '@/contexts/AuthContext'
+
 export default function ExerciseHistory({
   exercises,
   onClose,
@@ -27,8 +19,7 @@ export default function ExerciseHistory({
   exercises: any[]
   onClose: () => void
   setWorkouts: React.Dispatch<React.SetStateAction<any[]>>
-})
-{
+}) {
   const { weightUnit } = usePreferences()
   const theme = useTheme()
   const isDark = useThemeName() === 'dark'
@@ -78,26 +69,60 @@ export default function ExerciseHistory({
     })
   }, [exercises, filterYear, rangeCutoff, filterExercise])
 
-
-const handleDeleteExercise = async (exerciseId: number) => {
-  try {
-    await deleteExercise(token, exerciseId)
-    setWorkouts(prev =>
-      prev.map(workout => ({
-        ...workout,
-        exercises: workout.exercises.filter((ex: any) => ex.id !== exerciseId),
-      }))
-    )
-    setConfirmId(null)
-  } catch (err) {
-    console.error('Failed to delete exercise:', err)
+  const handleDeleteExercise = async (exerciseId: number) => {
+    try {
+      await deleteExercise(token, exerciseId)
+      setWorkouts(prev =>
+        prev.map(workout => ({
+          ...workout,
+          exercises: workout.exercises.filter((ex: any) => ex.id !== exerciseId),
+        }))
+      )
+      setConfirmId(null)
+    } catch (err) {
+      console.error('Failed to delete exercise:', err)
+    }
   }
-}
 
+  const renderItem = useCallback(
+    ({ item: ex, index }) => {
+      const date = new Date(ex.created_at).toLocaleDateString()
+      return (
+        <Animated.View entering={FadeInUp.duration(300).delay(index * 20)}>
+          <Card elevate bg="$color2" p="$4" gap="$3" br="$6" my="$2">
+            <XStack jc="space-between" ai="center">
+              <YStack>
+                <Text fontSize="$6" fontWeight="700">
+                  {ex.name}
+                </Text>
+                <Text fontSize="$3" color="$gray10">
+                  {date}
+                </Text>
+              </YStack>
+              {editMode && (
+                <Pressable onPress={() => setConfirmId(ex.id)}>
+                  <Trash2 size={18} color="red" />
+                </Pressable>
+              )}
+            </XStack>
 
+            <YStack mt="$3" gap="$2">
+              {ex.sets?.map((set: any, j: number) => (
+                <Text key={j} fontSize="$4" color="$gray10">
+                  {renderSetLine(ex.type, set, weightUnit)}
+                </Text>
+              ))}
+            </YStack>
+          </Card>
+        </Animated.View>
+      )
+    },
+    [editMode, weightUnit]
+  )
 
   return (
     <ScreenContainer>
+      {/* Header */}
       <YStack px="$4" pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
@@ -125,6 +150,7 @@ const handleDeleteExercise = async (exerciseId: number) => {
           </Pressable>
         </Animated.View>
 
+        {/* Filters */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <XStack gap="$2" my="$3" px="$4">
             {['All Years', ...years.map(String)].map(val => (
@@ -164,42 +190,17 @@ const handleDeleteExercise = async (exerciseId: number) => {
         </Text>
       </YStack>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap="$4" pb="$8">
-          {filtered.map((ex, i) => {
-            const date = new Date(ex.created_at).toLocaleDateString()
-            return (
-              <Animated.View key={i} entering={FadeInUp.duration(300).delay(i * 40)}>
-                <Card elevate bg="$color2" p="$4" gap="$3" br="$6">
-                  <XStack jc="space-between" ai="center">
-                    <YStack>
-                      <Text fontSize="$6" fontWeight="700">
-                        {ex.name}
-                      </Text>
-                      <Text fontSize="$3" color="$gray10">
-                        {date}
-                      </Text>
-                    </YStack>
-                    {editMode && (
-                      <Pressable onPress={() => setConfirmId(ex.id)}>
-                        <Trash2 size={18} color="red" />
-                      </Pressable>
-                    )}
-                  </XStack>
-
-                  <YStack mt="$3" gap="$2">
-                    {ex.sets?.map((set: any, j: number) => (
-                      <Text key={j} fontSize="$4" color="$gray10">
-                        {renderSetLine(ex.type, set, weightUnit)}
-                      </Text>
-                    ))}
-                  </YStack>
-                </Card>
-              </Animated.View>
-            )
-          })}
-        </YStack>
-      </ScrollView>
+      {/* FlatList for exercises */}
+      <FlatList
+        data={filtered}
+        keyExtractor={(_, i) => i.toString()}
+        renderItem={renderItem}
+        initialNumToRender={12}
+        removeClippedSubviews
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 64 }}
+        showsVerticalScrollIndicator={false}
+        windowSize={10}
+      />
 
       <ExerciseFilterSheet
         open={showSheet}
@@ -209,6 +210,7 @@ const handleDeleteExercise = async (exerciseId: number) => {
         exerciseNames={exerciseNames}
       />
 
+      {/* Confirm Delete Modal */}
       <Modal
         transparent
         animationType="fade"
@@ -233,10 +235,9 @@ const handleDeleteExercise = async (exerciseId: number) => {
               <Button flex={1} onPress={() => setConfirmId(null)}>
                 Cancel
               </Button>
-             <Button theme="active" flex={1} onPress={() => handleDeleteExercise(confirmId!)}>
-  Delete
-</Button>
-
+              <Button theme="active" flex={1} onPress={() => handleDeleteExercise(confirmId!)}>
+                Delete
+              </Button>
             </XStack>
           </YStack>
         </View>

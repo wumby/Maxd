@@ -46,4 +46,30 @@ router.get('/', requireAuth, async (req, res) => {
   }
 })
 
+// Delete a saved workout by title (case-insensitive)
+router.delete('/:title', requireAuth, async (req, res) => {
+  const userId = (req.user as any).userId
+  const title = decodeURIComponent(req.params.title)
+
+  try {
+    const result = await db.query(
+      `DELETE FROM saved_workouts
+       WHERE user_id = $1 AND LOWER(title) = LOWER($2)
+       RETURNING *`,
+      [userId, title]
+    )
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Saved workout not found' })
+      return 
+    }
+
+    res.status(204).send()
+  } catch (err) {
+    console.error('Failed to delete saved workout', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+
 export default router

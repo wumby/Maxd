@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Edit3, Trash2 } from '@tamagui/lucide-icons'
 import { Pressable, FlatList, Dimensions, Modal, View, ScrollView } from 'react-native'
 import Animated, { FadeInUp } from 'react-native-reanimated'
-import { API_URL } from '@/env'
 import { useAuth } from '@/contexts/AuthContext'
 import { YearFilterItem } from './YearFilterItem'
 import { useToast } from '@/contexts/ToastContextProvider'
@@ -24,7 +23,6 @@ interface HistoryProps {
   weights: WeightEntry[]
   setWeights: React.Dispatch<React.SetStateAction<WeightEntry[]>>
 }
-// [...] all your imports remain the same
 
 const HistoryItem = React.memo(
   ({
@@ -32,7 +30,6 @@ const HistoryItem = React.memo(
     prev,
     index,
     editMode,
-    isDark,
     theme,
     onEdit,
     onDelete,
@@ -42,7 +39,6 @@ const HistoryItem = React.memo(
     prev: WeightEntry | undefined
     index: number
     editMode: boolean
-    isDark: boolean
     theme: ReturnType<typeof useTheme>
     onEdit: (w: WeightEntry) => void
     onDelete: (id: number) => void
@@ -72,48 +68,40 @@ const HistoryItem = React.memo(
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
-        <Card
-  p="$4"
-  mb="$4"
-  elevate
-  bg="$color2"
-  br="$6"
-  width={screenWidth - 32}
->
-  <XStack jc="space-between" ai="center">
-    <YStack>
-      <Text fontSize="$6" fontWeight="700" color="$color">
-        {convertWeight(item.value)} {weightUnit}
-      </Text>
-      <Text fontSize="$3" color="$gray10">
-        {new Date(item.created_at).toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-      </Text>
-    </YStack>
+        <Card p="$4" mb="$4" elevate bg="$color2" br="$6" width={screenWidth - 32}>
+          <XStack jc="space-between" ai="center">
+            <YStack>
+              <Text fontSize="$6" fontWeight="700" color="$color">
+                {convertWeight(item.value)} {weightUnit}
+              </Text>
+              <Text fontSize="$3" color="$gray10">
+                {new Date(item.created_at).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Text>
+            </YStack>
 
-    {editMode ? (
-      <XStack gap="$5">
-        <Pressable onPress={() => onEdit(item)}>
-          <Edit3 size={20} color={theme.color.val} />
-        </Pressable>
-        <Pressable onPress={() => onDelete(item.id)}>
-          <Trash2 size={20} color="red" />
-        </Pressable>
-      </XStack>
-    ) : prev ? (
-      <Text color={getDeltaColor()} fontSize="$3">
-        {delta === 0
-          ? '±0'
-          : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
-      </Text>
-    ) : null}
-  </XStack>
-</Card>
-
+            {editMode ? (
+              <XStack gap="$5">
+                <Pressable onPress={() => onEdit(item)}>
+                  <Edit3 size={20} color={theme.color.val} />
+                </Pressable>
+                <Pressable onPress={() => onDelete(item.id)}>
+                  <Trash2 size={20} color="red" />
+                </Pressable>
+              </XStack>
+            ) : prev ? (
+              <Text color={getDeltaColor()} fontSize="$3">
+                {delta === 0
+                  ? '±0'
+                  : `${delta > 0 ? '+' : '−'}${convertWeight(Math.abs(delta))} ${weightUnit}`}
+              </Text>
+            ) : null}
+          </XStack>
+        </Card>
       </Animated.View>
     )
   }
@@ -123,7 +111,6 @@ HistoryItem.displayName = 'HistoryItem'
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
   const { user } = useAuth()
   const goalMode = user?.goal_mode
-
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
@@ -196,7 +183,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
     setEditInput(inputVal)
   }
 
-   const handleEditSave = async () => {
+  const handleEditSave = async () => {
     if (!editingWeight || editInput.trim() === '' || isNaN(Number(editInput))) return
     const parsedValue = Number(editInput)
     const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsedValue) : parsedValue
@@ -209,7 +196,6 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             : w
         )
       )
-
       setEditingWeight(null)
       setEditInput('')
     } catch (err) {
@@ -316,7 +302,6 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
             prev={filtered[index + 1]}
             index={index}
             editMode={editMode}
-            isDark={isDark}
             theme={theme}
             onEdit={handleEditStart}
             onDelete={confirmDelete}

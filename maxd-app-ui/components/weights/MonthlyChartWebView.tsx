@@ -88,92 +88,112 @@ export default function MonthlyChartWebView({
     })
   }, [filteredWeights, weightUnit])
 
+  const shouldScroll = filter === 'All Years' && range === 'all' && safeWeights.length > 12
+
+  const chartWidth = Math.max(safeWeights.length * 40, 400)
+
   const chartHtml = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        html, body, #container, canvas {
-          margin: 0;
-          padding: 0;
-          height: 100%;
-          width: 100%;
-          background: ${isDark ? '#0D0D0D' : 'white'};
-        }
-          #container {
-  height: 100%;
-  overflow: hidden;
-  padding-bottom: 1px; /* hides anti-aliasing artifacts */
-}
-      </style>
-    </head>
-    <body>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        background: ${isDark ? '#0D0D0D' : 'white'};
+      }
+
+      #scroll-container {
+        width: 100%;
+        height: 100%;
+       overflow-x: ${shouldScroll ? 'auto' : 'hidden'};
+overflow-y: hidden;
+overscroll-behavior-y: contain;
+touch-action: pan-x;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #container {
+        height: 100%;
+        width: ${shouldScroll ? chartWidth + 'px' : '100%'};
+        padding-bottom: 1px;
+      }
+
+      canvas {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll-container">
       <div id="container">
         <canvas id="chart"></canvas>
       </div>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-      <script>
-        const ctx = document.getElementById('chart').getContext('2d');
-        const data = ${JSON.stringify(safeWeights)};
+    </div>
 
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            datasets: [{
-              label: 'Monthly Avg Weight',
-              data: data,
-              borderColor: '${isDark ? '#fff' : '#000'}',
-              backgroundColor: '${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}',
-              tension: 0.3,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'month',
-                  tooltipFormat: 'MMM yyyy',
-                  displayFormats: { month: 'MMM' }
-                },
-                ticks: {
-                  color: '${isDark ? '#aaa' : '#333'}',
-                },
-                grid: { color: '${isDark ? '#333' : '#eee'}' },
-                title: { display: true, text: 'Month', color: '${isDark ? '#fff' : '#000'}' }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script>
+      const ctx = document.getElementById('chart').getContext('2d');
+      const data = ${JSON.stringify(safeWeights)};
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Monthly Avg Weight',
+            data: data,
+            borderColor: '${isDark ? '#fff' : '#000'}',
+            backgroundColor: '${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}',
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'month',
+                tooltipFormat: 'MMM yyyy',
+                displayFormats: { month: 'MMM' }
               },
-              y: {
-                title: { display: true, text: 'Weight (${weightUnit})', color: '${isDark ? '#fff' : '#000'}' },
-                grid: { color: '${isDark ? '#333' : '#eee'}' },
-                ticks: { color: '${isDark ? '#aaa' : '#333'}' }
+              ticks: { color: '${isDark ? '#aaa' : '#333'}' },
+              grid: { color: '${isDark ? '#333' : '#eee'}' },
+              title: { display: true, text: 'Month', color: '${isDark ? '#fff' : '#000'}' }
+            },
+            y: {
+              title: { display: true, text: 'Weight (${weightUnit})', color: '${isDark ? '#fff' : '#000'}' },
+              grid: { color: '${isDark ? '#333' : '#eee'}' },
+              ticks: { color: '${isDark ? '#aaa' : '#333'}' }
+            }
+          },
+          plugins: {
+            tooltip: {
+              mode: 'nearest',
+              intersect: false,
+              callbacks: {
+                label: function(ctx) {
+                  const y = ctx.raw.y;
+                  return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
+                }
               }
             },
-            plugins: {
-              tooltip: {
-                mode: 'nearest',
-                intersect: false,
-                callbacks: {
-                  label: function(ctx) {
-                    const y = ctx.raw.y;
-                    return (typeof y === 'number' ? y.toFixed(1) : y) + ' ${weightUnit}';
-                  }
-                }
-              },
-              legend: { display: false }
-            }
+            legend: { display: false }
           }
-        });
-      </script>
-    </body>
-  </html>
-  `
+        }
+      });
+    </script>
+  </body>
+</html>
+`
 
   return (
     <YStack

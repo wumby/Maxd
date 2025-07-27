@@ -1,14 +1,6 @@
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
-import {
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  XStack,
-  YStack,
-  Separator,
-} from 'tamagui'
+import { Button, Input, ScrollView, Text, XStack, YStack, Separator } from 'tamagui'
 import { X } from '@tamagui/lucide-icons'
 
 export function ExerciseFilterSheet({
@@ -45,26 +37,25 @@ export function ExerciseFilterSheet({
         <YStack gap="$4">
           {/* Header */}
           <XStack position="relative" ai="center" mb="$2" h={40} jc="center">
-  {/* Cancel button absolutely on the left */}
-  <Button
-    chromeless
-    icon={X}
-    onPress={() => onOpenChange(false)}
-    position="absolute"
-    left={0}
-  >
-    Cancel
-  </Button>
+            {/* Cancel button absolutely on the left */}
+            <Button
+              chromeless
+              icon={X}
+              onPress={() => onOpenChange(false)}
+              position="absolute"
+              left={0}
+            >
+              Cancel
+            </Button>
 
-  {/* Centered title */}
-  <Text fontSize="$8" fontWeight="800" textAlign="center">
-    Filter by Exercise
-  </Text>
+            {/* Centered title */}
+            <Text fontSize="$8" fontWeight="800" textAlign="center">
+              Filter by Exercise
+            </Text>
 
-  {/* Spacer on right to balance Cancel button */}
-  <XStack position="absolute" right={0} width={80} />
-</XStack>
-
+            {/* Spacer on right to balance Cancel button */}
+            <XStack position="absolute" right={0} width={80} />
+          </XStack>
 
           <Separator />
 

@@ -73,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const data = await res.json()
-
     await SecureStore.setItemAsync('token', data.token)
     await SecureStore.setItemAsync('user', JSON.stringify(data.user))
 
