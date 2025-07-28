@@ -27,7 +27,7 @@ export function ExerciseFilterSheet({
       modal
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={[70]}
+      snapPoints={[85]}
       dismissOnSnapToBottom
       zIndex={100_000}
       disableDrag

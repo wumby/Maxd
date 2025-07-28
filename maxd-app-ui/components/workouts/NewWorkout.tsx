@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { YStack, Text, XStack, ScrollView, Button } from 'tamagui'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
@@ -15,31 +15,66 @@ import WeightUtil from '@/util/weightConversion'
 import { Pressable } from 'react-native'
 import { ScreenContainer } from '../ScreenContainer'
 import { FavoriteExerciseSheet } from './FavoriteExerciseSheet'
-import { createWorkout } from '@/services/workoutService'
-import { createSavedExercise } from '@/services/savedWorkoutsService'
+import { createWorkout, updateWorkout } from '@/services/workoutService'
 
 export default function NewWorkout({
   onCancel,
   onSubmit,
+  workoutToEdit,
 }: {
   onCancel: () => void
-  onSubmit: () => void
-}) {
+  onSubmit: (updatedWorkout?: any) => void
+  workoutToEdit?: any
+})
+ {
   const [step, setStep] = useState<'choose' | 'form'>('choose')
   const [title, setTitle] = useState('')
   const [, setMissingTitle] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [exercises, setExercises] = useState<any[]>([])
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
-  const [exerciseErrors, setExerciseErrors] = useState<Record<number, string>>({})
   const [workoutDate, setWorkoutDate] = useState(new Date())
   const [showFavoritesSheet, setShowFavoritesSheet] = useState(false)
   const [showExerciseSheet, setShowExerciseSheet] = useState(false)
   const [showTypeSheet, setShowTypeSheet] = useState(false)
-  const { saved, setSaved } = useSavedWorkouts()
-  const { savedExercises, setSavedExercises } = useSavedExercises()
+  const { saved } = useSavedWorkouts()
+  const { savedExercises } = useSavedExercises()
   const { token } = useAuth()
   const { weightUnit } = usePreferences()
+
+  useEffect(() => {
+  if (workoutToEdit) {
+    setTitle(workoutToEdit.title || '')
+    setWorkoutDate(new Date(workoutToEdit.created_at))
+    setStep('form')
+
+    const mappedExercises = workoutToEdit.exercises.map((ex: any) => ({
+      name: ex.name,
+      type: ex.type,
+      sets: ex.sets.map((set: any) => {
+        const rawWeight = set.weight ?? null
+        const displayWeight =
+          weightUnit === 'lb' && rawWeight != null
+            ? Math.round(WeightUtil.kgToLbs(rawWeight))
+            : rawWeight != null
+              ? Math.round(rawWeight)
+              : null
+
+        return {
+          reps: set.reps?.toString() ?? '',
+          weight: displayWeight?.toString() ?? '',
+          duration: set.duration?.toString?.() ?? '',
+          distance: set.distance?.toString() ?? '',
+          distance_unit: set.distance_unit ?? 'mi',
+        }
+      }),
+    }))
+
+    setExercises(mappedExercises)
+    setExpandedIndex(0)
+  }
+}, [workoutToEdit])
+
 
   const resetForm = () => {
     setMissingTitle(false)
@@ -81,11 +116,6 @@ export default function NewWorkout({
       updated[index].name = newName
       return updated
     })
-    setExerciseErrors(prev => {
-      const next = { ...prev }
-      delete next[index]
-      return next
-    })
   }
 
   const handleChangeType = (index: number, newType: string) => {
@@ -123,11 +153,6 @@ export default function NewWorkout({
       updated[exerciseIndex].sets[setIndex][field] = value
       return updated
     })
-    setExerciseErrors(prev => {
-      const next = { ...prev }
-      delete next[exerciseIndex]
-      return next
-    })
   }
 
   const buildPayload = () => {
@@ -154,77 +179,51 @@ export default function NewWorkout({
 
   // In your React Native NewWorkout component where you call createWorkout:
 
-  const handleSubmit = async () => {
-    setFeedback('')
-    if (!title.trim()) {
-      setMissingTitle(true)
-      setFeedback('Workout title is required')
-      return
+const handleSubmit = async () => {
+  setFeedback('')
+
+  if (!title.trim()) {
+    setMissingTitle(true)
+    setFeedback('Workout title is required')
+    return
+  }
+
+  const payload = buildPayload()
+  if (payload.length === 0) {
+    setFeedback('Add at least one valid exercise')
+    return
+  }
+
+  try {
+    const data = {
+      title: title.trim(),
+      created_at: workoutDate.toISOString(),
+      exercises: payload,
     }
 
-    const payload = buildPayload()
-    if (payload.length === 0) {
-      setFeedback('Add at least one valid exercise')
-      return
-    }
-
-    try {
-      await createWorkout(token, {
-        title: title.trim(),
-        created_at: workoutDate.toISOString(),
-        exercises: payload,
-      })
-      resetForm()
+    if (workoutToEdit) {
+      await updateWorkout(token, workoutToEdit.id, data)
+      onSubmit({ ...workoutToEdit, ...data })
+    } else {
+      await createWorkout(token, data)
       onSubmit()
-    } catch (err) {
-      console.error('Workout save failed', err)
+    }
 
-      if (err instanceof Error && err.message.includes('Limit of 3 workouts per day reached')) {
-        setFeedback('You have already logged 3 workouts today.')
-      } else {
-        setFeedback('Error saving workout')
-      }
+    resetForm()
+  } catch (err) {
+    console.error('Workout save failed', err)
+
+    if (
+      err instanceof Error &&
+      err.message.includes('Limit of 3 workouts per day reached')
+    ) {
+      setFeedback('You have already logged 3 workouts today.')
+    } else {
+      setFeedback('Error saving workout')
     }
   }
+}
 
-  const handleSaveExercise = async (exercise: any, index: number) => {
-    const name = exercise.name.trim()
-    const hasValidSet = exercise.sets.some(
-      (set: any) => set.reps || set.weight || set.duration || set.distance
-    )
-
-    if (!name || !hasValidSet) {
-      setExerciseErrors(prev => ({
-        ...prev,
-        [index]: 'Enter a name and at least one set to favorite this exercise.',
-      }))
-      return
-    }
-
-    setExerciseErrors(prev => {
-      const updated = { ...prev }
-      delete updated[index]
-      return updated
-    })
-
-    const alreadyExists = savedExercises.some(ex => ex.name.toLowerCase() === name.toLowerCase())
-    if (alreadyExists) return
-
-    try {
-      const saved = await createSavedExercise(token, {
-        name,
-        type: exercise.type,
-        sets: exercise.sets,
-      })
-      setSavedExercises(prev => [saved, ...prev])
-    } catch (err) {
-      console.error('Error saving exercise', err)
-      setExerciseErrors(prev => ({
-        ...prev,
-        [index]: 'Server error saving this exercise.',
-      }))
-    }
-  }
   const handleLoadTemplate = (template: any) => {
     const mappedExercises = template.exercises.map((ex: any) => ({
       name: ex.name,
@@ -282,22 +281,37 @@ export default function NewWorkout({
   return (
     <ScreenContainer>
       <XStack jc="space-between" ai="center" mb="$3">
-        <Pressable onPress={onCancel} hitSlop={10}>
-          <XStack fd="row" ai="center" gap="$2">
-            <ChevronLeft size={20} />
-            <Text fontSize="$5" fontWeight="600" color="$color">
-              Back
-            </Text>
-          </XStack>
-        </Pressable>
-        <Text />
-      </XStack>
-
-      <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
-        New Workout
+  <Pressable onPress={onCancel} hitSlop={10}>
+    <XStack fd="row" ai="center" gap="$2">
+      <ChevronLeft size={20} />
+      <Text fontSize="$5" fontWeight="600" color="$color">
+        Back
       </Text>
+    </XStack>
+  </Pressable>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+  {!workoutToEdit && (
+    <Button
+      size="$4"
+      chromeless
+      onPress={resetForm}
+      padding={0}
+    >
+      Reset
+    </Button>
+  )}
+</XStack>
+
+
+
+     
+      <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
+  {workoutToEdit ? 'Edit Workout' : 'New Workout'}
+</Text>
+
+
+
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: '$20' }}>
         {step === 'choose' ? (
           <WorkoutModeChooser
             onChooseNew={() => {
@@ -305,7 +319,6 @@ export default function NewWorkout({
               setTitle('')
               setFeedback('')
               setMissingTitle(false)
-              setExerciseErrors({})
               setExpandedIndex(0)
               setStep('form')
             }}
@@ -326,32 +339,27 @@ export default function NewWorkout({
                   setFeedback('')
                 }
               }}
-              onReset={resetForm}
             />
 
             <YStack gap="$6" py="$4">
               {exercises.map((exercise, index) => (
-                <AddExerciseCard
-                  key={index}
-                  index={index}
-                  exercise={exercise}
-                  expanded={expandedIndex === index}
-                  onToggleExpand={toggleExpand}
-                  onChangeName={handleChangeName}
-                  onChangeType={handleChangeType}
-                  onAddSet={handleAddSet}
-                  onRemoveSet={handleRemoveSet}
-                  onChangeSet={handleChangeSet}
-                  onRemove={handleRemoveExercise}
-                  onSave={exercise => handleSaveExercise(exercise, index)}
-                  error={exerciseErrors[index]}
-                  isSaved={savedExercises.some(
-                    ex => ex.name.toLowerCase() === exercise.name.trim().toLowerCase()
-                  )}
-                />
+               <AddExerciseCard
+  key={index}
+  index={index}
+  exercise={exercise}
+  expanded={expandedIndex === index}
+  onToggleExpand={toggleExpand}
+  onChangeName={handleChangeName}
+  onChangeType={handleChangeType}
+  onAddSet={handleAddSet}
+  onRemoveSet={handleRemoveSet}
+  onChangeSet={handleChangeSet}
+  onRemove={handleRemoveExercise}
+/>
+
               ))}
 
-              <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems="center">
+              <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems="center" mt={'$5'}>
                 <Button onPress={() => setShowTypeSheet(true)}>+ New Exercise</Button>
                 <Text>or</Text>
                 <Button onPress={() => setShowExerciseSheet(true)}>★ From Favorites</Button>

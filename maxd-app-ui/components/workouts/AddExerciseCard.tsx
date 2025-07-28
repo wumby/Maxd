@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { YStack, XStack, Text, Button, Input, Separator } from 'tamagui'
-import { Trash2, ChevronDown, Clock } from '@tamagui/lucide-icons'
+import { Trash2, ChevronDown } from '@tamagui/lucide-icons'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
-import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import { DistanceUnitSheet } from './DistanceUnitSheet'
 import { usePreferences } from '@/contexts/PreferencesContext'
-import WeightUtil from '@/util/weightConversion'
 import { DurationPickerSheet } from './DurationPickerSheet'
 
-const EXERCISE_TYPES = ['weights', 'bodyweight', 'cardio'] as const
 const distanceUnitLabels: Record<'mi' | 'km' | 'm' | 'steps', string> = {
   mi: 'Miles',
   km: 'Kilometers',
@@ -28,9 +25,6 @@ export function AddExerciseCard({
   onRemoveSet,
   onChangeSet,
   onRemove,
-  onSave,
-  isSaved,
-  error,
 }: {
   exercise: any
   index: number
@@ -42,9 +36,6 @@ export function AddExerciseCard({
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void
   onChangeSet: (exerciseIndex: number, setIndex: number, field: string, value: string) => void
   onRemove: (index: number) => void
-  onSave: (exercise: any) => void
-  isSaved: boolean
-  error?: string
 }) {
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [showDurationPicker, setShowDurationPicker] = useState(false)
@@ -54,6 +45,7 @@ export function AddExerciseCard({
 
   const rotation = useSharedValue(expanded ? 180 : 0)
   const { weightUnit } = usePreferences()
+
   useEffect(() => {
     rotation.value = withTiming(expanded ? 180 : 0, { duration: 200 })
   }, [expanded])
@@ -80,9 +72,6 @@ export function AddExerciseCard({
             <Text fontWeight="600" fontSize="$6">
               {exercise.name.trim() || 'New Exercise'}
             </Text>
-            <Button chromeless size="$2" onPress={() => onSave(exercise)}>
-              <Text fontSize="$5">{isSaved ? '★' : '☆'}</Text>
-            </Button>
             <Button chromeless size="$3" onPress={() => onToggleExpand(index)}>
               <Animated.View style={animatedChevronStyle}>
                 <ChevronDown size={20} />
@@ -95,12 +84,6 @@ export function AddExerciseCard({
 
         {expanded && (
           <YStack gap="$3">
-            {error && (
-              <Text color="$red10" fontSize="$4">
-                {error}
-              </Text>
-            )}
-
             <XStack gap="$2">
               <YStack flex={2}>
                 <Text fontSize="$2" color="$gray10" pb="$1">
@@ -173,55 +156,53 @@ export function AddExerciseCard({
                       )}
                     </>
                   ) : (
-                    <>
-                      <XStack gap="$4" w="80%" ai="flex-start">
-                        {/* Duration */}
-                        <YStack flex={1} gap="$2">
-                          <Text fontSize="$2" color="$gray10">
-                            Duration
-                          </Text>
-                          <Button
-                            size="$3"
-                            onPress={() => {
-                              setShowDurationPicker(true)
-                              setActiveSetIndex(setIndex)
-                            }}
-                            justifyContent="flex-start"
-                            w="100%"
-                          >
-                            {set.duration ? formatDuration(Number(set.duration)) : 'Pick Duration'}
-                          </Button>
-                        </YStack>
+                    <XStack gap="$4" w="80%" ai="flex-start">
+                      {/* Duration */}
+                      <YStack flex={1} gap="$2">
+                        <Text fontSize="$2" color="$gray10">
+                          Duration
+                        </Text>
+                        <Button
+                          size="$3"
+                          onPress={() => {
+                            setShowDurationPicker(true)
+                            setActiveSetIndex(setIndex)
+                          }}
+                          justifyContent="flex-start"
+                          w="100%"
+                        >
+                          {set.duration ? formatDuration(Number(set.duration)) : 'Pick Duration'}
+                        </Button>
+                      </YStack>
 
-                        {/* Distance */}
-                        <YStack flex={2} gap="$2">
-                          <Text fontSize="$2" color="$gray10">
-                            Distance
-                          </Text>
-                          <Input
-                            keyboardType="numeric"
-                            placeholder="e.g. 2.5"
-                            value={set.distance || ''}
-                            onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
-                            returnKeyType="done"
-                          />
+                      {/* Distance */}
+                      <YStack flex={2} gap="$2">
+                        <Text fontSize="$2" color="$gray10">
+                          Distance
+                        </Text>
+                        <Input
+                          keyboardType="numeric"
+                          placeholder="e.g. 2.5"
+                          value={set.distance || ''}
+                          onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
+                          returnKeyType="done"
+                        />
 
-                          <Button
-                            size="$3"
-                            onPress={() => {
-                              setShowDistanceUnitSheet(true)
-                              setDistanceUnitSetIndex(setIndex)
-                            }}
-                            iconAfter={ChevronDown}
-                            justifyContent="space-between"
-                          >
-                            {distanceUnitLabels[
-                              set.distance_unit as keyof typeof distanceUnitLabels
-                            ] || 'Miles'}
-                          </Button>
-                        </YStack>
-                      </XStack>
-                    </>
+                        <Button
+                          size="$3"
+                          onPress={() => {
+                            setShowDistanceUnitSheet(true)
+                            setDistanceUnitSetIndex(setIndex)
+                          }}
+                          iconAfter={ChevronDown}
+                          justifyContent="space-between"
+                        >
+                          {distanceUnitLabels[
+                            set.distance_unit as keyof typeof distanceUnitLabels
+                          ] || 'Miles'}
+                        </Button>
+                      </YStack>
+                    </XStack>
                   )}
 
                   <YStack ai="center" gap="$1">

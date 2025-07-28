@@ -151,6 +151,76 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 })
 
+router.put('/:id', requireAuth, async (req, res) => {
+  const userId = (req.user as any).userId
+  const workoutId = parseInt(req.params.id)
+  const { title, exercises, created_at } = req.body
+
+  if (isNaN(workoutId)) {
+     res.status(400).json({ error: 'Invalid workout ID' })
+     return
+  }
+
+  try {
+    // Check workout ownership
+    const workoutCheck = await db.query(
+      'SELECT id FROM workouts WHERE id = $1 AND user_id = $2',
+      [workoutId, userId]
+    )
+
+    if (workoutCheck.rowCount === 0) {
+       res.status(404).json({ error: 'Workout not found' })
+       return
+    }
+
+    // Update workout title and date
+    await db.query(
+      'UPDATE workouts SET title = $1, created_at = $2 WHERE id = $3 AND user_id = $4',
+      [title || null, new Date(created_at).toISOString(), workoutId, userId]
+    )
+
+    // Delete old sets and exercises
+    await db.query(
+      `DELETE FROM sets WHERE exercise_id IN (
+        SELECT id FROM exercises WHERE workout_id = $1
+      )`,
+      [workoutId]
+    )
+    await db.query('DELETE FROM exercises WHERE workout_id = $1', [workoutId])
+
+    // Re-insert updated exercises and sets
+    for (const exercise of exercises) {
+      const { name, type = 'weights', sets } = exercise
+
+      const exerciseRes = await db.query(
+        'INSERT INTO exercises (workout_id, user_id, name, type) VALUES ($1, $2, $3, $4) RETURNING id',
+        [workoutId, userId, name, type]
+      )
+
+      const exerciseId = exerciseRes.rows[0].id
+
+      for (const set of sets) {
+        const reps = isFinite(parseInt(set.reps)) ? parseInt(set.reps) : null
+        const weight = set.weight !== undefined ? parseFloat(set.weight) : null
+        const duration = isFinite(parseInt(set.duration)) ? parseInt(set.duration) : null
+        const distance = isFinite(parseFloat(set.distance)) ? parseFloat(set.distance) : null
+        const distanceUnit = set.distance_unit || null
+
+        await db.query(
+          `INSERT INTO sets (exercise_id, user_id, reps, weight, duration, distance, distance_unit)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [exerciseId, userId, reps, weight, duration, distance, distanceUnit]
+        )
+      }
+    }
+
+    res.status(200).json({ message: 'Workout updated!' })
+  } catch (err) {
+    console.error('Error updating workout:', err)
+    res.status(500).json({ error: 'Failed to update workout' })
+  }
+})
+
 
 
 

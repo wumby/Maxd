@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { YStack, Text, XStack, Card, Button, useTheme, useThemeName } from 'tamagui'
 import { ChevronLeft, ChevronDown, Trash2 } from '@tamagui/lucide-icons'
 import { Pressable, Modal, View, FlatList, ScrollView } from 'react-native'
@@ -10,6 +10,9 @@ import { ScreenContainer } from '../ScreenContainer'
 import { ExerciseFilterSheet } from './ExerciseFilterSheet'
 import { deleteExercise } from '@/services/exerciseService'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSavedExercises } from '@/hooks/useSavedExercises'
+import { createSavedExercise, deleteSavedExercise } from '@/services/savedExerciseService'
+import { useToast } from '@/contexts/ToastContextProvider'
 
 export default function ExerciseHistory({
   exercises,
@@ -28,10 +31,54 @@ export default function ExerciseHistory({
   const currentYear = new Date().getFullYear().toString()
   const [filterYear, setFilterYear] = useState<'All Years' | string>(currentYear)
   const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
-  const [filterExercise, setFilterExercise] = useState<string | null>(null)
+  const [filterExercise, setFilterExercise] = useState<string | null>(
+  exercises.length > 0 ? exercises[0].name.trim() : null
+)
   const [showSheet, setShowSheet] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [confirmId, setConfirmId] = useState<number | null>(null)
+const { savedExercises, setSavedExercises } = useSavedExercises()
+const { showToast } = useToast()
+useEffect(() => {
+  if (exercises.length > 0 && !filterExercise) {
+    setFilterExercise(exercises[0].name.trim())
+  }
+}, [exercises])
+
+const isFavorited = (ex: any) =>
+  savedExercises.some(saved => saved.name.toLowerCase() === ex.name.trim().toLowerCase())
+const toggleFavorite = async (ex: any) => {
+  const name = ex.name.trim()
+  const existing = savedExercises.find(
+    saved => saved.name.toLowerCase() === name.toLowerCase()
+  )
+
+  if (existing) {
+    try {
+      await deleteSavedExercise(token, existing.id)
+      setSavedExercises(prev => prev.filter(s => s.id !== existing.id))
+      showToast(`${name} removed from favorites`)
+    } catch (err) {
+      console.error('Failed to remove favorite:', err)
+      showToast('Error removing favorite')
+    }
+  } else {
+    try {
+      const saved = await createSavedExercise(token, {
+        name,
+        type: ex.type,
+        sets: ex.sets,
+      })
+      setSavedExercises(prev => [saved, ...prev])
+      showToast(`${name} added to favorites`)
+    } catch (err) {
+      console.error('Failed to add favorite:', err)
+      showToast('Error adding favorite')
+    }
+  }
+}
+
+
 
   const years = useMemo(() => {
     const uniqueYears = new Set(exercises.map(e => new Date(e.created_at).getFullYear()))
@@ -85,26 +132,34 @@ export default function ExerciseHistory({
   }
 
   const renderItem = useCallback(
-    ({ item: ex, index }) => {
+  ({ item, index }: { item: any; index: number }) => {
+    const ex = item
       const date = new Date(ex.created_at).toLocaleDateString()
       return (
         <Animated.View entering={FadeInUp.duration(300).delay(index * 20)}>
           <Card elevate bg="$color2" p="$4" gap="$3" br="$6" my="$2">
-            <XStack jc="space-between" ai="center">
-              <YStack>
-                <Text fontSize="$6" fontWeight="700">
-                  {ex.name}
-                </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {date}
-                </Text>
-              </YStack>
-              {editMode && (
-                <Pressable onPress={() => setConfirmId(ex.id)}>
-                  <Trash2 size={18} color="red" />
-                </Pressable>
-              )}
-            </XStack>
+           <XStack jc="space-between" ai="center">
+  <YStack>
+    <Text fontSize="$6" fontWeight="700">
+      {ex.name}
+    </Text>
+    <Text fontSize="$3" color="$gray10">
+      {date}
+    </Text>
+  </YStack>
+
+  {editMode && (
+    <XStack gap="$3" ai="center">
+      <Pressable onPress={() => toggleFavorite(ex)}>
+        <Text fontSize="$6">{isFavorited(ex) ? '★' : '☆'}</Text>
+      </Pressable>
+      <Pressable onPress={() => setConfirmId(ex.id)}>
+        <Trash2 size={18} color="red" />
+      </Pressable>
+    </XStack>
+  )}
+</XStack>
+
 
             <YStack mt="$3" gap="$2">
               {ex.sets?.map((set: any, j: number) => (
@@ -117,7 +172,7 @@ export default function ExerciseHistory({
         </Animated.View>
       )
     },
-    [editMode, weightUnit]
+    [editMode, weightUnit, savedExercises]
   )
 
   return (

@@ -46,3 +46,28 @@ export async function fetchWorkouts(token: string) {
   if (!res.ok) throw new Error('Failed to fetch workouts')
   return await res.json()
 }
+
+
+export async function updateWorkout(
+  token: string | null,
+  id: number,
+  payload: {
+    title: string
+    created_at: string
+    exercises: any[]
+  }
+) {
+  if (!token) throw new Error('No token provided')
+
+  const res = await fetch(`${API_URL}/workouts/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) throw new Error('Failed to update workout')
+  return await res.json()
+}

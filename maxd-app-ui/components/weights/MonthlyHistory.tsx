@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import WeightUtil from '@/util/weightConversion'
 import { usePreferences } from '@/contexts/PreferencesContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface WeightEntry {
   id: number
@@ -33,11 +34,22 @@ export default function MonthlySummary({
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
   const { weightUnit } = usePreferences()
+const { user } = useAuth()
+  const goalMode = user?.goal_mode
   const convertWeight = (val?: number) => {
     if (typeof val !== 'number' || isNaN(val)) return '--'
     const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(val) : val
     return converted.toFixed(1)
   }
+
+  const getDeltaColor = (delta: number | null) => {
+    if (delta === null || isNaN(delta)) return '$gray10'
+    if (goalMode === 'track' || !goalMode) return theme.color.val
+    if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
+    if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
+    return '$gray10'
+  }
+
   const allYears = useMemo(() => {
     const years = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(years).sort((a, b) => b - a)
@@ -179,6 +191,7 @@ export default function MonthlySummary({
             const prev = monthlyAverages[index + 1]
             const delta =
               prev && typeof prev.average === 'number' ? entry.average - prev.average : null
+
             return (
               <Animated.View
                 key={`month-${entry.year}-${entry.month}`}
@@ -205,9 +218,8 @@ export default function MonthlySummary({
                     </YStack>
 
                     {delta !== null && !isNaN(delta) ? (
-                      <Text color={delta > 0 ? 'red' : 'green'} fontSize="$3">
-                        {delta > 0 ? '+' : ''}
-                        {convertWeight(delta)} {weightUnit}
+                      <Text color={getDeltaColor(delta)} fontSize="$3">
+                        {delta === 0 ? '±0' : `${delta > 0 ? '+' : ''}${convertWeight(delta)} ${weightUnit}`}
                       </Text>
                     ) : null}
                   </XStack>

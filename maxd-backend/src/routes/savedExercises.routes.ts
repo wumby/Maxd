@@ -42,5 +42,28 @@ router.get('/', requireAuth, async (req, res) => {
   }
 })
 
+router.delete('/:id', requireAuth, async (req, res) => {
+  const userId = (req.user as any).userId
+  const id = req.params.id
+
+  try {
+    const result = await db.query(
+      `DELETE FROM saved_exercises WHERE id = $1 AND user_id = $2 RETURNING *`,
+      [id, userId]
+    )
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Exercise not found' })
+      return 
+    }
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Failed to delete saved exercise', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+
 
 export default router

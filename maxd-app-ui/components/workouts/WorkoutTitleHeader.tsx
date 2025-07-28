@@ -1,14 +1,12 @@
-import { XStack, Text, Input, Button, YStack } from 'tamagui'
+import { XStack, Text, Input, YStack } from 'tamagui'
 import { Keyboard } from 'react-native'
 
 export function WorkoutTitleHeader({
   title,
   onChangeTitle,
-  onReset,
 }: {
   title: string
   onChangeTitle: (text: string) => void
-  onReset: () => void
 }) {
   return (
     <YStack gap="$3">
@@ -17,12 +15,6 @@ export function WorkoutTitleHeader({
         <Text fontSize="$6" fontWeight="700">
           {title.trim()}
         </Text>
-
-        {title.trim() && (
-          <Button chromeless size="$2" onPress={onReset}>
-            Reset
-          </Button>
-        )}
       </XStack>
 
       {/* Labeled workout title input */}

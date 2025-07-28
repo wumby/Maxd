@@ -12,7 +12,6 @@ export function WorkoutModeChooser({
 }) {
   return (
     <YStack gap="$5" ai="center" jc="center" p="$4" mt="$2">
-      {/* Action Buttons */}
       <XStack gap="$4" w="100%">
         <Button
           size="$5"

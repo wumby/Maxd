@@ -58,13 +58,15 @@ const HistoryItem = React.memo(
       return converted.toFixed(1)
     }
 
-    const getDeltaColor = () => {
-      if (!prev || goalMode === 'track') return '$gray10'
-      if (delta === 0) return '$gray10'
-      if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
-      if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
-      return '$gray10'
-    }
+  const getDeltaColor = () => {
+  if (!prev) return '$gray10'
+  if (goalMode === 'track') return theme.color.val
+  if (delta === 0) return '$gray10'
+  if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
+  if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
+  return '$gray10'
+}
+
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
