@@ -56,17 +56,16 @@ export default function WorkoutsTab() {
   )
 
   const lastWorkout = workouts[0]
-  const flattenedExercises = useMemo(() => {
-    return workouts.flatMap(w =>
-      (w.exercises || []).map((ex: any) => ({
-        id: ex.id,
-        name: ex.name,
-        type: ex.type,
-        sets: ex.sets,
-        created_at: w.created_at,
-      }))
-    )
-  }, [workouts])
+ const flattenedExercises = useMemo(() => {
+  return workouts.flatMap(w =>
+    (w.exercises || []).map((ex: any) => ({
+      ...ex,
+      created_at: w.created_at,
+      workout_id: w.id, 
+    }))
+  )
+}, [workouts])
+
 
   if (loading) {
     return (
@@ -134,11 +133,12 @@ export default function WorkoutsTab() {
             </YStack>
           }
         >
-          <ExerciseHistory
-            exercises={flattenedExercises}
-            onClose={() => setViewMode(null)}
-            setWorkouts={setWorkouts}
-          />
+         <ExerciseHistory
+  exercises={flattenedExercises}
+  onClose={() => setViewMode(null)}
+  setWorkouts={setWorkouts}
+/>
+
         </Suspense>
       )}
 

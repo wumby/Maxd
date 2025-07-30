@@ -1,19 +1,34 @@
 import { Picker } from '@react-native-picker/picker'
 import { Sheet, YStack, XStack, Button, Text } from 'tamagui'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export function DurationPickerSheet({
   open,
   onOpenChange,
   onConfirm,
+  value = 0,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: (totalSeconds: number) => void
+  value?: number // new prop
 }) {
   const [hours, setHours] = useState(0)
   const [minutes, setMinutes] = useState(0)
   const [seconds, setSeconds] = useState(0)
+
+  // Set initial values from `value` when opening
+  useEffect(() => {
+    if (open) {
+      const h = Math.floor(value / 3600)
+      const m = Math.floor((value % 3600) / 60)
+      const s = value % 60
+
+      setHours(h)
+      setMinutes(m)
+      setSeconds(s)
+    }
+  }, [open, value])
 
   const handleConfirm = () => {
     const total = hours * 3600 + minutes * 60 + seconds

@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 import { YStack, Text, XStack, Card, Button, useTheme, useThemeName } from 'tamagui'
-import { ChevronLeft, ChevronDown, Trash2 } from '@tamagui/lucide-icons'
+import { ChevronLeft, ChevronDown, Trash2, Pencil } from '@tamagui/lucide-icons'
 import { Pressable, Modal, View, FlatList, ScrollView } from 'react-native'
 import { YearFilterItem } from '../weights/YearFilterItem'
 import { usePreferences } from '@/contexts/PreferencesContext'
@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
 import { createSavedExercise, deleteSavedExercise } from '@/services/savedExerciseService'
 import { useToast } from '@/contexts/ToastContextProvider'
+import { EditExercise } from './EditExercise'
 
 export default function ExerciseHistory({
   exercises,
@@ -38,6 +39,9 @@ export default function ExerciseHistory({
   const [editMode, setEditMode] = useState(false)
   const [confirmId, setConfirmId] = useState<number | null>(null)
 const { savedExercises, setSavedExercises } = useSavedExercises()
+const [editingExercise, setEditingExercise] = useState<any | null>(null)
+const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null)
+const [viewMode, setViewMode] = useState<'history' | 'edit'>('history')
 const { showToast } = useToast()
 useEffect(() => {
   if (exercises.length > 0 && !filterExercise) {
@@ -149,18 +153,28 @@ const toggleFavorite = async (ex: any) => {
   </YStack>
 
   {editMode && (
-    <XStack gap="$3" ai="center">
+    <XStack gap="$6" ai="center">
       <Pressable onPress={() => toggleFavorite(ex)}>
-        <Text fontSize="$6">{isFavorited(ex) ? '★' : '☆'}</Text>
+        <Text fontSize="$7">{isFavorited(ex) ? '★' : '☆'}</Text>
       </Pressable>
+    <Pressable
+  onPress={() => {
+    setEditingWorkoutId(ex.workout_id)
+    setEditingExercise(ex)
+    setViewMode('edit')
+  }}
+  hitSlop={10}
+>
+  <Pencil size={22} color={theme.color.val} />
+</Pressable>
+
+
       <Pressable onPress={() => setConfirmId(ex.id)}>
-        <Trash2 size={18} color="red" />
+        <Trash2 size={22} color="red" />
       </Pressable>
     </XStack>
   )}
 </XStack>
-
-
             <YStack mt="$3" gap="$2">
               {ex.sets?.map((set: any, j: number) => (
                 <Text key={j} fontSize="$4" color="$gray10">
@@ -174,6 +188,57 @@ const toggleFavorite = async (ex: any) => {
     },
     [editMode, weightUnit, savedExercises]
   )
+
+ if (viewMode === 'edit' && editingExercise) {
+  return (
+    <EditExercise
+      exercise={editingExercise}
+      onCancel={() => {
+        setEditingExercise(null)
+        setViewMode('history')
+      }}
+    onSubmit={updated => {
+  console.log('Received updated exercise:', updated)
+  console.log('Editing workout ID:', editingWorkoutId)
+
+  setWorkouts(prev => {
+    const newWorkouts = prev.map(workout => {
+      if (workout.id !== editingWorkoutId) return workout
+
+      const updatedExercises = workout.exercises.map((ex: { id: any }) => {
+        if (ex.id === updated.id) {
+          console.log('Updating exercise in workout:', workout.id)
+          return {
+            ...ex,
+            name: updated.name,
+            type: updated.type,
+            sets: updated.sets,
+            updated_at: new Date().toISOString(), // ensure FlatList re-renders
+          }
+        }
+        return ex
+      })
+
+      return {
+        ...workout,
+        exercises: updatedExercises,
+      }
+    })
+
+    console.log('Updated workouts:', JSON.stringify(newWorkouts, null, 2))
+    return newWorkouts
+  })
+
+  showToast('Exercise updated')
+  setEditingExercise(null)
+  setViewMode('history')
+}}
+
+
+    />
+  )
+}
+
 
   return (
     <ScreenContainer>
@@ -248,7 +313,7 @@ const toggleFavorite = async (ex: any) => {
       {/* FlatList for exercises */}
       <FlatList
         data={filtered}
-        keyExtractor={(_, i) => i.toString()}
+        keyExtractor={(item) => `${item.id}-${item.updated_at || ''}`}
         renderItem={renderItem}
         initialNumToRender={12}
         removeClippedSubviews
@@ -264,6 +329,9 @@ const toggleFavorite = async (ex: any) => {
         onSelect={setFilterExercise}
         exerciseNames={exerciseNames}
       />
+    
+
+      
 
       {/* Confirm Delete Modal */}
       <Modal

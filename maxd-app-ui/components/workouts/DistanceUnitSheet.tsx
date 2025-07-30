@@ -1,6 +1,13 @@
 import { Sheet, YStack, Button, Text } from 'tamagui'
 
-const DISTANCE_UNITS = ['mi', 'km', 'm', 'steps']
+const DISTANCE_UNITS = ['mi', 'km', 'm', 'steps'] as const;
+
+const DISTANCE_UNIT_LABELS = {
+  mi: 'Miles',
+  km: 'Kilometers',
+  m: 'Meters',
+  steps: 'Steps',
+}
 
 export function DistanceUnitSheet({
   open,
@@ -31,7 +38,7 @@ export function DistanceUnitSheet({
                 onOpenChange(false)
               }}
             >
-              {unit}
+              {DISTANCE_UNIT_LABELS[unit]}
             </Button>
           ))}
         </YStack>

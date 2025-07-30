@@ -35,13 +35,14 @@ export function AddExerciseCard({
   onAddSet: (index: number) => void
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void
   onChangeSet: (exerciseIndex: number, setIndex: number, field: string, value: string) => void
-  onRemove: (index: number) => void
+  onRemove?: (index: number) => void
 }) {
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [showDurationPicker, setShowDurationPicker] = useState(false)
   const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null)
   const [showDistanceUnitSheet, setShowDistanceUnitSheet] = useState(false)
   const [distanceUnitSetIndex, setDistanceUnitSetIndex] = useState<number | null>(null)
+const [initialDuration, setInitialDuration] = useState<number>(0)
 
   const rotation = useSharedValue(expanded ? 180 : 0)
   const { weightUnit } = usePreferences()
@@ -72,14 +73,17 @@ export function AddExerciseCard({
             <Text fontWeight="600" fontSize="$6">
               {exercise.name.trim() || 'New Exercise'}
             </Text>
-            <Button chromeless size="$3" onPress={() => onToggleExpand(index)}>
+            {!!onRemove && (
+<Button chromeless size="$3" onPress={() => onToggleExpand(index)}>
               <Animated.View style={animatedChevronStyle}>
                 <ChevronDown size={20} />
               </Animated.View>
             </Button>
+            ) }
+            
           </XStack>
 
-          <Button chromeless size="$2" icon={Trash2} onPress={() => onRemove(index)} />
+          {!!onRemove && (<Button chromeless size="$5" icon={Trash2} onPress={() => onRemove(index)} />)}
         </XStack>
 
         {expanded && (
@@ -157,52 +161,55 @@ export function AddExerciseCard({
                     </>
                   ) : (
                     <XStack gap="$4" w="80%" ai="flex-start">
-                      {/* Duration */}
-                      <YStack flex={1} gap="$2">
-                        <Text fontSize="$2" color="$gray10">
-                          Duration
-                        </Text>
-                        <Button
-                          size="$3"
-                          onPress={() => {
-                            setShowDurationPicker(true)
-                            setActiveSetIndex(setIndex)
-                          }}
-                          justifyContent="flex-start"
-                          w="100%"
-                        >
-                          {set.duration ? formatDuration(Number(set.duration)) : 'Pick Duration'}
-                        </Button>
-                      </YStack>
+  {/* Duration */}
+  <YStack flex={1.5} gap="$2">
+    <Text fontSize="$2" color="$gray10">
+      Duration
+    </Text>
+    <Button
+      size="$4" 
+      h={48} 
+      onPress={() => {
+        setShowDurationPicker(true)
+         setInitialDuration(Number(set.duration) || 0)
+        setActiveSetIndex(setIndex)
+      }}
+      justifyContent="flex-start"
+      w="100%"
+    >
+      {set.duration ? formatDuration(Number(set.duration)) : 'Pick Duration'}
+    </Button>
+  </YStack>
 
-                      {/* Distance */}
-                      <YStack flex={2} gap="$2">
-                        <Text fontSize="$2" color="$gray10">
-                          Distance
-                        </Text>
-                        <Input
-                          keyboardType="numeric"
-                          placeholder="e.g. 2.5"
-                          value={set.distance || ''}
-                          onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
-                          returnKeyType="done"
-                        />
+  {/* Distance */}
+  <YStack flex={1.5} gap="$2">
+    <Text fontSize="$2" color="$gray10">
+      Distance
+    </Text>
+    <Input
+      keyboardType="numeric"
+      placeholder="e.g. 2.5"
+      value={set.distance !== undefined && set.distance !== null ? String(set.distance) : ''}
+      onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
+      returnKeyType="done"
+    />
 
-                        <Button
-                          size="$3"
-                          onPress={() => {
-                            setShowDistanceUnitSheet(true)
-                            setDistanceUnitSetIndex(setIndex)
-                          }}
-                          iconAfter={ChevronDown}
-                          justifyContent="space-between"
-                        >
-                          {distanceUnitLabels[
-                            set.distance_unit as keyof typeof distanceUnitLabels
-                          ] || 'Miles'}
-                        </Button>
-                      </YStack>
-                    </XStack>
+    <Button
+      size="$3"
+      onPress={() => {
+        setShowDistanceUnitSheet(true)
+        setDistanceUnitSetIndex(setIndex)
+      }}
+      iconAfter={ChevronDown}
+      justifyContent="space-between"
+    >
+      {distanceUnitLabels[
+        set.distance_unit as keyof typeof distanceUnitLabels
+      ] || 'Miles'}
+    </Button>
+  </YStack>
+</XStack>
+
                   )}
 
                   <YStack ai="center" gap="$1">
@@ -236,6 +243,7 @@ export function AddExerciseCard({
               onChangeSet(index, activeSetIndex, 'duration', String(totalSeconds))
             }
           }}
+          value={initialDuration}
         />
 
         <Separator />

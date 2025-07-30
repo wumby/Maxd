@@ -10,6 +10,8 @@ import { useToast } from '@/contexts/ToastContextProvider'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
 import { deleteWeightEntry, updateWeightEntry } from '@/services/weightService'
+import { EditWeightSheet } from './EditWeightSheet'
+import { ConfirmDeleteSheet } from '../ConfirmDeleteSheet'
 
 interface WeightEntry {
   id: number
@@ -87,12 +89,12 @@ const HistoryItem = React.memo(
             </YStack>
 
             {editMode ? (
-              <XStack gap="$5">
+              <XStack gap="$7">
                 <Pressable onPress={() => onEdit(item)}>
-                  <Edit3 size={20} color={theme.color.val} />
+                  <Edit3 size={22} color={theme.color.val} />
                 </Pressable>
                 <Pressable onPress={() => onDelete(item.id)}>
-                  <Trash2 size={20} color="red" />
+                  <Trash2 size={22} color="red" />
                 </Pressable>
               </XStack>
             ) : prev ? (
@@ -312,85 +314,29 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
         )}
       />
 
-      {/* Edit Modal */}
-      <Modal
-        animationType="fade"
-        transparent
-        visible={!!editingWeight}
-        onRequestClose={() => setEditingWeight(null)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
-          }}
-        >
-          <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700" color="$color">
-              Edit Weight
-            </Text>
-            <Input
-              keyboardType="numeric"
-              placeholder={weightUnit === 'lb' ? 'e.g. 175.5 (lb)' : 'e.g. 79.6 (kg)'}
-              value={editInput}
-              onChangeText={setEditInput}
-              returnKeyType="done"
-            />
+     <EditWeightSheet
+  open={!!editingWeight}
+  onOpenChange={() => setEditingWeight(null)}
+  weightUnit={weightUnit}
+  value={editInput}
+  onChange={setEditInput}
+  onCancel={() => setEditingWeight(null)}
+  onSave={handleEditSave}
+/>
 
-            <XStack gap="$2">
-              <Button flex={1} onPress={() => setEditingWeight(null)}>
-                Cancel
-              </Button>
-              <Button flex={1} onPress={handleEditSave} theme="active">
-                Save
-              </Button>
-            </XStack>
-          </YStack>
-        </View>
-      </Modal>
+<ConfirmDeleteSheet
+  open={confirmId !== null}
+  onOpenChange={() => setConfirmId(null)}
+  onCancel={() => setConfirmId(null)}
+  onConfirm={() => {
+    if (confirmId !== null) handleDelete(confirmId)
+    setConfirmId(null)
+  }}
+  title="Delete Weight"
+  message="Are you sure you want to delete this entry?"
+/>
 
-      {/* Confirm Delete Modal */}
-      <Modal
-        animationType="fade"
-        transparent
-        visible={confirmId !== null}
-        onRequestClose={() => setConfirmId(null)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
-          }}
-        >
-          <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-            <Text fontSize="$6" fontWeight="700" color="$color">
-              Delete Weight
-            </Text>
-            <Text color="$gray10">Are you sure you want to delete this entry?</Text>
-            <XStack gap="$2">
-              <Button flex={1} onPress={() => setConfirmId(null)}>
-                Cancel
-              </Button>
-              <Button
-                theme="active"
-                flex={1}
-                onPress={() => {
-                  if (confirmId !== null) handleDelete(confirmId)
-                  setConfirmId(null)
-                }}
-              >
-                Delete
-              </Button>
-            </XStack>
-          </YStack>
-        </View>
-      </Modal>
+
     </YStack>
   )
 }

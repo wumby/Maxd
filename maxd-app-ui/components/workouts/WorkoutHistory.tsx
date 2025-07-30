@@ -6,13 +6,11 @@ import {
   XStack,
   Card,
   Separator,
-  View,
-  Button,
   useTheme,
   useThemeName,
 } from 'tamagui'
 import { ChevronDown, ChevronUp, ChevronLeft, Pencil, Trash2 } from '@tamagui/lucide-icons'
-import { FlatList, Modal, Pressable } from 'react-native'
+import { FlatList, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from '../weights/YearFilterItem'
 import Animated, { FadeInUp } from 'react-native-reanimated'
@@ -23,6 +21,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createSavedWorkout, deleteSavedWorkout } from '@/services/savedWorkoutsService'
 import { useToast } from '@/contexts/ToastContextProvider'
 import NewWorkout from './NewWorkout'
+import { ConfirmDeleteSheet } from '../ConfirmDeleteSheet'
+
+
 export default function WorkoutHistory({
   workouts,
   onClose,
@@ -32,6 +33,7 @@ export default function WorkoutHistory({
   onClose: () => void
   setWorkouts: React.Dispatch<React.SetStateAction<any[]>>
 }) {
+  const { showToast } = useToast()
   const [expanded, setExpanded] = useState<number | null>(null)
   const { weightUnit } = usePreferences()
   const theme = useTheme()
@@ -91,17 +93,20 @@ const handleEdit = (workout: any) => {
     setConfirmId(workout.id)
   }
 
-  const confirmDelete = async () => {
-    if (!confirmId) return
-    try {
-      await deleteWorkout(token, confirmId)
-      setWorkouts(prev => prev.filter(w => w.id !== confirmId))
-    } catch (err) {
-      console.error('Failed to delete workout:', err)
-    } finally {
-      setConfirmId(null)
-    }
+const confirmDelete = async () => {
+  if (!confirmId) return
+  try {
+    await deleteWorkout(token, confirmId)
+    setWorkouts(prev => prev.filter(w => w.id !== confirmId))
+    showToast('Workout deleted ') 
+  } catch (err) {
+    console.error('Failed to delete workout:', err)
+    showToast('Failed to delete workout ', 'warn')
+  } finally {
+    setConfirmId(null)
   }
+}
+
 
  const handleToggleFavorite = async (workout: any) => {
   if (!token) return
@@ -137,7 +142,7 @@ if (viewMode === 'edit' && editingWorkout) {
     left={0}
     right={0}
     bottom={0}
-    zIndex={999} // ensure it's above
+    zIndex={999}
     bg="$background"
   >
     <NewWorkout
@@ -305,37 +310,15 @@ return (
       }}
     />
 
-    <Modal
-      transparent
-      animationType="fade"
-      visible={confirmId !== null}
-      onRequestClose={() => setConfirmId(null)}
-    >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.2)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
-      >
-        <YStack bg="$background" p="$4" br="$4" w="100%" maxWidth={400} gap="$4">
-          <Text fontSize="$6" fontWeight="700" color="$color">
-            Delete Workout
-          </Text>
-          <Text color="$gray10">Are you sure you want to delete this workout?</Text>
-          <XStack gap="$2">
-            <Button flex={1} onPress={() => setConfirmId(null)}>
-              Cancel
-            </Button>
-            <Button theme="active" flex={1} onPress={confirmDelete}>
-              Delete
-            </Button>
-          </XStack>
-        </YStack>
-      </View>
-    </Modal>
+    <ConfirmDeleteSheet
+  open={confirmId !== null}
+  onOpenChange={() => setConfirmId(null)}
+  onCancel={() => setConfirmId(null)}
+  onConfirm={confirmDelete}
+  title="Delete Workout"
+  message="Are you sure you want to delete this workout?"
+/>
+
   </YStack>
 )
 

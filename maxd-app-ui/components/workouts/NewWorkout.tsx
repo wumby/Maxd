@@ -202,8 +202,10 @@ const handleSubmit = async () => {
     }
 
     if (workoutToEdit) {
-      await updateWorkout(token, workoutToEdit.id, data)
-      onSubmit({ ...workoutToEdit, ...data })
+     const updated = await updateWorkout(token, workoutToEdit.id, data)
+onSubmit(updated)
+
+
     } else {
       await createWorkout(token, data)
       onSubmit()
