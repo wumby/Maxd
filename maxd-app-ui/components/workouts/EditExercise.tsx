@@ -7,6 +7,8 @@ import { ScreenContainer } from '../ScreenContainer'
 import { editExercise } from '@/services/exerciseService'
 import { useToast } from '@/contexts/ToastContextProvider'
 import { useAuth } from '@/contexts/AuthContext'
+import WeightUtil from '@/util/weightConversion'
+import { usePreferences } from '@/contexts/PreferencesContext'
 
 export function EditExercise({
   exercise,
@@ -16,9 +18,42 @@ export function EditExercise({
   exercise: any
   onCancel: () => void
   onSubmit: (updated: any) => void
-}) {
-  const [editedExercise, setEditedExercise] = useState(exercise)
-  console.log('Exercise sets on load:', editedExercise.sets)
+}) {const normalizeSets = (sets: any[], type: string, weightUnit: 'lb' | 'kg') =>
+  sets.map(set => {
+    if (type === 'weights') {
+      const rawWeight = set.weight ?? ''
+     const convertedWeight =
+  weightUnit === 'lb' && rawWeight !== ''
+    ? String(WeightUtil.kgToLbs(rawWeight).toFixed(1)) 
+    : String(rawWeight)
+
+      return {
+        reps: set.reps != null ? String(set.reps) : '',
+        weight: convertedWeight,
+      }
+    } else if (type === 'bodyweight') {
+      return {
+        reps: set.reps != null ? String(set.reps) : '',
+      }
+    } else if (type === 'cardio') {
+      return {
+        distance: set.distance != null ? String(set.distance) : '',
+        distance_unit: set.distance_unit ?? 'mi',
+        duration: set.duration != null ? String(set.duration) : '',
+      }
+    } else {
+      return set
+    }
+  })
+
+
+const { weightUnit } = usePreferences()
+
+const [editedExercise, setEditedExercise] = useState(() => ({
+  ...exercise,
+  sets: normalizeSets(exercise.sets ?? [], exercise.type, weightUnit),
+}))
+
 const { token } = useAuth();
   const {showToast} = useToast()
 
@@ -36,12 +71,19 @@ const { token } = useAuth();
     setEditedExercise((prev: any) => ({ ...prev, sets }))
   }
 
-  const handleAddSet = (i: number) => {
-    setEditedExercise((prev: { sets: any }) => ({
-      ...prev,
-      sets: [...prev.sets, {}],
-    }))
+ const handleAddSet = () => {
+  const { type } = editedExercise
+  let newSet: any = {}
+  if (type === 'weights') {
+    newSet = { reps: '', weight: '' }
+  } else if (type === 'bodyweight') {
+    newSet = { reps: '' }
+  } else if (type === 'cardio') {
+    newSet = { distance: '', distance_unit: 'mi', duration: '' }
   }
+  setEditedExercise((prev: { sets: any }) => ({ ...prev, sets: [...prev.sets, newSet] }))
+}
+
 
   const handleRemoveSet = (i: number, setIndex: number) => {
     const newSets = [...editedExercise.sets]
@@ -71,19 +113,30 @@ const { token } = useAuth();
   <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
       <YStack px="$4" pt="$4" gap="$4">
         {/* Back header */}
-        <XStack ai="center" gap="$2">
-          <Button
-            icon={ChevronLeft}
-            size="$3"
-            chromeless
-            onPress={onCancel}
-            circular
-            bg="transparent"
-          />
-          <Text fontSize="$6" fontWeight="600" color="$color">
-            Edit Exercise
-          </Text>
-        </XStack>
+        <XStack ai="center" jc="space-between" position="relative" w="100%" mb={'$5'}>
+  <Button
+    chromeless
+    circular
+    bg="transparent"
+    onPress={onCancel}
+  >
+    <ChevronLeft size={28} />
+  </Button>
+
+  <Text
+    fontSize="$8"
+    fontWeight="600"
+    color="$color"
+    position="absolute"
+    left="50%"
+    style={{ transform: [{ translateX: -50 + '%' }] }}
+  >
+    Edit Exercise
+  </Text>
+
+  <YStack w={40} /> {/* Spacer to balance the right side */}
+</XStack>
+
 
         {/* Reuse AddExerciseCard */}
         <AddExerciseCard

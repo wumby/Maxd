@@ -198,22 +198,17 @@ const toggleFavorite = async (ex: any) => {
         setViewMode('history')
       }}
     onSubmit={updated => {
-  console.log('Received updated exercise:', updated)
-  console.log('Editing workout ID:', editingWorkoutId)
-
   setWorkouts(prev => {
     const newWorkouts = prev.map(workout => {
       if (workout.id !== editingWorkoutId) return workout
 
       const updatedExercises = workout.exercises.map((ex: { id: any }) => {
         if (ex.id === updated.id) {
-          console.log('Updating exercise in workout:', workout.id)
           return {
             ...ex,
             name: updated.name,
             type: updated.type,
             sets: updated.sets,
-            updated_at: new Date().toISOString(), // ensure FlatList re-renders
           }
         }
         return ex
@@ -224,8 +219,6 @@ const toggleFavorite = async (ex: any) => {
         exercises: updatedExercises,
       }
     })
-
-    console.log('Updated workouts:', JSON.stringify(newWorkouts, null, 2))
     return newWorkouts
   })
 

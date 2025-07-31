@@ -10,14 +10,10 @@ import { WorkoutCardsTop } from '@/components/workouts/WorkoutCardsTop'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
 
-const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'))
-const ExerciseHistory = lazy(() => import('@/components/workouts/ExerciseHistory'))
-
 export default function WorkoutsTab() {
   const router = useRouter()
   const [workouts, setWorkouts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'new' | 'workouts' | 'exercises' | null>(null)
   const { token } = useAuth()
   const params = useLocalSearchParams()
   const { saved: savedWorkouts } = useSavedWorkouts()
@@ -37,20 +33,9 @@ export default function WorkoutsTab() {
 
   useFocusEffect(
     useCallback(() => {
-      if (params?.log === '1') {
-        setViewMode('new')
-        router.replace('/tabs/workouts')
-      }
-    }, [params?.log])
-  )
-
-  useFocusEffect(
-    useCallback(() => {
-      setViewMode(null)
       fetchData()
 
       return () => {
-        setViewMode(null)
       }
     }, [fetchData])
   )
@@ -77,22 +62,22 @@ export default function WorkoutsTab() {
 
   return (
     <>
-      {viewMode === null && !loading && (
+      { !loading && (
         <ScreenContainer>
           <YStack f={1} jc="space-evenly" gap="$4">
             <WorkoutCardsTop
               workouts={workouts}
               savedWorkoutsCount={savedWorkouts.length}
               savedExercisesCount={savedExercises.length}
-              onFavoritesPress={() => setViewMode('workouts')}
-              onVolumePress={() => setViewMode('workouts')}
+              onFavoritesPress={() => {}}
+              onVolumePress={() => {}}
             />
 
             <YStack ai="center" gap="$6">
               <Text fontSize="$9" fontWeight="700">
                 Last: {lastWorkout?.title || 'None'}
               </Text>
-              <Button size="$5" onPress={() => setViewMode('new')}>
+              <Button size="$5" onPress={() => router.push('/tabs/workouts/newWorkout')}>
                 Log New Workout
               </Button>
             </YStack>
@@ -100,59 +85,15 @@ export default function WorkoutsTab() {
             <WorkoutCardsBottom
               key={workouts.length}
               workouts={workouts}
-              onWorkoutsPress={() => setViewMode('workouts')}
-              onExercisesPress={() => setViewMode('exercises')}
+              onWorkoutsPress={() => router.push('/tabs/workouts/workoutHistory')}
+
+              onExercisesPress={() =>router.push('/tabs/workouts/exercisesHistory')}
             />
           </YStack>
         </ScreenContainer>
       )}
 
-      {viewMode === 'workouts' && (
-        <ScreenContainer>
-          <Suspense
-            fallback={
-              <YStack f={1} minHeight="100%" px="$4" bg="$background" jc="center" ai="center">
-                <Spinner size="large" />
-              </YStack>
-            }
-          >
-            <WorkoutHistory
-              workouts={workouts}
-              onClose={() => setViewMode(null)}
-              setWorkouts={setWorkouts}
-            />
-          </Suspense>
-        </ScreenContainer>
-      )}
-
-      {viewMode === 'exercises' && (
-        <Suspense
-          fallback={
-            <YStack f={1} minHeight="100%" px="$4" bg="$background" jc="center" ai="center">
-              <Spinner size="large" />
-            </YStack>
-          }
-        >
-         <ExerciseHistory
-  exercises={flattenedExercises}
-  onClose={() => setViewMode(null)}
-  setWorkouts={setWorkouts}
-/>
-
-        </Suspense>
-      )}
-
-      {viewMode === 'new' && (
-        <Suspense fallback={<Text p="$4">Loading New Workout...</Text>}>
-          <NewWorkout
-            onCancel={() => setViewMode(null)}
-            onSubmit={() => {
-              setViewMode(null)
-              fetchData()
-            }}
-          />
-        </Suspense>
-      )}
+     
     </>
   )
 }

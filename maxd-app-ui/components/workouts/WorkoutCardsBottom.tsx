@@ -10,7 +10,6 @@ interface Props {
 
 export function WorkoutCardsBottom({ onWorkoutsPress, onExercisesPress, workouts = [] }: Props) {
   const latestThreeWorkouts = workouts.slice(0, 3)
-
   const latestExercises = useMemo(() => {
     return workouts
       .flatMap(w =>
