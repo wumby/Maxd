@@ -9,6 +9,7 @@ import { fetchWorkouts } from '@/services/workoutService'
 import { WorkoutCardsTop } from '@/components/workouts/WorkoutCardsTop'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
+import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
 
 export default function WorkoutsTab() {
   const router = useRouter()
@@ -64,6 +65,7 @@ export default function WorkoutsTab() {
     <>
       { !loading && (
         <ScreenContainer>
+          <TabTransitionWrapper tabPosition={2}>
           <YStack f={1} jc="space-evenly" gap="$4">
             <WorkoutCardsTop
               workouts={workouts}
@@ -90,6 +92,7 @@ export default function WorkoutsTab() {
               onExercisesPress={() =>router.push('/tabs/workouts/exercisesHistory')}
             />
           </YStack>
+          </TabTransitionWrapper>
         </ScreenContainer>
       )}
 

@@ -13,6 +13,7 @@ import { DatePickerSheet } from '@/components/weights/DatePickerSheet'
 import { GoalModeSheet } from '@/components/weights/GoalModeSheet'
 import { EnterWeightSheet } from '@/components/weights/EnterWeightSheet'
 import { fetchWeights, logWeight } from '@/services/weightService'
+import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
 
 const History = lazy(() => import('@/components/weights/History'))
 const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
@@ -123,6 +124,7 @@ export default function WeightTab() {
   return (
     <>
       <ScreenContainer>
+         <TabTransitionWrapper tabPosition={1}>
         {viewMode === null && (
           <YStack f={1} jc="space-evenly" gap="$4">
             <CardsTop
@@ -164,6 +166,7 @@ export default function WeightTab() {
             />
           </YStack>
         )}
+        </TabTransitionWrapper>
       </ScreenContainer>
 
       <Suspense fallback={null}>

@@ -1,4 +1,3 @@
-// app/_layout.tsx or RootLayout.tsx
 import { Slot } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { PortalProvider, TamaguiProvider } from 'tamagui'
@@ -16,11 +15,9 @@ function InnerApp() {
     <TamaguiProvider config={config} defaultTheme={theme}>
       <PortalProvider>
         <ToastContextProvider>
-          <TabTransitionProvider>
-            <AuthProvider>
-              <Slot />
-            </AuthProvider>
-          </TabTransitionProvider>
+          <AuthProvider>
+            <Slot />
+          </AuthProvider>
         </ToastContextProvider>
       </PortalProvider>
     </TamaguiProvider>
@@ -31,7 +28,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <PreferencesProvider>
-        <InnerApp />
+        <TabTransitionProvider> 
+          <InnerApp />
+        </TabTransitionProvider>
       </PreferencesProvider>
     </GestureHandlerRootView>
   )

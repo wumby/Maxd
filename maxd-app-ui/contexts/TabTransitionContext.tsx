@@ -1,26 +1,29 @@
-// contexts/TabTransitionContext.tsx
-
 import { createContext, useContext, useState } from 'react'
 
 type TabTransitionContextType = {
-  currentTab: number
-  prevTab: number
-  updateTab: (newTab: number) => void
+  tabIndex: number
+  prevTabIndex: number
+  direction: 1 | -1
+  setTabIndex: (index: number) => void
 }
+
 
 const TabTransitionContext = createContext<TabTransitionContextType | null>(null)
 
 export const TabTransitionProvider = ({ children }: { children: React.ReactNode }) => {
-  const [currentTab, setCurrentTab] = useState(0)
-  const [prevTab, setPrevTab] = useState(0)
+  const [tabIndex, setTabIndexInternal] = useState(0)
+  const [prevTabIndex, setPrevTabIndex] = useState(0)
+const [direction, setDirection] = useState<1 | -1>(1)
 
-  const updateTab = (newTab: number) => {
-    setPrevTab(currentTab) // store current as previous
-    setCurrentTab(newTab) // then update current
-  }
+const setTabIndex = (index: number) => {
+  setDirection(index > tabIndex ? 1 : -1)
+  setPrevTabIndex(tabIndex)
+  setTabIndexInternal(index)
+}
+
 
   return (
-    <TabTransitionContext.Provider value={{ currentTab, prevTab, updateTab }}>
+    <TabTransitionContext.Provider value={{ tabIndex, prevTabIndex, setTabIndex, direction }}>
       {children}
     </TabTransitionContext.Provider>
   )
@@ -28,8 +31,6 @@ export const TabTransitionProvider = ({ children }: { children: React.ReactNode 
 
 export const useTabTransition = () => {
   const context = useContext(TabTransitionContext)
-  if (!context) {
-    throw new Error('useTabTransition must be used within a TabTransitionProvider')
-  }
+  if (!context) throw new Error('useTabTransition must be used within TabTransitionProvider')
   return context
 }

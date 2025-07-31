@@ -6,6 +6,7 @@ import { LogOut, Trash2 } from '@tamagui/lucide-icons'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { deleteUserProfile, updateUserProfile } from '@/services/userService'
+import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
 
 export default function ProfileTab() {
   const { user, token, logout, updateUser } = useAuth()
@@ -16,7 +17,6 @@ export default function ProfileTab() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    console.log(token)
     if (editMode && user) {
       setName(user.name)
       setEmail(user.email)
@@ -63,6 +63,7 @@ export default function ProfileTab() {
 
   return (
     <ScreenContainer>
+       <TabTransitionWrapper tabPosition={3}>
       <YStack f={1} bg="$background" p="$4" space="$4" pt="$6">
         <XStack w="100%" maxWidth={400} ai="center" jc="center" px={4}>
           <Text fontSize="$9" fontWeight="700">
@@ -199,6 +200,7 @@ export default function ProfileTab() {
           </>
         )}
       </YStack>
+      </TabTransitionWrapper>
     </ScreenContainer>
   )
 }

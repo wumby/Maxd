@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router'
 import { Dumbbell, Scale, ArrowUpRight } from '@tamagui/lucide-icons'
 import { CurrentWeightWidget } from '@/components/widgets/CurrentWeightWidget'
 import { StreakWidget } from '@/components/widgets/StreakWidget'
+import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
 
 export default function HomeTab() {
   const { user } = useAuth()
@@ -23,6 +24,8 @@ export default function HomeTab() {
 
   return (
     <ScreenContainer>
+      <TabTransitionWrapper tabPosition={0}>
+
       <XStack jc="center" ai="center" px="$4" mt="$4" mb="$3">
         <Text fontSize="$10" fontWeight="900" color="$accentColor">
           Maxd
@@ -82,6 +85,7 @@ export default function HomeTab() {
           </Text>
         </Card>
       </XStack>
+      </TabTransitionWrapper>
     </ScreenContainer>
   )
 }

@@ -1,18 +1,39 @@
-import { Tabs } from 'expo-router'
+import { Tabs, useRouter, usePathname } from 'expo-router'
 import { Home, Dumbbell, User, Scale } from '@tamagui/lucide-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useThemeName } from 'tamagui'
-import { Platform } from 'react-native'
+import { Platform, TouchableOpacity } from 'react-native'
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
+  const router = useRouter()
+  const pathname = usePathname()
 
   const activeTintColor = isDark ? '#E4E4E7' : '#1F2937'
   const inactiveTintColor = isDark ? '#7C7C8A' : '#A3A3A3'
-  const backgroundColor = isDark ? 'rgba(20, 20, 20, 0.93)' : 'rgba(255,255,255,0.9)'
-
+  const backgroundColor = isDark ? 'rgba(20, 20, 20, 0.96)' : 'rgba(255,255,255,0.9)'
   const borderColor = isDark ? '#2C2C2E' : '#E5E7EB'
+
+ const createTabBarButton = (target: string) => {
+  const TabBarButton = (props: any) => {
+    return (
+      <TouchableOpacity
+        {...props}
+        onPress={() => {
+          if (pathname.startsWith(`/tabs/${target}`)) {
+            router.replace(`/tabs/${target}`)
+          } else {
+            router.push(`/tabs/${target}`)
+          }
+        }}
+      />
+    )
+  }
+  TabBarButton.displayName = `TabBarButton_${target}`
+  return TabBarButton
+}
+
 
   return (
     <Tabs
@@ -41,6 +62,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Home',
+          tabBarButton: createTabBarButton('home'),
           tabBarIcon: ({ color, focused }) => <Home color={color} size={focused ? 24 : 22} />,
         }}
       />
@@ -48,6 +70,7 @@ export default function TabLayout() {
         name="weight"
         options={{
           title: 'Weight',
+          tabBarButton: createTabBarButton('weight'),
           tabBarIcon: ({ color, focused }) => <Scale color={color} size={focused ? 24 : 22} />,
         }}
       />
@@ -55,6 +78,7 @@ export default function TabLayout() {
         name="workouts"
         options={{
           title: 'Workouts',
+          tabBarButton: createTabBarButton('workouts'),
           tabBarIcon: ({ color, focused }) => <Dumbbell color={color} size={focused ? 24 : 22} />,
         }}
       />
@@ -62,6 +86,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          tabBarButton: createTabBarButton('profile'),
           tabBarIcon: ({ color, focused }) => <User color={color} size={focused ? 24 : 22} />,
         }}
       />
