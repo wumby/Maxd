@@ -1,68 +1,36 @@
-import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react'
-import { Button, YStack, Text, XStack, useThemeName } from 'tamagui'
+import { useState, useMemo, useCallback } from 'react'
+import { Button, YStack, Text, XStack } from 'tamagui'
+import { useRouter, useFocusEffect } from 'expo-router'
+import { Pencil } from '@tamagui/lucide-icons'
 import { useAuth } from '@/contexts/AuthContext'
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import { CardsBottom } from '@/components/weights/CardsBottom'
 import { useToast } from '@/contexts/ToastContextProvider'
-import { CardsTop } from '@/components/weights/CardsTop'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
-import { Pencil } from '@tamagui/lucide-icons'
-import { ScreenContainer } from '@/components/ScreenContainer'
+import { fetchWeights, logWeight } from '@/services/weightService'
+import { EnterWeightSheet } from '@/components/weights/EnterWeightSheet'
 import { DatePickerSheet } from '@/components/weights/DatePickerSheet'
 import { GoalModeSheet } from '@/components/weights/GoalModeSheet'
-import { EnterWeightSheet } from '@/components/weights/EnterWeightSheet'
-import { fetchWeights, logWeight } from '@/services/weightService'
+import { CardsTop } from '@/components/weights/CardsTop'
+import { CardsBottom } from '@/components/weights/CardsBottom'
 import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
+import { ScreenContainer } from '@/components/ScreenContainer'
 
-const History = lazy(() => import('@/components/weights/History'))
-const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
-const ChartWebView = lazy(() => import('@/components/weights/ChartWebView'))
-const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChartWebView'))
-
-export default function WeightTab() {
+export default function WeightIndex() {
+  const { user, token } = useAuth()
   const { weightUnit } = usePreferences()
-  const router = useRouter()
   const { showToast } = useToast()
+  const router = useRouter()
   const [weights, setWeights] = useState<{ id: number; value: number; created_at: string }[]>([])
-  const [viewMode, setViewMode] = useState<
-    'chart' | 'monthlyChart' | 'history' | 'monthlyHistory' | null
-  >(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showDateSheet, setShowDateSheet] = useState(false)
   const [tempDate, setTempDate] = useState(selectedDate)
   const [goalModeSheetVisible, setGoalModeSheetVisible] = useState(false)
   const [showWeightSheet, setShowWeightSheet] = useState(false)
-  const { user, token } = useAuth()
-  const params = useLocalSearchParams()
-  const shouldLog = params.log === '1'
   const [inputError, setInputError] = useState('')
-
-  const goalLabel = useMemo(() => {
-    if (!user) return null
-    const mode = user.goal_mode || 'track'
-    switch (mode) {
-      case 'lose':
-        return 'Goal: Lose weight'
-      case 'gain':
-        return 'Goal: Gain weight'
-      case 'track':
-      default:
-        return 'Goal: Just tracking'
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (shouldLog) {
-      setShowWeightSheet(true)
-      router.replace('/tabs/weight')
-    }
-  }, [shouldLog])
 
   useFocusEffect(
     useCallback(() => {
       if (!token) return
-      setViewMode(null)
       const getData = async () => {
         try {
           const data = await fetchWeights(token)
@@ -79,7 +47,6 @@ export default function WeightTab() {
       getData()
     }, [token])
   )
-
   const handleLogWeight = async (entered: string) => {
     if (!token) return
     const rawInput = parseFloat(entered)
@@ -87,9 +54,7 @@ export default function WeightTab() {
       setInputError('Please enter a valid weight')
       return
     }
-
     const weightInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(rawInput) : rawInput
-
     try {
       const created = await logWeight({
         token,
@@ -99,7 +64,6 @@ export default function WeightTab() {
 
       setShowWeightSheet(false)
       showToast('Weight added!')
-
       setWeights(prev =>
         [...prev, created].sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -109,35 +73,41 @@ export default function WeightTab() {
       setInputError(err.message || 'Error logging weight')
     }
   }
+
   const currentWeight = useMemo(() => {
     if (weights.length === 0) return '--'
     const val = Number(weights[0].value)
     if (isNaN(val)) return '--'
     const converted = weightUnit === 'lb' ? WeightUtil.kgToLbs(val) : val
-    const unitLabel = weightUnit
-    return `${converted.toFixed(1)} ${unitLabel}`
+    return `${converted.toFixed(1)} ${weightUnit}`
   }, [weights])
 
-  const themeName = useThemeName()
-  if (!themeName) return null
+  const goalLabel = useMemo(() => {
+    if (!user) return null
+    switch (user.goal_mode || 'track') {
+      case 'lose':
+        return 'Goal: Lose weight'
+      case 'gain':
+        return 'Goal: Gain weight'
+      default:
+        return 'Goal: Just tracking'
+    }
+  }, [user])
 
   return (
     <>
       <ScreenContainer>
-         <TabTransitionWrapper tabPosition={1}>
-        {viewMode === null && (
+        <TabTransitionWrapper tabPosition={1}>
           <YStack f={1} jc="space-evenly" gap="$4">
             <CardsTop
-              onChartPress={() => setViewMode('chart')}
-              onMonthlyPress={() => setViewMode('monthlyChart')}
+              onChartPress={() => router.push('/tabs/weight/chart')}
+              onMonthlyPress={() => router.push('tabs/weight/monthlyChart')}
               weights={weights}
             />
-
             <YStack ai="center" gap="$4">
               <Text fontSize="$9" fontWeight="700">
                 Current: {currentWeight}
               </Text>
-
               {goalLabel && (
                 <XStack ai="center" gap="$2">
                   <Text fontSize="$5" color="$gray10">
@@ -152,43 +122,19 @@ export default function WeightTab() {
                 </XStack>
               )}
             </YStack>
-
             <YStack ai="center">
               <Button size="$5" onPress={() => setShowWeightSheet(true)}>
                 Enter New Weight
               </Button>
             </YStack>
-
             <CardsBottom
-              onHistoryPress={() => setViewMode('history')}
-              onMonthlyPress={() => setViewMode('monthlyHistory')}
+              onHistoryPress={() => router.push('/tabs/weight/history')}
+              onMonthlyPress={() => router.push('/tabs/weight/monthlyHistory')}
               weights={weights}
             />
           </YStack>
-        )}
         </TabTransitionWrapper>
       </ScreenContainer>
-
-      <Suspense fallback={null}>
-        {viewMode === 'chart' && (
-          <ChartWebView onBack={() => setViewMode(null)} weights={weights} />
-        )}
-        {viewMode === 'monthlyChart' && (
-          <MonthlyChartWebView onBack={() => setViewMode(null)} weights={weights} />
-        )}
-        {viewMode === 'history' && (
-          <History
-            visible
-            onClose={() => setViewMode(null)}
-            weights={weights}
-            setWeights={setWeights}
-          />
-        )}
-        {viewMode === 'monthlyHistory' && (
-          <MonthlyHistory visible onClose={() => setViewMode(null)} weights={weights} />
-        )}
-      </Suspense>
-
       <EnterWeightSheet
         open={showWeightSheet}
         onOpenChange={setShowWeightSheet}

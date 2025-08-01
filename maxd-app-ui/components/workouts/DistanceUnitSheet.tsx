@@ -1,6 +1,6 @@
 import { Sheet, YStack, Button, Text } from 'tamagui'
 
-const DISTANCE_UNITS = ['mi', 'km', 'm', 'steps'] as const;
+const DISTANCE_UNITS = ['mi', 'km', 'm', 'steps'] as const
 
 const DISTANCE_UNIT_LABELS = {
   mi: 'Miles',

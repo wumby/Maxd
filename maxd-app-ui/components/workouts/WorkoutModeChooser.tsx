@@ -21,7 +21,7 @@ export function WorkoutModeChooser({
           iconAfter={false}
           onPress={onChooseNew}
         >
-          <Text>New</Text>
+          New
         </Button>
         <Button
           size="$5"
@@ -31,16 +31,14 @@ export function WorkoutModeChooser({
           iconAfter={false}
           onPress={onChooseFavorite}
         >
-          <Text>Favorite</Text>
+          Favorite
         </Button>
       </XStack>
-
-      <Text fontSize="$4" color="$gray10" textAlign="center">
+      <Text fontSize="$4" color="$gray10" ta="center">
         Log a new workout by creating a new one or selecting from favorites.
       </Text>
-
       {feedback && (
-        <Text color="$red10" fontSize="$4" textAlign="center" mt="$3">
+        <Text color="$red10" fontSize="$4" ta="center" mt="$3">
           {feedback}
         </Text>
       )}

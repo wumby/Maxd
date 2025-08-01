@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, Pressable } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { YStack, Text, XStack, useThemeName } from 'tamagui'
@@ -34,10 +34,15 @@ export default function ChartWebView({
     return Array.from(uniqueYears).sort((a, b) => b - a)
   }, [weights])
 
-  const currentYear = new Date().getFullYear().toString()
-  const [filter, setFilter] = useState(
-    years.map(String).includes(currentYear) ? currentYear : 'All Years'
-  )
+ const [filter, setFilter] = useState('All Years')
+
+useEffect(() => {
+  if (years.length > 0) {
+    setFilter(String(years[0]))
+  }
+}, [years])
+
+
   const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
   const rangeCutoff = useMemo(() => {

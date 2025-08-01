@@ -22,8 +22,8 @@ export function EditWeightSheet({
       <Sheet.Overlay />
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
-        <YStack gap="$4" >
-          <Text fontSize="$8" fontWeight="700" textAlign='center'>
+        <YStack gap="$4">
+          <Text fontSize="$8" fontWeight="700" textAlign="center">
             Edit Weight
           </Text>
           <Input

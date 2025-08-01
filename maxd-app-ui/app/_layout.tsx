@@ -28,7 +28,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <PreferencesProvider>
-        <TabTransitionProvider> 
+        <TabTransitionProvider>
           <InnerApp />
         </TabTransitionProvider>
       </PreferencesProvider>

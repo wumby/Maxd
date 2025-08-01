@@ -21,10 +21,12 @@ export function ConfirmDeleteSheet({
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
-          <Text fontSize="$8" fontWeight="700" textAlign='center'>
+          <Text fontSize="$8" fontWeight="700" textAlign="center">
             {title}
           </Text>
-          <Text color="$gray10" textAlign='center'>{message}</Text>
+          <Text color="$gray10" textAlign="center">
+            {message}
+          </Text>
           <XStack gap="$2" mt={'$4'}>
             <Button flex={1} onPress={onCancel}>
               Cancel

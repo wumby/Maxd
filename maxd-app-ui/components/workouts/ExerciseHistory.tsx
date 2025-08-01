@@ -33,56 +33,52 @@ export default function ExerciseHistory({
   const [filterYear, setFilterYear] = useState<'All Years' | string>(currentYear)
   const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
   const [filterExercise, setFilterExercise] = useState<string | null>(
-  exercises.length > 0 ? exercises[0].name.trim() : null
-)
+    exercises.length > 0 ? exercises[0].name.trim() : null
+  )
   const [showSheet, setShowSheet] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [confirmId, setConfirmId] = useState<number | null>(null)
-const { savedExercises, setSavedExercises } = useSavedExercises()
-const [editingExercise, setEditingExercise] = useState<any | null>(null)
-const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null)
-const [viewMode, setViewMode] = useState<'history' | 'edit'>('history')
-const { showToast } = useToast()
-useEffect(() => {
-  if (exercises.length > 0 && !filterExercise) {
-    setFilterExercise(exercises[0].name.trim())
-  }
-}, [exercises])
-
-const isFavorited = (ex: any) =>
-  savedExercises.some(saved => saved.name.toLowerCase() === ex.name.trim().toLowerCase())
-const toggleFavorite = async (ex: any) => {
-  const name = ex.name.trim()
-  const existing = savedExercises.find(
-    saved => saved.name.toLowerCase() === name.toLowerCase()
-  )
-
-  if (existing) {
-    try {
-      await deleteSavedExercise(token, existing.id)
-      setSavedExercises(prev => prev.filter(s => s.id !== existing.id))
-      showToast(`${name} removed from favorites`)
-    } catch (err) {
-      console.error('Failed to remove favorite:', err)
-      showToast('Error removing favorite')
+  const { savedExercises, setSavedExercises } = useSavedExercises()
+  const [editingExercise, setEditingExercise] = useState<any | null>(null)
+  const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useState<'history' | 'edit'>('history')
+  const { showToast } = useToast()
+  useEffect(() => {
+    if (exercises.length > 0 && !filterExercise) {
+      setFilterExercise(exercises[0].name.trim())
     }
-  } else {
-    try {
-      const saved = await createSavedExercise(token, {
-        name,
-        type: ex.type,
-        sets: ex.sets,
-      })
-      setSavedExercises(prev => [saved, ...prev])
-      showToast(`${name} added to favorites`)
-    } catch (err) {
-      console.error('Failed to add favorite:', err)
-      showToast('Error adding favorite')
+  }, [exercises])
+
+  const isFavorited = (ex: any) =>
+    savedExercises.some(saved => saved.name.toLowerCase() === ex.name.trim().toLowerCase())
+  const toggleFavorite = async (ex: any) => {
+    const name = ex.name.trim()
+    const existing = savedExercises.find(saved => saved.name.toLowerCase() === name.toLowerCase())
+
+    if (existing) {
+      try {
+        await deleteSavedExercise(token, existing.id)
+        setSavedExercises(prev => prev.filter(s => s.id !== existing.id))
+        showToast(`${name} removed from favorites`)
+      } catch (err) {
+        console.error('Failed to remove favorite:', err)
+        showToast('Error removing favorite')
+      }
+    } else {
+      try {
+        const saved = await createSavedExercise(token, {
+          name,
+          type: ex.type,
+          sets: ex.sets,
+        })
+        setSavedExercises(prev => [saved, ...prev])
+        showToast(`${name} added to favorites`)
+      } catch (err) {
+        console.error('Failed to add favorite:', err)
+        showToast('Error adding favorite')
+      }
     }
   }
-}
-
-
 
   const years = useMemo(() => {
     const uniqueYears = new Set(exercises.map(e => new Date(e.created_at).getFullYear()))
@@ -136,45 +132,44 @@ const toggleFavorite = async (ex: any) => {
   }
 
   const renderItem = useCallback(
-  ({ item, index }: { item: any; index: number }) => {
-    const ex = item
+    ({ item, index }: { item: any; index: number }) => {
+      const ex = item
       const date = new Date(ex.created_at).toLocaleDateString()
       return (
         <Animated.View entering={FadeInUp.duration(300).delay(index * 20)}>
           <Card elevate bg="$color2" p="$4" gap="$3" br="$6" my="$2">
-           <XStack jc="space-between" ai="center">
-  <YStack>
-    <Text fontSize="$6" fontWeight="700">
-      {ex.name}
-    </Text>
-    <Text fontSize="$3" color="$gray10">
-      {date}
-    </Text>
-  </YStack>
+            <XStack jc="space-between" ai="center">
+              <YStack>
+                <Text fontSize="$6" fontWeight="700">
+                  {ex.name}
+                </Text>
+                <Text fontSize="$3" color="$gray10">
+                  {date}
+                </Text>
+              </YStack>
 
-  {editMode && (
-    <XStack gap="$6" ai="center">
-      <Pressable onPress={() => toggleFavorite(ex)}>
-        <Text fontSize="$7">{isFavorited(ex) ? '★' : '☆'}</Text>
-      </Pressable>
-    <Pressable
-  onPress={() => {
-    setEditingWorkoutId(ex.workout_id)
-    setEditingExercise(ex)
-    setViewMode('edit')
-  }}
-  hitSlop={10}
->
-  <Pencil size={22} color={theme.color.val} />
-</Pressable>
+              {editMode && (
+                <XStack gap="$6" ai="center">
+                  <Pressable onPress={() => toggleFavorite(ex)}>
+                    <Text fontSize="$7">{isFavorited(ex) ? '★' : '☆'}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setEditingWorkoutId(ex.workout_id)
+                      setEditingExercise(ex)
+                      setViewMode('edit')
+                    }}
+                    hitSlop={10}
+                  >
+                    <Pencil size={22} color={theme.color.val} />
+                  </Pressable>
 
-
-      <Pressable onPress={() => setConfirmId(ex.id)}>
-        <Trash2 size={22} color="red" />
-      </Pressable>
-    </XStack>
-  )}
-</XStack>
+                  <Pressable onPress={() => setConfirmId(ex.id)}>
+                    <Trash2 size={22} color="red" />
+                  </Pressable>
+                </XStack>
+              )}
+            </XStack>
             <YStack mt="$3" gap="$2">
               {ex.sets?.map((set: any, j: number) => (
                 <Text key={j} fontSize="$4" color="$gray10">
@@ -189,49 +184,46 @@ const toggleFavorite = async (ex: any) => {
     [editMode, weightUnit, savedExercises]
   )
 
- if (viewMode === 'edit' && editingExercise) {
-  return (
-    <EditExercise
-      exercise={editingExercise}
-      onCancel={() => {
-        setEditingExercise(null)
-        setViewMode('history')
-      }}
-    onSubmit={updated => {
-  setWorkouts(prev => {
-    const newWorkouts = prev.map(workout => {
-      if (workout.id !== editingWorkoutId) return workout
+  if (viewMode === 'edit' && editingExercise) {
+    return (
+      <EditExercise
+        exercise={editingExercise}
+        onCancel={() => {
+          setEditingExercise(null)
+          setViewMode('history')
+        }}
+        onSubmit={updated => {
+          setWorkouts(prev => {
+            const newWorkouts = prev.map(workout => {
+              if (workout.id !== editingWorkoutId) return workout
 
-      const updatedExercises = workout.exercises.map((ex: { id: any }) => {
-        if (ex.id === updated.id) {
-          return {
-            ...ex,
-            name: updated.name,
-            type: updated.type,
-            sets: updated.sets,
-          }
-        }
-        return ex
-      })
+              const updatedExercises = workout.exercises.map((ex: { id: any }) => {
+                if (ex.id === updated.id) {
+                  return {
+                    ...ex,
+                    name: updated.name,
+                    type: updated.type,
+                    sets: updated.sets,
+                  }
+                }
+                return ex
+              })
 
-      return {
-        ...workout,
-        exercises: updatedExercises,
-      }
-    })
-    return newWorkouts
-  })
+              return {
+                ...workout,
+                exercises: updatedExercises,
+              }
+            })
+            return newWorkouts
+          })
 
-  showToast('Exercise updated')
-  setEditingExercise(null)
-  setViewMode('history')
-}}
-
-
-    />
-  )
-}
-
+          showToast('Exercise updated')
+          setEditingExercise(null)
+          setViewMode('history')
+        }}
+      />
+    )
+  }
 
   return (
     <ScreenContainer>
@@ -306,7 +298,7 @@ const toggleFavorite = async (ex: any) => {
       {/* FlatList for exercises */}
       <FlatList
         data={filtered}
-        keyExtractor={(item) => `${item.id}-${item.updated_at || ''}`}
+        keyExtractor={item => `${item.id}-${item.updated_at || ''}`}
         renderItem={renderItem}
         initialNumToRender={12}
         removeClippedSubviews
@@ -322,9 +314,6 @@ const toggleFavorite = async (ex: any) => {
         onSelect={setFilterExercise}
         exerciseNames={exerciseNames}
       />
-    
-
-      
 
       {/* Confirm Delete Modal */}
       <Modal

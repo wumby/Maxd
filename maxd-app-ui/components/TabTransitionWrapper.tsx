@@ -39,7 +39,7 @@ export function TabTransitionWrapper({
         duration: 500,
         easing: Easing.out(Easing.cubic),
       })
-    }, 10) 
+    }, 10)
 
     return () => clearTimeout(timeout)
   }, [tabIndex, prevTabIndex, direction, tabPosition])
@@ -48,9 +48,5 @@ export function TabTransitionWrapper({
     transform: [{ translateX: offset.value }],
   }))
 
-  return (
-    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-      {children}
-    </Animated.View>
-  )
+  return <Animated.View style={[{ flex: 1 }, animatedStyle]}>{children}</Animated.View>
 }

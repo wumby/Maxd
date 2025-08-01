@@ -7,20 +7,18 @@ type TabTransitionContextType = {
   setTabIndex: (index: number) => void
 }
 
-
 const TabTransitionContext = createContext<TabTransitionContextType | null>(null)
 
 export const TabTransitionProvider = ({ children }: { children: React.ReactNode }) => {
   const [tabIndex, setTabIndexInternal] = useState(0)
   const [prevTabIndex, setPrevTabIndex] = useState(0)
-const [direction, setDirection] = useState<1 | -1>(1)
+  const [direction, setDirection] = useState<1 | -1>(1)
 
-const setTabIndex = (index: number) => {
-  setDirection(index > tabIndex ? 1 : -1)
-  setPrevTabIndex(tabIndex)
-  setTabIndexInternal(index)
-}
-
+  const setTabIndex = (index: number) => {
+    setDirection(index > tabIndex ? 1 : -1)
+    setPrevTabIndex(tabIndex)
+    setTabIndexInternal(index)
+  }
 
   return (
     <TabTransitionContext.Provider value={{ tabIndex, prevTabIndex, setTabIndex, direction }}>

@@ -12,6 +12,7 @@ import WeightUtil from '@/util/weightConversion'
 import { deleteWeightEntry, updateWeightEntry } from '@/services/weightService'
 import { EditWeightSheet } from './EditWeightSheet'
 import { ConfirmDeleteSheet } from '../ConfirmDeleteSheet'
+import { ScreenContainer } from '../ScreenContainer'
 
 interface WeightEntry {
   id: number
@@ -47,7 +48,6 @@ const HistoryItem = React.memo(
     goalMode?: string
   }) => {
     const delta = prev ? item.value - prev.value : 0
-    const screenWidth = Dimensions.get('window').width
     const { weightUnit } = usePreferences()
 
     const convertWeight = (val?: number | string) => {
@@ -60,19 +60,18 @@ const HistoryItem = React.memo(
       return converted.toFixed(1)
     }
 
-  const getDeltaColor = () => {
-  if (!prev) return '$gray10'
-  if (goalMode === 'track') return theme.color.val
-  if (delta === 0) return '$gray10'
-  if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
-  if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
-  return '$gray10'
-}
-
+    const getDeltaColor = () => {
+      if (!prev) return '$gray10'
+      if (goalMode === 'track') return theme.color.val
+      if (delta === 0) return '$gray10'
+      if (goalMode === 'lose') return delta < 0 ? 'green' : 'red'
+      if (goalMode === 'gain') return delta > 0 ? 'green' : 'red'
+      return '$gray10'
+    }
 
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 40)}>
-        <Card p="$4" mb="$4" elevate bg="$color2" br="$6" width={screenWidth - 32}>
+        <Card p="$4" mb="$4" elevate bg="$color2" br="$6">
           <XStack jc="space-between" ai="center">
             <YStack>
               <Text fontSize="$6" fontWeight="700" color="$color">
@@ -115,10 +114,8 @@ HistoryItem.displayName = 'HistoryItem'
 export default function History({ visible, onClose, weights, setWeights }: HistoryProps) {
   const { user } = useAuth()
   const goalMode = user?.goal_mode
-  const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
-  const bgColor = theme.background.val
   const currentYear = new Date().getFullYear().toString()
   const [filter, setFilter] = useState<'All Years' | string>(currentYear)
   const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
@@ -210,17 +207,8 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
   if (!visible) return null
 
   return (
-    <YStack
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      zIndex={100}
-      bg={bgColor}
-      paddingTop={insets.top}
-    >
-      <YStack px="$4" pt="$4" pb="$2">
+    <ScreenContainer>
+      <YStack pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
@@ -294,7 +282,7 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
       <FlatList
         data={filtered}
         keyExtractor={item => item.id.toString()}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
         ListEmptyComponent={
           <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
             No entries
@@ -314,29 +302,27 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
         )}
       />
 
-     <EditWeightSheet
-  open={!!editingWeight}
-  onOpenChange={() => setEditingWeight(null)}
-  weightUnit={weightUnit}
-  value={editInput}
-  onChange={setEditInput}
-  onCancel={() => setEditingWeight(null)}
-  onSave={handleEditSave}
-/>
+      <EditWeightSheet
+        open={!!editingWeight}
+        onOpenChange={() => setEditingWeight(null)}
+        weightUnit={weightUnit}
+        value={editInput}
+        onChange={setEditInput}
+        onCancel={() => setEditingWeight(null)}
+        onSave={handleEditSave}
+      />
 
-<ConfirmDeleteSheet
-  open={confirmId !== null}
-  onOpenChange={() => setConfirmId(null)}
-  onCancel={() => setConfirmId(null)}
-  onConfirm={() => {
-    if (confirmId !== null) handleDelete(confirmId)
-    setConfirmId(null)
-  }}
-  title="Delete Weight"
-  message="Are you sure you want to delete this entry?"
-/>
-
-
-    </YStack>
+      <ConfirmDeleteSheet
+        open={confirmId !== null}
+        onOpenChange={() => setConfirmId(null)}
+        onCancel={() => setConfirmId(null)}
+        onConfirm={() => {
+          if (confirmId !== null) handleDelete(confirmId)
+          setConfirmId(null)
+        }}
+        title="Delete Weight"
+        message="Are you sure you want to delete this entry?"
+      />
+    </ScreenContainer>
   )
 }

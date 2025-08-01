@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Spinner, YStack } from 'tamagui'
 import { fetchWorkouts } from '@/services/workoutService'
 import { useAuth } from '@/contexts/AuthContext'
+import { Fallback } from '@/components/Fallback'
 
 const WorkoutHistory = lazy(() => import('@/components/workouts/WorkoutHistory'))
 
@@ -28,30 +29,12 @@ export default function WorkoutHistoryScreen() {
   }, [token])
 
   if (loading) {
-    return (
-      <YStack f={1} jc="center" ai="center" bg={'$background'}>
-        <Spinner size="large" />
-      </YStack>
-    )
+    return <Fallback />
   }
 
   return (
-    <Suspense fallback={ <YStack
-      f={1}
-      minHeight="100%"
-      px="$4"
-      bg="$background" // ✅ Important
-      jc="center"
-      ai="center"
-      position="relative" // optional but helps anchor layout
-    >
-      <Spinner size="large" />
-    </YStack>}>
-      <WorkoutHistory
-        workouts={workouts}
-        onClose={() => router.back()}
-        setWorkouts={setWorkouts}
-      />
+    <Suspense fallback={<Fallback />}>
+      <WorkoutHistory workouts={workouts} onClose={() => router.back()} setWorkouts={setWorkouts} />
     </Suspense>
   )
 }

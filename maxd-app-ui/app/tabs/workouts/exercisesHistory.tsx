@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { Spinner, YStack } from 'tamagui'
 import { fetchWorkouts } from '@/services/workoutService'
 import { useAuth } from '@/contexts/AuthContext'
+import { Fallback } from '@/components/Fallback'
 
 const ExerciseHistory = lazy(() => import('@/components/workouts/ExerciseHistory'))
 
@@ -38,37 +38,11 @@ export default function ExercisesPage() {
   }, [workouts])
 
   if (loading) {
-    return (
-      <YStack
-        f={1}
-        minHeight="100%"
-        px="$4"
-        bg="$background"
-        jc="center"
-        ai="center"
-        position="relative"
-      >
-        <Spinner size="large" />
-      </YStack>
-    )
+    return <Fallback />
   }
 
   return (
-    <Suspense
-      fallback={
-        <YStack
-          f={1}
-          minHeight="100%"
-          px="$4"
-          bg="$background"
-          jc="center"
-          ai="center"
-          position="relative"
-        >
-          <Spinner size="large" />
-        </YStack>
-      }
-    >
+    <Suspense fallback={<Fallback />}>
       <ExerciseHistory
         exercises={flattenedExercises}
         onClose={() => router.back()}

@@ -260,4 +260,60 @@ router.put("/:id", requireAuth, async (req, res) => {
   }
 });
 
+router.get("/:id", requireAuth, async (req, res) => {
+  const userId = (req.user as any).userId;
+  const workoutId = parseInt(req.params.id);
+
+  if (isNaN(workoutId)) {
+    res.status(400).json({ error: "Invalid workout ID" });
+    return;
+  }
+
+  try {
+    const result = await db.query(
+      `
+      SELECT 
+        w.id,
+        w.title,
+        w.created_at,
+        COALESCE(json_agg(
+          json_build_object(
+            'id', e.id,
+            'name', e.name,
+            'type', e.type,
+            'sets', COALESCE(s.sets, '[]'::json)
+          )
+        ) FILTER (WHERE e.id IS NOT NULL), '[]') AS exercises
+      FROM workouts w
+      LEFT JOIN exercises e ON w.id = e.workout_id
+      LEFT JOIN LATERAL (
+        SELECT json_agg(json_build_object(
+          'reps', s.reps,
+          'weight', s.weight,
+          'duration', s.duration,
+          'distance', s.distance,
+          'distance_unit', s.distance_unit
+        )) AS sets
+        FROM sets s
+        WHERE s.exercise_id = e.id
+      ) s ON true
+      WHERE w.id = $1 AND w.user_id = $2
+      GROUP BY w.id
+      `,
+      [workoutId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: "Workout not found" });
+      return;
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error fetching workout:", err);
+    res.status(500).json({ error: "Failed to fetch workout" });
+  }
+});
+
+
 export default router;

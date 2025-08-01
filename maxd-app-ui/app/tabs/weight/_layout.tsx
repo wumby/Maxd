@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router'
 
-export default function WorkoutsLayout() {
+export default function WeightStackLayout() {
   return (
     <Stack
       screenOptions={{

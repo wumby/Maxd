@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { YStack, XStack, Text, Button, Input, Separator, Portal } from 'tamagui' // ✅ Portal here
+import { YStack, XStack, Text, Button, Input, Separator, Portal } from 'tamagui'
 import { Trash2, ChevronDown } from '@tamagui/lucide-icons'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
@@ -178,7 +178,11 @@ export function AddExerciseCard({
                         <Input
                           keyboardType="numeric"
                           placeholder="e.g. 2.5"
-                          value={set.distance !== undefined && set.distance !== null ? String(set.distance) : ''}
+                          value={
+                            set.distance !== undefined && set.distance !== null
+                              ? String(set.distance)
+                              : ''
+                          }
                           onChangeText={val => onChangeSet(index, setIndex, 'distance', val)}
                           returnKeyType="done"
                         />
@@ -199,7 +203,6 @@ export function AddExerciseCard({
                       </YStack>
                     </XStack>
                   )}
-
                   <YStack ai="center" gap="$1">
                     <Text fontSize="$1" color="$gray10">
                       {isLast ? 'Add Set' : 'Remove'}
@@ -208,15 +211,15 @@ export function AddExerciseCard({
                       chromeless
                       size="$4"
                       icon={!isLast ? Trash2 : undefined}
-                      onPress={() =>
-                        isLast ? onAddSet(index) : onRemoveSet(index, setIndex)
-                      }
+                      onPress={() => (isLast ? onAddSet(index) : onRemoveSet(index, setIndex))}
                       accessibilityLabel={isLast ? 'Add Set' : 'Remove Set'}
                     >
-                      {isLast && (
+                      {isLast ? (
                         <Text fontSize="$7" fontWeight="700">
                           +
                         </Text>
+                      ) : (
+                        <></>
                       )}
                     </Button>
                   </YStack>
@@ -225,11 +228,8 @@ export function AddExerciseCard({
             })}
           </YStack>
         )}
-
         <Separator />
       </YStack>
-
-      {/* ✅ Use Portals for overlays */}
       <Portal>
         <ExerciseTypeSheet
           open={showTypeSheet}

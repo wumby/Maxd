@@ -46,4 +46,3 @@ export async function editExercise(token: string | null, id: number, data: any) 
 
   return await res.json()
 }
-

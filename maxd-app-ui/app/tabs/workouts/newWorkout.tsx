@@ -1,27 +1,46 @@
-import { useRouter } from 'expo-router'
-import { Spinner, Text, YStack } from 'tamagui'
-import { Suspense } from 'react'
-import NewWorkout from '@/components/workouts/NewWorkout'
+import { useRouter, useGlobalSearchParams } from 'expo-router'
+import { Suspense, lazy, useEffect, useState } from 'react'
+import { Fallback } from '@/components/Fallback'
+import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
+import { ScreenContainer } from '@/components/ScreenContainer'
+import { useAuth } from '@/contexts/AuthContext'
+import { fetchWorkoutById } from '@/services/workoutService'
+
+const NewWorkout = lazy(() => import('@/components/workouts/NewWorkout'))
 
 export default function NewWorkoutPage() {
   const router = useRouter()
+  const { workoutId } = useGlobalSearchParams()
+  const { token } = useAuth()
+  const [workoutToEdit, setWorkoutToEdit] = useState<any | null>(null)
+
+  useEffect(() => {
+    const loadWorkout = async () => {
+      if (workoutId && token) {
+        try {
+          const workout = await fetchWorkoutById(token, Number(workoutId))
+          setWorkoutToEdit(workout)
+        } catch (err) {
+          console.error('Failed to fetch workout for edit', err)
+          router.back()
+        }
+      }
+    }
+
+    loadWorkout()
+  }, [workoutId, token])
 
   return (
-    <Suspense fallback={ <YStack
-              f={1}
-              minHeight="100%"
-              px="$4"
-              bg="$background"
-              jc="center"
-              ai="center"
-              position="relative"
-            >
-              <Spinner size="large" />
-            </YStack>}>
-      <NewWorkout
-        onCancel={() => router.back()}
-        onSubmit={() => router.back()}
-      />
+    <Suspense fallback={<Fallback />}>
+      <ScreenContainer>
+        <TabTransitionWrapper tabPosition={2}>
+          <NewWorkout
+            workoutToEdit={workoutToEdit}
+            onCancel={() => router.back()}
+            onSubmit={() => router.back()}
+          />
+        </TabTransitionWrapper>
+      </ScreenContainer>
     </Suspense>
   )
 }

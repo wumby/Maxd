@@ -15,25 +15,24 @@ export default function TabLayout() {
   const backgroundColor = isDark ? 'rgba(20, 20, 20, 0.96)' : 'rgba(255,255,255,0.9)'
   const borderColor = isDark ? '#2C2C2E' : '#E5E7EB'
 
- const createTabBarButton = (target: string) => {
-  const TabBarButton = (props: any) => {
-    return (
-      <TouchableOpacity
-        {...props}
-        onPress={() => {
-          if (pathname.startsWith(`/tabs/${target}`)) {
-            router.replace(`/tabs/${target}`)
-          } else {
-            router.push(`/tabs/${target}`)
-          }
-        }}
-      />
-    )
+  const createTabBarButton = (target: string) => {
+    const TabBarButton = (props: any) => {
+      return (
+        <TouchableOpacity
+          {...props}
+          onPress={() => {
+            if (pathname.startsWith(`/tabs/${target}`)) {
+              router.replace(`/tabs/${target}`)
+            } else {
+              router.push(`/tabs/${target}`)
+            }
+          }}
+        />
+      )
+    }
+    TabBarButton.displayName = `TabBarButton_${target}`
+    return TabBarButton
   }
-  TabBarButton.displayName = `TabBarButton_${target}`
-  return TabBarButton
-}
-
 
   return (
     <Tabs

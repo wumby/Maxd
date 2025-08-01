@@ -1,4 +1,4 @@
-import { API_URL } from "@/env"
+import { API_URL } from '@/env'
 
 export async function createSavedExercise(
   token: string | null,
@@ -22,7 +22,6 @@ export async function createSavedExercise(
   if (!res.ok) throw new Error('Failed to save favorite exercise')
   return await res.json()
 }
-
 
 export async function deleteSavedExercise(token: string | null, id: number) {
   if (!token) throw new Error('No token provided')

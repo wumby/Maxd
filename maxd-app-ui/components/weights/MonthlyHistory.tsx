@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { YStack, Text, XStack, Card, useThemeName, useTheme } from 'tamagui'
-import { Pressable, ScrollView, Dimensions } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Pressable, ScrollView } from 'react-native'
 import { ChevronLeft } from '@tamagui/lucide-icons'
 import Animated, {
   FadeInUp,
@@ -12,14 +11,13 @@ import Animated, {
 import WeightUtil from '@/util/weightConversion'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { ScreenContainer } from '../ScreenContainer'
 
 interface WeightEntry {
   id: number
   value: number
   created_at: string
 }
-
-const SCREEN_WIDTH = Dimensions.get('window').width
 
 export default function MonthlySummary({
   visible,
@@ -30,11 +28,10 @@ export default function MonthlySummary({
   onClose: () => void
   weights: WeightEntry[]
 }) {
-  const insets = useSafeAreaInsets()
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
   const { weightUnit } = usePreferences()
-const { user } = useAuth()
+  const { user } = useAuth()
   const goalMode = user?.goal_mode
   const convertWeight = (val?: number) => {
     if (typeof val !== 'number' || isNaN(val)) return '--'
@@ -136,16 +133,8 @@ const { user } = useAuth()
   if (!visible) return null
 
   return (
-    <YStack
-      position="absolute"
-      top={insets.top}
-      left={0}
-      right={0}
-      bottom={0}
-      zIndex={100}
-      bg="$background"
-    >
-      <YStack px="$4" pt="$4" pb="$2">
+    <ScreenContainer>
+      <YStack pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
@@ -181,7 +170,7 @@ const { user } = useAuth()
         </ScrollView>
       </YStack>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 40 }}>
         {monthlyAverages.length === 0 ? (
           <Text textAlign="center" fontSize="$5" color="$gray10" mt="$6">
             No data yet
@@ -197,15 +186,7 @@ const { user } = useAuth()
                 key={`month-${entry.year}-${entry.month}`}
                 entering={FadeInUp.duration(300).delay(index * 40)}
               >
-                <Card
-                  elevate
-                  bg="$color2"
-                  p="$4"
-                  gap="$3"
-                  br="$6"
-                  mb="$4"
-                  width={SCREEN_WIDTH - 32}
-                >
+                <Card elevate bg="$color2" p="$4" gap="$3" br="$6" mb="$4">
                   <XStack jc="space-between" ai="center">
                     <YStack>
                       <Text fontSize="$6" fontWeight="700">
@@ -219,7 +200,9 @@ const { user } = useAuth()
 
                     {delta !== null && !isNaN(delta) ? (
                       <Text color={getDeltaColor(delta)} fontSize="$3">
-                        {delta === 0 ? '±0' : `${delta > 0 ? '+' : ''}${convertWeight(delta)} ${weightUnit}`}
+                        {delta === 0
+                          ? '±0'
+                          : `${delta > 0 ? '+' : ''}${convertWeight(delta)} ${weightUnit}`}
                       </Text>
                     ) : null}
                   </XStack>
@@ -229,6 +212,6 @@ const { user } = useAuth()
           })
         )}
       </ScrollView>
-    </YStack>
+    </ScreenContainer>
   )
 }
