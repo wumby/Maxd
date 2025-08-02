@@ -5,19 +5,22 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcrypt": "6.0.0",
     "cors": "2.8.5",
     "dotenv": "16.5.0",
     "express": "5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "8.16.0"
+    "pg": "8.16.0",
+    "pg-format": "^1.0.4",
+    "zod": "4.0.14"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -27,6 +30,7 @@
     "@types/node": "^24.0.3",
     "@types/pg": "^8.15.4",
     "nodemon": "3.1.10",
+    "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }

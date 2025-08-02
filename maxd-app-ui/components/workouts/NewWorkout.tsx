@@ -160,17 +160,18 @@ export default function NewWorkout({
         name: ex.name.trim(),
         type: ex.type,
         sets: ex.sets.map((set: any) => {
-          const raw = parseFloat(set.weight)
-          const weightInKg = isNaN(raw) ? null : weightUnit === 'lb' ? WeightUtil.lbsToKg(raw) : raw
+  const raw = parseFloat(set.weight)
+  const weightInKg = isNaN(raw) ? null : weightUnit === 'lb' ? WeightUtil.lbsToKg(raw) : raw
 
-          return {
-            reps: parseInt(set.reps) || null,
-            weight: weightInKg,
-            duration: set.duration || null,
-            distance: set.distance || null,
-            distance_unit: set.distance_unit || null,
-          }
-        }),
+  return {
+    reps: parseInt(set.reps) || null,
+    weight: weightInKg,
+    duration: parseInt(set.duration) || null,       // <-- fix here
+    distance: parseFloat(set.distance) || null,     // <-- and here
+    distance_unit: set.distance_unit || null,
+  }
+})
+
       }))
       .filter(ex => ex.sets.length > 0)
   }
@@ -185,6 +186,13 @@ export default function NewWorkout({
     }
 
     const payload = buildPayload()
+console.log('Workout payload:', JSON.stringify({
+  title: title.trim(),
+  created_at: workoutDate.toISOString(),
+  exercises: payload,
+}, null, 2))
+
+
     if (payload.length === 0) {
       setFeedback('Add at least one valid exercise')
       return
