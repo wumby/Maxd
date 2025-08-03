@@ -7,95 +7,89 @@ import { ExerciseInput, WorkoutResponse } from '../types'
 
 const router = Router()
 
-router.post(
-  '/',
-  requireAuth,
-  async (req: Request<{}, {}, WorkoutCreateInput>, res: Response) => {
-    const parsed = WorkoutCreateSchema.safeParse(req.body)
+router.post('/', requireAuth, async (req: Request<{}, {}, WorkoutCreateInput>, res: Response) => {
+  const parsed = WorkoutCreateSchema.safeParse(req.body)
 
-    if (!parsed.success) {
-      res.status(400).json({
-        error: 'Invalid input',
-        details: z.treeifyError(parsed.error),
-      })
-      return 
-    }
-
-    const userId = req.user?.userId
-
-    if (!userId) {
-       res.status(401).json({ error: 'Unauthorized: missing user ID' })
-       return
-    }
-
-    const { title, exercises, created_at } = parsed.data
-
-    const workoutDate = created_at ? new Date(created_at) : new Date()
-    const startOfDay = new Date(workoutDate)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(workoutDate)
-    endOfDay.setHours(23, 59, 59, 999)
-
-    try {
-      const countRes = await db.query(
-        `SELECT COUNT(*) FROM workouts
-         WHERE user_id = $1 AND created_at BETWEEN $2 AND $3`,
-        [userId, startOfDay.toISOString(), endOfDay.toISOString()]
-      )
-
-      const workoutCount = parseInt(countRes.rows[0].count)
-
-      if (workoutCount >= 3) {
-         res.status(400).json({
-          error: 'Limit of 3 workouts per day reached',
-        })
-        return 
-      }
-
-      const workoutRes = await db.query(
-        'INSERT INTO workouts (user_id, title, created_at) VALUES ($1, $2, $3) RETURNING id',
-        [userId, title || null, workoutDate.toISOString()]
-      )
-
-      const workoutId = workoutRes.rows[0].id
-
-      for (const exercise of exercises) {
-        const { name, type = 'weights', sets } = exercise
-
-        const exerciseRes = await db.query(
-          'INSERT INTO exercises (workout_id, user_id, name, type) VALUES ($1, $2, $3, $4) RETURNING id',
-          [workoutId, userId, name, type]
-        )
-
-        const exerciseId = exerciseRes.rows[0].id
-
-        for (const set of sets) {
-          const {
-            reps = null,
-            weight = null,
-            duration = null,
-            distance = null,
-            distance_unit = null,
-          } = set
-
-          await db.query(
-            `INSERT INTO sets (exercise_id, user_id, reps, weight, duration, distance, distance_unit)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [exerciseId, userId, reps, weight, duration, distance, distance_unit]
-          )
-        }
-      }
-
-       res.status(201).json({ message: 'Workout saved!' })
-       return 
-    } catch {
-       res.status(500).json({ error: 'Failed to save workout' })
-       return
-    }
+  if (!parsed.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: z.treeifyError(parsed.error),
+    })
+    return
   }
-)
 
+  const userId = req.user?.userId
 
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized: missing user ID' })
+    return
+  }
+
+  const { title, exercises, created_at } = parsed.data
+
+  const workoutDate = created_at ? new Date(created_at) : new Date()
+  const startOfDay = new Date(workoutDate)
+  startOfDay.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(workoutDate)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  try {
+    const countRes = await db.query(
+      `SELECT COUNT(*) FROM workouts
+         WHERE user_id = $1 AND created_at BETWEEN $2 AND $3`,
+      [userId, startOfDay.toISOString(), endOfDay.toISOString()]
+    )
+
+    const workoutCount = parseInt(countRes.rows[0].count)
+
+    if (workoutCount >= 3) {
+      res.status(400).json({
+        error: 'Limit of 3 workouts per day reached',
+      })
+      return
+    }
+
+    const workoutRes = await db.query(
+      'INSERT INTO workouts (user_id, title, created_at) VALUES ($1, $2, $3) RETURNING id',
+      [userId, title || null, workoutDate.toISOString()]
+    )
+
+    const workoutId = workoutRes.rows[0].id
+
+    for (const exercise of exercises) {
+      const { name, type = 'weights', sets } = exercise
+
+      const exerciseRes = await db.query(
+        'INSERT INTO exercises (workout_id, user_id, name, type) VALUES ($1, $2, $3, $4) RETURNING id',
+        [workoutId, userId, name, type]
+      )
+
+      const exerciseId = exerciseRes.rows[0].id
+
+      for (const set of sets) {
+        const {
+          reps = null,
+          weight = null,
+          duration = null,
+          distance = null,
+          distance_unit = null,
+        } = set
+
+        await db.query(
+          `INSERT INTO sets (exercise_id, user_id, reps, weight, duration, distance, distance_unit)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [exerciseId, userId, reps, weight, duration, distance, distance_unit]
+        )
+      }
+    }
+
+    res.status(201).json({ message: 'Workout saved!' })
+    return
+  } catch {
+    res.status(500).json({ error: 'Failed to save workout' })
+    return
+  }
+})
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const userId = req.user?.userId

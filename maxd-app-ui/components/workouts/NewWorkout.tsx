@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { YStack, Text, XStack, ScrollView, Button } from 'tamagui'
+import { YStack, Text, XStack, ScrollView, Button, useTheme } from 'tamagui'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
 import { useSavedExercises } from '@/hooks/useSavedExercises'
@@ -26,6 +26,7 @@ export default function NewWorkout({
   onSubmit: (updatedWorkout?: any) => void
   workoutToEdit?: any
 }) {
+  const theme = useTheme()
   const [step, setStep] = useState<'choose' | 'form'>('choose')
   const [title, setTitle] = useState('')
   const [, setMissingTitle] = useState(false)
@@ -160,18 +161,17 @@ export default function NewWorkout({
         name: ex.name.trim(),
         type: ex.type,
         sets: ex.sets.map((set: any) => {
-  const raw = parseFloat(set.weight)
-  const weightInKg = isNaN(raw) ? null : weightUnit === 'lb' ? WeightUtil.lbsToKg(raw) : raw
+          const raw = parseFloat(set.weight)
+          const weightInKg = isNaN(raw) ? null : weightUnit === 'lb' ? WeightUtil.lbsToKg(raw) : raw
 
-  return {
-    reps: parseInt(set.reps) || null,
-    weight: weightInKg,
-    duration: parseInt(set.duration) || null,       // <-- fix here
-    distance: parseFloat(set.distance) || null,     // <-- and here
-    distance_unit: set.distance_unit || null,
-  }
-})
-
+          return {
+            reps: parseInt(set.reps) || null,
+            weight: weightInKg,
+            duration: parseInt(set.duration) || null, // <-- fix here
+            distance: parseFloat(set.distance) || null, // <-- and here
+            distance_unit: set.distance_unit || null,
+          }
+        }),
       }))
       .filter(ex => ex.sets.length > 0)
   }
@@ -186,12 +186,18 @@ export default function NewWorkout({
     }
 
     const payload = buildPayload()
-console.log('Workout payload:', JSON.stringify({
-  title: title.trim(),
-  created_at: workoutDate.toISOString(),
-  exercises: payload,
-}, null, 2))
-
+    console.log(
+      'Workout payload:',
+      JSON.stringify(
+        {
+          title: title.trim(),
+          created_at: workoutDate.toISOString(),
+          exercises: payload,
+        },
+        null,
+        2
+      )
+    )
 
     if (payload.length === 0) {
       setFeedback('Add at least one valid exercise')
@@ -280,20 +286,19 @@ console.log('Workout payload:', JSON.stringify({
   return (
     <>
       <XStack jc="space-between" ai="center" mb="$3">
-        <Pressable onPress={onCancel} hitSlop={10}>
-          <XStack fd="row" ai="center" gap="$2">
-            <ChevronLeft size={20} />
-            <Text fontSize="$5" fontWeight="600" color="$color">
-              Back
-            </Text>
+        <Button
+          position="absolute"
+          left={16}
+          size="$4"
+          chromeless
+          onPress={onCancel}
+          px="$2"
+          borderRadius="$6"
+        >
+          <XStack ai="center" gap="$2">
+            <ChevronLeft size={24} color={theme.color.val} />
           </XStack>
-        </Pressable>
-
-        {!workoutToEdit && (
-          <Button size="$4" chromeless onPress={resetForm} padding={0}>
-            Reset
-          </Button>
-        )}
+        </Button>
       </XStack>
       <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
         {workoutToEdit ? 'Edit Workout' : 'New Workout'}
@@ -385,6 +390,6 @@ console.log('Workout payload:', JSON.stringify({
         favorites={savedExercises}
         onSelect={handleAddFavoriteExercise}
       />
-      </>
+    </>
   )
 }

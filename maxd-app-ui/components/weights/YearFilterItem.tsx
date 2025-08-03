@@ -35,7 +35,7 @@ export function YearFilterItem({
         >
           <Text
             fontWeight="600"
-            fontSize="$3"
+            fontSize="$2"
             color={selected ? (isDark ? 'white' : 'black') : '$gray10'}
           >
             {val === 'all' ? 'All' : val}

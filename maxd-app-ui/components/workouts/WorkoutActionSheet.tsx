@@ -24,7 +24,7 @@ export function WorkoutActionSheet({
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
-          <Text fontSize="$8" fontWeight="700" ta="center" mb="$6" >
+          <Text fontSize="$8" fontWeight="700" ta="center" mb="$6">
             {workoutTitle || 'Workout'}
           </Text>
 

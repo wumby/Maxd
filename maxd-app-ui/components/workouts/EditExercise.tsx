@@ -91,91 +91,85 @@ export function EditExercise({
   }
 
   const handleSave = async () => {
-  try {
-    const cleanedSets = editedExercise.sets.map((set: any) => {
-      const cleaned: any = {}
+    try {
+      const cleanedSets = editedExercise.sets.map((set: any) => {
+        const cleaned: any = {}
 
-      if ('reps' in set)
-        cleaned.reps = set.reps === '' ? null : parseInt(set.reps)
+        if ('reps' in set) cleaned.reps = set.reps === '' ? null : parseInt(set.reps)
 
-      if ('weight' in set)
-        cleaned.weight = set.weight === '' ? null : parseFloat(set.weight)
+        if ('weight' in set) cleaned.weight = set.weight === '' ? null : parseFloat(set.weight)
 
-      if ('duration' in set)
-        cleaned.duration = set.duration === '' ? null : parseInt(set.duration)
+        if ('duration' in set)
+          cleaned.duration = set.duration === '' ? null : parseInt(set.duration)
 
-      if ('distance' in set)
-        cleaned.distance = set.distance === '' ? null : parseFloat(set.distance)
+        if ('distance' in set)
+          cleaned.distance = set.distance === '' ? null : parseFloat(set.distance)
 
-      if ('distance_unit' in set)
-        cleaned.distance_unit = set.distance_unit || null
+        if ('distance_unit' in set) cleaned.distance_unit = set.distance_unit || null
 
-      return cleaned
-    })
+        return cleaned
+      })
 
-    await editExercise(token, editedExercise.id, {
-      name: editedExercise.name,
-      type: editedExercise.type,
-      sets: cleanedSets,
-    })
+      await editExercise(token, editedExercise.id, {
+        name: editedExercise.name,
+        type: editedExercise.type,
+        sets: cleanedSets,
+      })
 
-    showToast('Exercise updated')
-    onSubmit({
-      ...editedExercise,
-      sets: cleanedSets,
-    })
-  } catch (err) {
-    console.error('Error updating exercise:', err)
-    showToast('Failed to update exercise', 'warn')
+      showToast('Exercise updated')
+      onSubmit({
+        ...editedExercise,
+        sets: cleanedSets,
+      })
+    } catch (err) {
+      console.error('Error updating exercise:', err)
+      showToast('Failed to update exercise', 'warn')
+    }
   }
-}
-
 
   return (
     <ScreenContainer>
-      
-        <YStack  pt="$4" gap="$4">
+      <YStack pt="$4" gap="$4">
         <XStack jc="space-between" ai="center" mb="$3">
-               <Pressable onPress={onCancel} hitSlop={10}>
-                 <XStack fd="row" ai="center" gap="$2">
-                   <ChevronLeft size={20} />
-                   <Text fontSize="$5" fontWeight="600" color="$color">
-                     Back
-                   </Text>
-                 </XStack>
-               </Pressable>
-             </XStack>
-  <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
-        Edit Exercise
-      </Text>
-      <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
-         <YStack padding="$4" pb="$8">
-          {/* Reuse AddExerciseCard */}
-          <AddExerciseCard
-            exercise={editedExercise}
-            index={0}
-            expanded
-            onToggleExpand={() => {}}
-            onChangeName={handleChangeName}
-            onChangeType={handleChangeType}
-            onChangeSet={handleChangeSet}
-            onAddSet={handleAddSet}
-            onRemoveSet={handleRemoveSet}
-          />
+          <Pressable onPress={onCancel} hitSlop={10}>
+            <XStack fd="row" ai="center" gap="$2">
+              <ChevronLeft size={20} />
+              <Text fontSize="$5" fontWeight="600" color="$color">
+                Back
+              </Text>
+            </XStack>
+          </Pressable>
+        </XStack>
+        <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
+          Edit Exercise
+        </Text>
+        <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
+          <YStack padding="$4" pb="$8">
+            {/* Reuse AddExerciseCard */}
+            <AddExerciseCard
+              exercise={editedExercise}
+              index={0}
+              expanded
+              onToggleExpand={() => {}}
+              onChangeName={handleChangeName}
+              onChangeType={handleChangeType}
+              onChangeSet={handleChangeSet}
+              onAddSet={handleAddSet}
+              onRemoveSet={handleRemoveSet}
+            />
 
-          {/* Save/Cancel */}
-          <XStack gap="$2" mt="$6">
-            <Button flex={1} onPress={onCancel}>
-              Cancel
-            </Button>
-            <Button flex={1} theme="active" onPress={handleSave}>
-              Save
-            </Button>
-          </XStack>
+            {/* Save/Cancel */}
+            <XStack gap="$2" mt="$6">
+              <Button flex={1} onPress={onCancel}>
+                Cancel
+              </Button>
+              <Button flex={1} theme="active" onPress={handleSave}>
+                Save
+              </Button>
+            </XStack>
           </YStack>
-          </ScrollView>
-        </YStack>
-      
+        </ScrollView>
+      </YStack>
     </ScreenContainer>
   )
 }

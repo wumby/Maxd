@@ -210,14 +210,21 @@ export default function History({ visible, onClose, weights, setWeights }: Histo
     <ScreenContainer>
       <YStack pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
-          <Pressable onPress={onClose} hitSlop={10}>
-            <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} color={theme.color.val} />
-              <Text fontSize="$5" fontWeight="600" color="$color">
-                Back
-              </Text>
-            </XStack>
-          </Pressable>
+          <XStack fd="row" ai="center" gap="$2">
+            <Button
+              position="absolute"
+              left={16}
+              size="$4"
+              chromeless
+              onPress={onClose}
+              px="$2"
+              borderRadius="$6"
+            >
+              <XStack ai="center" gap="$2">
+                <ChevronLeft size={24} color={theme.color.val} />
+              </XStack>
+            </Button>
+          </XStack>
 
           <Pressable onPress={() => setEditMode(!editMode)} hitSlop={10}>
             <Text fontSize="$5" fontWeight="600" color="$color">

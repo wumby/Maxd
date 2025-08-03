@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, Pressable } from 'react-native'
 import { WebView } from 'react-native-webview'
-import { YStack, Text, XStack, useThemeName } from 'tamagui'
+import { YStack, Text, XStack, useThemeName, Button, useTheme } from 'tamagui'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
@@ -18,7 +18,7 @@ export default function ChartWebView({
   onBack: () => void
 }) {
   const { weightUnit } = usePreferences()
-
+  const theme = useTheme()
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
   const themeName = useThemeName()
@@ -34,14 +34,13 @@ export default function ChartWebView({
     return Array.from(uniqueYears).sort((a, b) => b - a)
   }, [weights])
 
- const [filter, setFilter] = useState('All Years')
+  const [filter, setFilter] = useState('All Years')
 
-useEffect(() => {
-  if (years.length > 0) {
-    setFilter(String(years[0]))
-  }
-}, [years])
-
+  useEffect(() => {
+    if (years.length > 0) {
+      setFilter(String(years[0]))
+    }
+  }, [years])
 
   const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
@@ -213,14 +212,19 @@ canvas {
       <StatusBar hidden />
       <YStack px="$4" pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
-          <Pressable onPress={onBack} hitSlop={10}>
-            <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} color={textColor} />
-              <Text fontSize="$5" fontWeight="600" color={textColor}>
-                Back
-              </Text>
+          <Button
+            position="absolute"
+            left={16}
+            size="$4"
+            chromeless
+            onPress={onBack}
+            px="$2"
+            borderRadius="$6"
+          >
+            <XStack ai="center" gap="$2">
+              <ChevronLeft size={24} color={theme.color.val} />
             </XStack>
-          </Pressable>
+          </Button>
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(400)}>

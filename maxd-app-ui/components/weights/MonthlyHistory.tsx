@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { YStack, Text, XStack, Card, useThemeName, useTheme } from 'tamagui'
+import { YStack, Text, XStack, Card, useThemeName, useTheme, Button } from 'tamagui'
 import { Pressable, ScrollView } from 'react-native'
 import { ChevronLeft } from '@tamagui/lucide-icons'
 import Animated, {
@@ -136,14 +136,19 @@ export default function MonthlySummary({
     <ScreenContainer>
       <YStack pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
-          <Pressable onPress={onClose} hitSlop={10}>
-            <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} color={theme.color.val} />
-              <Text fontSize="$5" fontWeight="600" color="$color">
-                Back
-              </Text>
+          <Button
+            position="absolute"
+            left={16}
+            size="$4"
+            chromeless
+            onPress={onClose}
+            px="$2"
+            borderRadius="$6"
+          >
+            <XStack ai="center" gap="$2">
+              <ChevronLeft size={24} color={theme.color.val} />
             </XStack>
-          </Pressable>
+          </Button>
         </XStack>
 
         <Animated.View entering={FadeInUp.duration(300)}>
