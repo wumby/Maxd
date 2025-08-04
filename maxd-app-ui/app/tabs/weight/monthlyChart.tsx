@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
-import MonthlyChartWebView from '@/components/weights/MonthlyChartWebView'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { fetchWeights } from '@/services/weightService'
 import { useRouter } from 'expo-router'
+import { Fallback } from '@/components/Fallback'
 
+const MonthlyChartWebView = lazy(() => import('@/components/weights/MonthlyChartWebView'))
 export default function MonthlyChartPage() {
   const { token } = useAuth()
-  const router = useRouter()
   const [weights, setWeights] = useState<{ value: number; created_at: string }[]>([])
 
   useEffect(() => {
@@ -23,5 +23,9 @@ export default function MonthlyChartPage() {
     loadWeights()
   }, [token])
 
-  return <MonthlyChartWebView weights={weights} onBack={() => router.back()} />
+  return (
+    <Suspense fallback={<Fallback />}>
+      <MonthlyChartWebView weights={weights} />
+    </Suspense>
+  )
 }

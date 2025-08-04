@@ -1,5 +1,17 @@
 import { API_URL } from '@/env'
 
+export async function getSavedExercises(token: string) {
+  const res = await fetch(`${API_URL}/saved-exercises`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch saved exercises')
+  return await res.json()
+}
+
 export async function createSavedExercise(
   token: string | null,
   payload: {

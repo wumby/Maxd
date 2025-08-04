@@ -1,24 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView, Pressable } from 'react-native'
+import { ActivityIndicator, ScrollView } from 'react-native'
 import { WebView } from 'react-native-webview'
-import { YStack, Text, XStack, useThemeName, Button, useTheme } from 'tamagui'
+import { YStack, Text, XStack, useThemeName } from 'tamagui'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
-import { ChevronLeft } from '@tamagui/lucide-icons'
-import Animated, { FadeInUp } from 'react-native-reanimated'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
+import { ScreenHeader } from '../ScreenHeader'
 
 export default function MonthlyChartWebView({
   weights,
-  onBack,
 }: {
   weights: { value: number; created_at: string }[]
-  onBack: () => void
 }) {
   const { weightUnit } = usePreferences()
-  const theme = useTheme()
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
   const themeName = useThemeName()
@@ -214,33 +210,7 @@ touch-action: pan-x;
     >
       <StatusBar hidden />
       <YStack px="$4" pt="$4" pb="$2">
-        <XStack jc="space-between" ai="center" mb="$3">
-          <Button
-            position="absolute"
-            left={16}
-            size="$4"
-            chromeless
-            onPress={onBack}
-            px="$2"
-            borderRadius="$6"
-          >
-            <XStack ai="center" gap="$2">
-              <ChevronLeft size={24} color={theme.color.val} />
-            </XStack>
-          </Button>
-        </XStack>
-
-        <Animated.View entering={FadeInUp.duration(400)}>
-          <Text
-            fontSize="$9"
-            fontWeight="900"
-            ta="center"
-            mb="$3"
-            color={isDark ? 'white' : 'black'}
-          >
-            Monthly Averages
-          </Text>
-        </Animated.View>
+        <ScreenHeader title="Monthly Averages" />
 
         <ScrollView
           horizontal

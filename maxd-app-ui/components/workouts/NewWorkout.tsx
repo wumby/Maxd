@@ -12,10 +12,14 @@ import { FavoriteWorkoutSheet } from './FavoriteWorkoutSheet'
 import { ExerciseTypeSheet } from './ExerciseTypeSheet'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
-import { Pressable } from 'react-native'
-import { ScreenContainer } from '../ScreenContainer'
 import { FavoriteExerciseSheet } from './FavoriteExerciseSheet'
 import { createWorkout, updateWorkout } from '@/services/workoutService'
+import { FavoriteWorkout, Workout } from '@/types/Workout'
+import { getSavedWorkouts } from '@/services/savedWorkoutsService'
+import { useFetch } from '@/hooks/useFetch'
+import { getSavedExercises } from '@/services/savedExerciseService'
+import { Exercise } from '@/types/Exercise'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function NewWorkout({
   onCancel,
@@ -37,10 +41,13 @@ export default function NewWorkout({
   const [showFavoritesSheet, setShowFavoritesSheet] = useState(false)
   const [showExerciseSheet, setShowExerciseSheet] = useState(false)
   const [showTypeSheet, setShowTypeSheet] = useState(false)
-  const { saved } = useSavedWorkouts()
-  const { savedExercises } = useSavedExercises()
+  const { data: savedWorkouts, execute: fetchSavedWorkouts } =
+    useFetch<FavoriteWorkout[]>(getSavedWorkouts)
+  const { data: savedExercises, execute: fetchSavedExercises } =
+    useFetch<Exercise[]>(getSavedExercises)
   const { token } = useAuth()
   const { weightUnit } = usePreferences()
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     if (workoutToEdit) {
@@ -283,8 +290,14 @@ export default function NewWorkout({
     setExpandedIndex(exercises.length)
   }
 
+  useEffect(() => {
+    if (showExerciseSheet) {
+      fetchSavedExercises()
+    }
+  }, [showExerciseSheet])
+
   return (
-    <>
+    <YStack mt="$5">
       <XStack jc="space-between" ai="center" mb="$3">
         <Button
           position="absolute"
@@ -304,8 +317,10 @@ export default function NewWorkout({
         {workoutToEdit ? 'Edit Workout' : 'New Workout'}
       </Text>
 
-      <ScrollView>
-        <YStack padding="$4" pb="$8">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }} // extra room for safety
+      >
+        <YStack padding="$4" pb="$">
           {step === 'choose' ? (
             <WorkoutModeChooser
               onChooseNew={() => {
@@ -316,9 +331,13 @@ export default function NewWorkout({
                 setExpandedIndex(0)
                 setStep('form')
               }}
-              onChooseFavorite={() => {
-                if (saved.length > 0) setShowFavoritesSheet(true)
-                else setFeedback('No saved workouts available.')
+              onChooseFavorite={async () => {
+                const result = await fetchSavedWorkouts()
+                if (!!result?.length) {
+                  setShowFavoritesSheet(true)
+                } else {
+                  setFeedback('No saved workouts available.')
+                }
               }}
               feedback={feedback}
             />
@@ -352,7 +371,7 @@ export default function NewWorkout({
                 ))}
 
                 <XStack gap="$2" jc="space-between" flexWrap="wrap" alignItems="center" mt="$5">
-                  <Button onPress={() => setShowTypeSheet(true)}>+ New Exercise</Button>
+                  <Button onPress={() => setShowTypeSheet(true)}>+ Add Exercise</Button>
                   <Text>or</Text>
                   <Button onPress={() => setShowExerciseSheet(true)}>★ From Favorites</Button>
                 </XStack>
@@ -376,7 +395,7 @@ export default function NewWorkout({
       <FavoriteWorkoutSheet
         open={showFavoritesSheet}
         onOpenChange={setShowFavoritesSheet}
-        favorites={saved}
+        favorites={savedWorkouts ?? []}
         onSelect={handleLoadTemplate}
       />
       <ExerciseTypeSheet
@@ -387,9 +406,9 @@ export default function NewWorkout({
       <FavoriteExerciseSheet
         open={showExerciseSheet}
         onOpenChange={setShowExerciseSheet}
-        favorites={savedExercises}
+        favorites={savedExercises ?? []}
         onSelect={handleAddFavoriteExercise}
       />
-    </>
+    </YStack>
   )
 }

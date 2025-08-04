@@ -1,13 +1,7 @@
+import { FavoriteWorkout } from '@/types/Workout'
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
 import { Button, Card, Input, ScrollView, Text, XStack, YStack } from 'tamagui'
-
-interface FavoriteWorkout {
-  id?: number
-  title: string
-  created_at?: string
-  exercises: any[]
-}
 
 export function FavoriteWorkoutSheet({
   open,

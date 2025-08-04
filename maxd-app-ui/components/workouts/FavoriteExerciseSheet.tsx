@@ -1,13 +1,7 @@
+import { Exercise } from '@/types/Exercise'
 import { Sheet } from '@tamagui/sheet'
 import { useState } from 'react'
-import { Button, Card, Input, ScrollView, Text, XStack, YStack } from 'tamagui'
-
-interface Exercise {
-  id?: number
-  name: string
-  type: 'weights' | 'cardio' | 'bodyweight'
-  sets: any[]
-}
+import { Button, Input, ScrollView, Text, XStack, YStack } from 'tamagui'
 
 export function FavoriteExerciseSheet({
   open,
@@ -34,7 +28,7 @@ export function FavoriteExerciseSheet({
       zIndex={100000}
       disableDrag
     >
-      <Sheet.Overlay />=
+      <Sheet.Overlay />
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
           <Text fontSize="$8" fontWeight="800" textAlign="center">

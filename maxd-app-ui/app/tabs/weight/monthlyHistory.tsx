@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react'
-import MonthlyHistory from '@/components/weights/MonthlyHistory'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { fetchWeights } from '@/services/weightService'
-import { useRouter } from 'expo-router'
+import { Fallback } from '@/components/Fallback'
 
+const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
 export default function MonthlyHistoryPage() {
   const { token } = useAuth()
   const [weights, setWeights] = useState<{ id: number; value: number; created_at: string }[]>([])
-  const router = useRouter()
   useEffect(() => {
     if (!token) return
     const loadWeights = async () => {
@@ -22,5 +21,9 @@ export default function MonthlyHistoryPage() {
     loadWeights()
   }, [token])
 
-  return <MonthlyHistory visible onClose={() => router.back()} weights={weights} />
+  return (
+    <Suspense fallback={<Fallback />}>
+      <MonthlyHistory weights={weights} />
+    </Suspense>
+  )
 }

@@ -110,20 +110,20 @@ export default function WeightIndex() {
               </Text>
               {goalLabel && (
                 <XStack ai="center" gap="$2">
-                  <Text fontSize="$5" color="$gray10">
+                  <Text fontSize="$6" color="$gray10">
                     {goalLabel}
                   </Text>
                   <Button
                     chromeless
                     size="$2"
                     onPress={() => setGoalModeSheetVisible(true)}
-                    icon={Pencil}
+                    icon={<Pencil size={18} />} // or 28, 32 etc.
                   />
                 </XStack>
               )}
             </YStack>
             <YStack ai="center">
-              <Button size="$5" onPress={() => setShowWeightSheet(true)}>
+              <Button size="$5" onPress={() => router.push('/tabs/weight/newWeight')}>
                 Enter New Weight
               </Button>
             </YStack>

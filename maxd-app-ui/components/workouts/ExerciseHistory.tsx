@@ -227,7 +227,6 @@ export default function ExerciseHistory({
 
   return (
     <ScreenContainer>
-      {/* Header */}
       <YStack px="$4" pt="$4" pb="$2">
         <XStack jc="space-between" ai="center" mb="$3">
           <Pressable onPress={onClose} hitSlop={10}>

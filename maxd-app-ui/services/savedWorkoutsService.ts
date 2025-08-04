@@ -1,14 +1,15 @@
 import { API_URL } from '@/env'
 
-export async function deleteSavedWorkout(token: string, title: string) {
-  const res = await fetch(`${API_URL}/saved-workouts/${encodeURIComponent(title)}`, {
-    method: 'DELETE',
+export async function getSavedWorkouts(token: string) {
+  const res = await fetch(`${API_URL}/saved-workouts`, {
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
 
-  if (!res.ok) throw new Error('Failed to delete saved workout')
+  if (!res.ok) throw new Error('Failed to fetch saved workouts')
+  return await res.json()
 }
 
 export async function createSavedWorkout(
@@ -31,4 +32,15 @@ export async function createSavedWorkout(
 
   if (!res.ok) throw new Error('Failed to save favorite workout')
   return await res.json()
+}
+
+export async function deleteSavedWorkout(token: string, title: string) {
+  const res = await fetch(`${API_URL}/saved-workouts/${encodeURIComponent(title)}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) throw new Error('Failed to delete saved workout')
 }

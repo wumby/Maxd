@@ -1,6 +1,7 @@
 import { Sheet, YStack, XStack, Button, Input, Text } from 'tamagui'
 import { useState } from 'react'
-import { Alert, Keyboard } from 'react-native'
+import { Keyboard } from 'react-native'
+import { formatWeightInput } from '@/util/Weight'
 
 export function EnterWeightSheet({
   open,
@@ -27,8 +28,6 @@ export function EnterWeightSheet({
       setInputError('Please enter a weight.')
       return
     }
-
-    // Let the parent handle submission and validation
     onSubmit(weight)
   }
 
@@ -51,7 +50,7 @@ export function EnterWeightSheet({
               placeholder="e.g. 175.5"
               value={weight}
               onChangeText={val => {
-                setWeight(val)
+                setWeight(formatWeightInput(val))
                 setInputError('')
               }}
               returnKeyType="done"

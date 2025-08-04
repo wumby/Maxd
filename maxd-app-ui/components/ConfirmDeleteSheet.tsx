@@ -16,7 +16,7 @@ export function ConfirmDeleteSheet({
   message?: string
 }) {
   return (
-    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[60]} dismissOnSnapToBottom>
+    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[70]} dismissOnSnapToBottom>
       <Sheet.Overlay />
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">

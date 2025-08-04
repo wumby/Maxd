@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView, Pressable } from 'react-native'
+import { ActivityIndicator, ScrollView } from 'react-native'
 import { WebView } from 'react-native-webview'
-import { YStack, Text, XStack, useThemeName, Button, useTheme } from 'tamagui'
+import { YStack, Text, XStack, useThemeName, useTheme } from 'tamagui'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
-import { ChevronLeft } from '@tamagui/lucide-icons'
-import Animated, { FadeInUp } from 'react-native-reanimated'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
+import { ScreenHeader } from '@/components/ScreenHeader'
 
 export default function ChartWebView({
   weights,
@@ -211,27 +210,7 @@ canvas {
     >
       <StatusBar hidden />
       <YStack px="$4" pt="$4" pb="$2">
-        <XStack jc="space-between" ai="center" mb="$3">
-          <Button
-            position="absolute"
-            left={16}
-            size="$4"
-            chromeless
-            onPress={onBack}
-            px="$2"
-            borderRadius="$6"
-          >
-            <XStack ai="center" gap="$2">
-              <ChevronLeft size={24} color={theme.color.val} />
-            </XStack>
-          </Button>
-        </XStack>
-
-        <Animated.View entering={FadeInUp.duration(400)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color={textColor}>
-            Weight Graph
-          </Text>
-        </Animated.View>
+        <ScreenHeader title="Weight Graph" />
 
         <ScrollView
           horizontal

@@ -12,6 +12,7 @@ import WeightUtil from '@/util/weightConversion'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { ScreenContainer } from '../ScreenContainer'
+import { ScreenHeader } from '../ScreenHeader'
 
 interface WeightEntry {
   id: number
@@ -19,15 +20,7 @@ interface WeightEntry {
   created_at: string
 }
 
-export default function MonthlySummary({
-  visible,
-  onClose,
-  weights,
-}: {
-  visible: boolean
-  onClose: () => void
-  weights: WeightEntry[]
-}) {
+export default function MonthlySummary({ weights }: { weights: WeightEntry[] }) {
   const isDark = useThemeName() === 'dark'
   const theme = useTheme()
   const { weightUnit } = usePreferences()
@@ -130,33 +123,10 @@ export default function MonthlySummary({
     )
   }
 
-  if (!visible) return null
-
   return (
     <ScreenContainer>
       <YStack pt="$4" pb="$2">
-        <XStack jc="space-between" ai="center" mb="$3">
-          <Button
-            position="absolute"
-            left={16}
-            size="$4"
-            chromeless
-            onPress={onClose}
-            px="$2"
-            borderRadius="$6"
-          >
-            <XStack ai="center" gap="$2">
-              <ChevronLeft size={24} color={theme.color.val} />
-            </XStack>
-          </Button>
-        </XStack>
-
-        <Animated.View entering={FadeInUp.duration(300)}>
-          <Text fontSize="$9" fontWeight="900" ta="center" mb="$3" color="$color">
-            Monthly Averages
-          </Text>
-        </Animated.View>
-
+        <ScreenHeader title="Monthly Averages" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

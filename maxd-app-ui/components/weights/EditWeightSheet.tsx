@@ -1,3 +1,4 @@
+import { formatWeightInput } from '@/util/Weight'
 import { Sheet, YStack, Text, Input, XStack, Button } from 'tamagui'
 
 export function EditWeightSheet({
@@ -18,7 +19,7 @@ export function EditWeightSheet({
   onSave: () => void
 }) {
   return (
-    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[80]} dismissOnSnapToBottom>
+    <Sheet modal open={open} onOpenChange={onOpenChange} snapPoints={[70]} dismissOnSnapToBottom>
       <Sheet.Overlay />
       <Sheet.Handle backgroundColor="$gray6" />
       <Sheet.Frame p="$4" bg="$background">
@@ -30,7 +31,7 @@ export function EditWeightSheet({
             keyboardType="numeric"
             placeholder={weightUnit === 'lb' ? 'e.g. 175.5 (lb)' : 'e.g. 79.6 (kg)'}
             value={value}
-            onChangeText={onChange}
+            onChangeText={text => onChange(formatWeightInput(text))}
             returnKeyType="done"
           />
           <XStack gap="$2">

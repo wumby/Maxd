@@ -24,3 +24,9 @@ export type Workout = {
   created_at: string
   exercises: Exercise[]
 }
+export interface FavoriteWorkout {
+  id?: number
+  title: string
+  created_at?: string
+  exercises: any[]
+}
