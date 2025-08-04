@@ -32,7 +32,7 @@ export function GoalModeSheet({
       <Sheet.Frame p="$4" bg="$background">
         <YStack gap="$4">
           <Text fontSize="$8" fontWeight="800" textAlign="center">
-            Select Your Goal
+            Update Your Goal
           </Text>
 
           {(
@@ -42,7 +42,7 @@ export function GoalModeSheet({
               { label: 'Just Track', value: 'track' },
             ] as const
           ).map(goal => (
-            <Button key={goal.value} size="$4" onPress={() => handleSelectGoal(goal.value)}>
+            <Button key={goal.value} size="$5" onPress={() => handleSelectGoal(goal.value)}>
               {goal.label}
             </Button>
           ))}

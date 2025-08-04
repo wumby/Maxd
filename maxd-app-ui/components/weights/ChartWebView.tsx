@@ -1,23 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ActivityIndicator, ScrollView, Alert } from 'react-native'
 import { WebView } from 'react-native-webview'
-import { YStack, Text, XStack, useThemeName, useTheme } from 'tamagui'
+import type { WebView as WebViewType } from 'react-native-webview'
+import { YStack, Text, XStack, useThemeName, Button } from 'tamagui'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { YearFilterItem } from './YearFilterItem'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import * as MediaLibrary from 'expo-media-library'
+import * as FileSystem from 'expo-file-system'
+import { Download } from '@tamagui/lucide-icons'
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { ConfirmDeleteSheet } from '../ConfirmDeleteSheet'
 
 export default function ChartWebView({
   weights,
-  onBack,
 }: {
   weights: { value: number; created_at: string }[]
-  onBack: () => void
 }) {
   const { weightUnit } = usePreferences()
-  const theme = useTheme()
   const [loading, setLoading] = useState(true)
   const insets = useSafeAreaInsets()
   const themeName = useThemeName()
@@ -27,6 +30,8 @@ export default function ChartWebView({
   const gridColor = isDark ? '#333' : '#eee'
   const borderColor = isDark ? '#FFFFFF' : '#000000'
   const fillColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+  const webViewRef = useRef<WebViewType>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
@@ -34,14 +39,13 @@ export default function ChartWebView({
   }, [weights])
 
   const [filter, setFilter] = useState('All Years')
+  const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
   useEffect(() => {
     if (years.length > 0) {
       setFilter(String(years[0]))
     }
   }, [years])
-
-  const [range, setRange] = useState<'30d' | '3mo' | 'all'>('3mo')
 
   const rangeCutoff = useMemo(() => {
     const selectedYearWeights = weights.filter(w => {
@@ -87,7 +91,6 @@ export default function ChartWebView({
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <style>
       html, body, #container, canvas {
         margin: 0;
@@ -96,37 +99,39 @@ export default function ChartWebView({
         width: 100%;
         background: ${bgColor};
       }
-    #scroll-container {
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  background: ${bgColor};
-}
-
-#container {
-  height: 100%;
-  width: max-content;
-  padding-bottom: 1px;
-}
-
-canvas {
-  min-width: ${Math.max(safeWeights.length * 10, 400)}px;
-  max-width: none;
-  height: 100%;
-}
-
-
+      #scroll-container {
+        width: 100%;
+        height: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        background: ${bgColor};
+      }
+      #container {
+        height: 100%;
+        width: max-content;
+        padding-bottom: 1px;
+      }
+      canvas {
+        min-width: ${Math.max(safeWeights.length * 10, 400)}px;
+        max-width: none;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
     <div id="scroll-container">
-  <div id="container">
-    <canvas id="chart" width="${Math.max(safeWeights.length * 10, 400)}"></canvas>
-  </div>
-</div>
-
+      <div id="container">
+        <canvas id="chart" width="${Math.max(safeWeights.length * 10, 400)}"></canvas>
+      </div>
+    </div>
+    <script>
+      function sendChartImage() {
+        const canvas = document.getElementById('chart');
+        const image = canvas.toDataURL('image/png');
+        window.ReactNativeWebView?.postMessage(image);
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script>
@@ -150,24 +155,22 @@ canvas {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-           x: {
-  type: 'time',
-  time: {
-    unit: '${range === 'all' ? 'month' : 'day'}',
-    tooltipFormat: 'MMM d, yyyy',
-    displayFormats: {
-      day: 'MMM d',
-      month: 'MMM',
-    }
-  },
-  ticks: {
-    
-    color: '${textColor}',
-  },
-  grid: { color: '${gridColor}' },
-  title: { display: true, text: 'Date', color: '${textColor}' }
-},
-
+            x: {
+              type: 'time',
+              time: {
+                unit: '${range === 'all' ? 'month' : 'day'}',
+                tooltipFormat: 'MMM d, yyyy',
+                displayFormats: {
+                  day: 'MMM d',
+                  month: 'MMM'
+                }
+              },
+              ticks: {
+                color: '${textColor}'
+              },
+              grid: { color: '${gridColor}' },
+              title: { display: true, text: 'Date', color: '${textColor}' }
+            },
             y: {
               title: { display: true, text: 'Weight (${weightUnit})', color: '${textColor}' },
               grid: { color: '${gridColor}' },
@@ -185,7 +188,7 @@ canvas {
                 }
               }
             },
-            legend: { display: false },
+            legend: { display: false }
           }
         }
       });
@@ -193,6 +196,24 @@ canvas {
   </body>
 </html>
 `
+
+  const handleSaveImage = async (event: any) => {
+    const dataUrl = event.nativeEvent.data
+    const base64 = dataUrl.replace(/^data:image\/png;base64,/, '')
+    const fileUri = FileSystem.documentDirectory + 'weight-graph.png'
+    await FileSystem.writeAsStringAsync(fileUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    })
+    const { status } = await MediaLibrary.requestPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Storage permission is needed to save the image.')
+      return
+    }
+    const asset = await MediaLibrary.createAssetAsync(fileUri)
+    await MediaLibrary.createAlbumAsync('Download', asset, false)
+
+    Alert.alert('Success', 'Graph image saved to gallery.')
+  }
 
   return (
     <YStack
@@ -209,8 +230,32 @@ canvas {
       paddingTop={insets.top}
     >
       <StatusBar hidden />
+
+      <ConfirmDeleteSheet
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false)
+          webViewRef.current?.injectJavaScript?.('sendChartImage();')
+        }}
+        title="Save Graph"
+        message="Do you want to save this graph image to your photos?"
+      />
+
       <YStack px="$4" pt="$4" pb="$2">
-        <ScreenHeader title="Weight Graph" />
+        <ScreenHeader
+          title="Weight Graph"
+          rightButton={
+            <Button
+              size="$4"
+              chromeless
+              icon={<Download size={18} />}
+              onPress={() => setConfirmOpen(true)}
+              borderRadius="$6"
+            />
+          }
+        />
 
         <ScrollView
           horizontal
@@ -260,20 +305,22 @@ canvas {
       </YStack>
 
       {loading && (
-        <YStack f={1} jc="center" ai="center">
+        <YStack f={1} jc="center" ai="center" bg={bgColor}>
           <ActivityIndicator size="large" color={textColor} />
         </YStack>
       )}
 
       <WebView
+        ref={webViewRef}
         originWhitelist={['*']}
         source={{ html: chartHtml }}
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: bgColor }}
+        containerStyle={{ backgroundColor: bgColor }}
         onLoadEnd={() => setLoading(false)}
         javaScriptEnabled
-        scalesPageToFit
-        bounces={false} // 👈 disable scroll bounce (especially on iOS)
+        bounces={false}
         overScrollMode="never"
+        onMessage={handleSaveImage}
       />
     </YStack>
   )

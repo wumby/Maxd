@@ -1,15 +1,4 @@
 import { Text, XStack, Card, View, YStack } from 'tamagui'
-import Animated, {
-  SlideInRight,
-  SlideOutLeft,
-  SlideInLeft,
-  SlideOutRight,
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-} from 'react-native-reanimated'
-import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useEffect } from 'react'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'expo-router'
@@ -55,7 +44,7 @@ export default function HomeTab() {
             bg="$background"
             br="$5"
             pressStyle={{ scale: 0.97 }}
-            onPress={() => router.push('/tabs/weight?log=1')}
+            onPress={() => router.push('/tabs/weight/newWeight')}
           >
             <YStack position="absolute" top="$2" right="$2" opacity={0.3}>
               <ArrowUpRight size={18} color="$accentColor" />

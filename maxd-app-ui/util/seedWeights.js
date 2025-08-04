@@ -1,7 +1,7 @@
 // seedWeights2024.ts
 
 const token =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMTkxNWI3Zi04YmU4LTRiZjktOTY4YS00NzgxY2VkNDBjNzkiLCJpYXQiOjE3NTM1MDMxMjB9.iHu6q-41RF_b1XLHUXdojs_dRP-eCxU9Z6o0-euodd4'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxNmY0MzJkMi1lYjMxLTRmYWMtOWUyYS02MDY1MTFmMmYyZjgiLCJpYXQiOjE3NTQzMjY1MjMsImV4cCI6MTc4NTg2MjUyM30.ba10puZpMLzNZeZztj4j3FddbdW_R-I0kCYhjK5k9Kk'
 
 if (!token) {
   console.error('❌ TOKEN missing. Set TOKEN env variable.')

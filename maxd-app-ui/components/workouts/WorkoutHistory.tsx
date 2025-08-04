@@ -19,6 +19,15 @@ export default function WorkoutHistory({
   const toggleExpand = (id: number) => {
     setExpanded(expanded === id ? null : id)
   }
+  if (workouts.length === 0) {
+    return (
+      <YStack f={1} jc="center" ai="center" px="$4">
+        <Text color="$gray10" fontSize="$5" textAlign="center">
+          No workouts found.
+        </Text>
+      </YStack>
+    )
+  }
 
   return (
     <YStack f={1}>

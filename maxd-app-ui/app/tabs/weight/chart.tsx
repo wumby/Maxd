@@ -1,33 +1,20 @@
-import { useEffect, useState, lazy, Suspense } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useEffect, lazy, Suspense } from 'react'
 import { fetchWeights } from '@/services/weightService'
-import { useRouter } from 'expo-router'
 import { Fallback } from '@/components/Fallback'
+import { useFetch } from '@/hooks/useFetch'
 
 const ChartWebView = lazy(() => import('@/components/weights/ChartWebView'))
 
 export default function ChartPage() {
-  const { token } = useAuth()
-  const router = useRouter()
-  const [weights, setWeights] = useState<{ value: number; created_at: string }[]>([])
+  const { data: weights = [], execute: loadWeights } = useFetch(fetchWeights, [])
 
   useEffect(() => {
-    if (!token) return
-    const loadWeights = async () => {
-      try {
-        const data = await fetchWeights(token)
-        setWeights(data)
-      } catch (error) {
-        console.error('Error loading weights:', error)
-        setWeights([])
-      }
-    }
     loadWeights()
-  }, [token])
+  }, [loadWeights])
 
   return (
     <Suspense fallback={<Fallback />}>
-      <ChartWebView weights={weights} onBack={() => router.back()} />
+      <ChartWebView weights={weights} />
     </Suspense>
   )
 }

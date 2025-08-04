@@ -44,7 +44,7 @@ export function ToastContextProvider({ children }: { children: React.ReactNode }
           style={[
             {
               position: 'absolute',
-              top: 60,
+              bottom: 30,
               alignSelf: 'center',
               width: Dimensions.get('window').width * 0.9,
               zIndex: 99999,

@@ -32,7 +32,7 @@ export function ConfirmDeleteSheet({
               Cancel
             </Button>
             <Button flex={1} theme="active" onPress={onConfirm}>
-              Delete
+              Confirm
             </Button>
           </XStack>
         </YStack>

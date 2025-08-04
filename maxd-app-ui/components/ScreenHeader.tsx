@@ -3,12 +3,20 @@ import { ChevronLeft } from '@tamagui/lucide-icons'
 import Animated, { FadeInUp } from 'react-native-reanimated'
 import { useRouter } from 'expo-router'
 
-export function ScreenHeader({ title, onBack }: { title: string; onBack?: () => void }) {
+export function ScreenHeader({
+  title,
+  onBack,
+  rightButton,
+}: {
+  title: string
+  onBack?: () => void
+  rightButton?: React.ReactNode
+}) {
   const router = useRouter()
   const theme = useTheme()
 
   return (
-    <XStack jc="space-between" ai="center" mb="$5" px="$4">
+    <XStack jc="space-between" ai="center" mb="$5">
       {/* Back Button */}
       <Button size="$4" chromeless onPress={onBack || router.back} px="$2" borderRadius="$6">
         <XStack ai="center" gap="$2">
@@ -23,8 +31,8 @@ export function ScreenHeader({ title, onBack }: { title: string; onBack?: () => 
         </Text>
       </Animated.View>
 
-      {/* Invisible Spacer for balance */}
-      <View style={{ width: 48 }} />
+      {/* Right-side button or spacer */}
+      {rightButton ? rightButton : <View style={{ width: 48 }} />}
     </XStack>
   )
 }

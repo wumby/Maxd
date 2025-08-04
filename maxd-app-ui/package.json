@@ -39,7 +39,8 @@
     "react-native-svg": "13.14.1",
     "react-native-timer-picker": "2.2.0",
     "react-native-webview": "13.13.5",
-    "tamagui": "1.127.1"
+    "tamagui": "1.127.1",
+    "expo-media-library": "~17.1.7"
   },
   "devDependencies": {
     "@babel/core": "7.25.2",

@@ -31,51 +31,46 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
   }
 })
 
-// Create new weight entry
 router.post('/', requireAuth, async (req: Request<{}, {}, WeightEntryInput>, res: Response) => {
   const userId = req.user?.userId
   const parsed = WeightEntrySchema.safeParse(req.body)
 
   if (!parsed.success) {
-    res.status(400).json({ error: 'Invalid input', details: z.treeifyError(parsed.error) })
+     res.status(400).json({
+      error: 'Invalid input',
+      details: z.treeifyError(parsed.error),
+    })
     return
   }
 
   const { value, date } = parsed.data
-  const createdAt = date ?? new Date()
-
-  const year = createdAt.getFullYear()
-  const month = String(createdAt.getMonth() + 1).padStart(2, '0')
-  const day = String(createdAt.getDate()).padStart(2, '0')
-  const dateOnly = `${year}-${month}-${day}`
+  const dateOnly = date ?? new Date().toISOString().split('T')[0]
 
   try {
     const existing = await db.query(
-      'SELECT 1 FROM weights WHERE user_id = $1 AND DATE(created_at) = $2',
+      'SELECT 1 FROM weights WHERE user_id = $1 AND created_at::date = $2::date',
       [userId, dateOnly]
     )
 
-    if (existing.rowCount && existing.rowCount > 0) {
-      res.status(409).json({ error: 'You already logged weight for this day' })
-      return
+    if ((existing.rowCount ?? 0) > 0) {
+       res.status(409).json({ error: 'You already logged weight for this day' })
+       return
     }
-
     const result = await db.query(
       'INSERT INTO weights (user_id, value, created_at) VALUES ($1, $2, $3) RETURNING *',
-      [userId, value, createdAt]
+      [userId, value, dateOnly]
     )
 
-    res.status(201).json(result.rows[0])
-    return
+     res.status(201).json(result.rows[0])
+     return
   } catch (err) {
     console.error('Failed to save weight:', err)
-
-    res.status(500).json({ error: 'Internal server error' })
-    return
+     res.status(500).json({ error: 'Internal server error' })
+      return
   }
 })
 
-// Update a weight entry
+
 router.put(
   '/:id',
   requireAuth,

@@ -15,7 +15,7 @@ export default function ProfileTab() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-
+  console.log(token)
   useEffect(() => {
     if (editMode && user) {
       setName(user.name)

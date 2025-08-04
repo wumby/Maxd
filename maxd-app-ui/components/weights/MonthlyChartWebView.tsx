@@ -20,6 +20,13 @@ export default function MonthlyChartWebView({
   const themeName = useThemeName()
   const isDark = themeName === 'dark'
 
+  // derived theme values
+  const bgColor = isDark ? '#0D0D0D' : '#FFFFFF'
+  const textColor = isDark ? '#FFFFFF' : '#000000'
+  const gridColor = isDark ? '#333' : '#eee'
+  const borderColor = isDark ? '#FFFFFF' : '#000000'
+  const fillColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(uniqueYears).sort((a, b) => b - a)
@@ -88,7 +95,6 @@ export default function MonthlyChartWebView({
   }, [filteredWeights, weightUnit])
 
   const shouldScroll = filter === 'All Years' && range === 'all' && safeWeights.length > 12
-
   const chartWidth = Math.max(safeWeights.length * 40, 400)
 
   const chartHtml = `
@@ -102,16 +108,16 @@ export default function MonthlyChartWebView({
         padding: 0;
         height: 100%;
         width: 100%;
-        background: ${isDark ? '#0D0D0D' : 'white'};
+        background: ${bgColor};
       }
 
       #scroll-container {
         width: 100%;
         height: 100%;
-       overflow-x: ${shouldScroll ? 'auto' : 'hidden'};
-overflow-y: hidden;
-overscroll-behavior-y: contain;
-touch-action: pan-x;
+        overflow-x: ${shouldScroll ? 'auto' : 'hidden'};
+        overflow-y: hidden;
+        overscroll-behavior-y: contain;
+        touch-action: pan-x;
         -webkit-overflow-scrolling: touch;
       }
 
@@ -145,8 +151,8 @@ touch-action: pan-x;
           datasets: [{
             label: 'Monthly Avg Weight',
             data: data,
-            borderColor: '${isDark ? '#fff' : '#000'}',
-            backgroundColor: '${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}',
+            borderColor: '${borderColor}',
+            backgroundColor: '${fillColor}',
             tension: 0.3,
             pointRadius: 4,
             pointHoverRadius: 6,
@@ -164,14 +170,14 @@ touch-action: pan-x;
                 tooltipFormat: 'MMM yyyy',
                 displayFormats: { month: 'MMM' }
               },
-              ticks: { color: '${isDark ? '#aaa' : '#333'}' },
-              grid: { color: '${isDark ? '#333' : '#eee'}' },
-              title: { display: true, text: 'Month', color: '${isDark ? '#fff' : '#000'}' }
+              ticks: { color: '${textColor}' },
+              grid: { color: '${gridColor}' },
+              title: { display: true, text: 'Month', color: '${textColor}' }
             },
             y: {
-              title: { display: true, text: 'Weight (${weightUnit})', color: '${isDark ? '#fff' : '#000'}' },
-              grid: { color: '${isDark ? '#333' : '#eee'}' },
-              ticks: { color: '${isDark ? '#aaa' : '#333'}' }
+              title: { display: true, text: 'Weight (${weightUnit})', color: '${textColor}' },
+              grid: { color: '${gridColor}' },
+              ticks: { color: '${textColor}' }
             }
           },
           plugins: {
@@ -202,7 +208,7 @@ touch-action: pan-x;
       right={0}
       bottom={0}
       zIndex={100}
-      bg={isDark ? '#0D0D0D' : 'white'}
+      bg={bgColor}
       paddingRight={20}
       paddingBottom={10}
       paddingLeft={10}
@@ -258,15 +264,15 @@ touch-action: pan-x;
       </YStack>
 
       {loading && (
-        <YStack f={1} jc="center" ai="center">
-          <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
+        <YStack f={1} jc="center" ai="center" bg={bgColor}>
+          <ActivityIndicator size="large" color={textColor} />
         </YStack>
       )}
-
       <WebView
         originWhitelist={['*']}
         source={{ html: chartHtml }}
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: bgColor }}
+        containerStyle={{ backgroundColor: bgColor }}
         onLoadEnd={() => setLoading(false)}
         javaScriptEnabled
         scalesPageToFit

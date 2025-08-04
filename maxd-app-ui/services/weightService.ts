@@ -1,6 +1,7 @@
 import { API_URL } from '@/env'
+import { WeightEntry } from '@/types/Weight'
 
-export async function fetchWeights(token: string) {
+export async function fetchWeights(token: string, _params: void): Promise<WeightEntry[]> {
   const res = await fetch(`${API_URL}/weights`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -24,15 +25,10 @@ export async function fetchWeights(token: string) {
   }))
 }
 
-export async function logWeight({
-  token,
-  weightInKg,
-  date,
-}: {
-  token: string
-  weightInKg: number
-  date: string
-}) {
+export async function logWeight(
+  token: string,
+  { weightInKg, date }: { weightInKg: number; date: string }
+) {
   const res = await fetch(`${API_URL}/weights`, {
     method: 'POST',
     headers: {

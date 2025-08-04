@@ -3,3 +3,8 @@ export interface WeightEntry {
   value: number
   created_at: string
 }
+
+export interface LogWeightParams {
+  weightInKg: number
+  date: string
+}

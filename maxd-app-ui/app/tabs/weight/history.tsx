@@ -1,88 +1,70 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { deleteWeightEntry, fetchWeights, updateWeightEntry } from '@/services/weightService'
-import { Fallback } from '@/components/Fallback'
-import { useRouter } from 'expo-router'
+import { useState, lazy, Suspense, useMemo, useEffect } from 'react'
 import { YStack, useThemeName } from 'tamagui'
+
+import { useAuth } from '@/contexts/AuthContext'
+import { usePreferences } from '@/contexts/PreferencesContext'
+import { deleteWeightEntry, fetchWeights, updateWeightEntry } from '@/services/weightService'
+import { useFetch } from '@/hooks/useFetch'
+
+import { Fallback } from '@/components/Fallback'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { WeightEntry } from '@/types/Weight'
-import WeightUtil from '@/util/weightConversion'
-import { usePreferences } from '@/contexts/PreferencesContext'
 import { EditWeightSheet } from '@/components/weights/EditWeightSheet'
 import { ConfirmDeleteSheet } from '@/components/ConfirmDeleteSheet'
 import { WeightActionSheet } from '@/components/weights/WeightActionSheet'
 import { WeightFilterControls } from '@/components/weights/WeightFilterControls'
 
+import { WeightEntry } from '@/types/Weight'
+import WeightUtil from '@/util/weightConversion'
+
 const History = lazy(() => import('@/components/weights/History'))
 
 export default function HistoryPage() {
-  const { token } = useAuth()
-  const [weights, setWeights] = useState<{ id: number; value: number; created_at: string }[]>([])
-  const [filter, setFilter] = useState<'All Years' | string>(new Date().getFullYear().toString())
-  const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
+  const { weightUnit } = usePreferences()
   const isDark = useThemeName() === 'dark'
-  const router = useRouter()
+  const { token } = useAuth()
+  const {
+    data: weights = [],
+    setData: setWeights,
+    execute: loadWeights,
+  } = useFetch(fetchWeights, [])
+  const [filter, setFilter] = useState<'All Years' | string>(new Date().getFullYear().toString())
+  const [year, setYear] = useState<string | 'All Years'>(new Date().getFullYear().toString())
   const [editWeight, setEditWeight] = useState<WeightEntry | null>(null)
   const [editInput, setEditInput] = useState('')
   const [confirmId, setConfirmId] = useState<number | null>(null)
-  const { weightUnit } = usePreferences()
   const [actionSheetOpen, setActionSheetOpen] = useState(false)
   const [selectedWeight, setSelectedWeight] = useState<WeightEntry | null>(null)
 
   useEffect(() => {
-    if (!token) return
-    const loadWeights = async () => {
-      try {
-        const data = await fetchWeights(token)
-        setWeights(data)
-      } catch (err) {
-        console.error('Error fetching weights:', err)
-        setWeights([])
-      }
-    }
     loadWeights()
-  }, [token])
+  }, [loadWeights])
 
   const years = useMemo(() => {
     const uniqueYears = new Set(weights.map(w => new Date(w.created_at).getFullYear()))
     return Array.from(uniqueYears).sort((a, b) => b - a)
   }, [weights])
 
-  const rangeCutoff = useMemo(() => {
-    if (range === 'all' || filter === 'All Years') return null
-    const selected = weights.filter(w => {
-      const d = new Date(w.created_at)
-      return d.getFullYear().toString() === filter
-    })
-    if (selected.length === 0) return null
-    const latest = new Date(Math.max(...selected.map(w => new Date(w.created_at).getTime())))
-    const cutoff = new Date(latest)
-    if (range === '30d') cutoff.setDate(cutoff.getDate() - 30)
-    if (range === '3mo') cutoff.setMonth(cutoff.getMonth() - 3)
-    return cutoff
-  }, [weights, filter, range])
-
   const filteredWeights = useMemo(() => {
     return weights.filter(w => {
       const d = new Date(w.created_at)
-      const matchYear = filter === 'All Years' || d.getFullYear().toString() === filter
-      const matchRange = !rangeCutoff || d >= rangeCutoff
-      return matchYear && matchRange
+      return year === 'All Years' || d.getFullYear().toString() === year
     })
-  }, [weights, filter, rangeCutoff])
+  }, [weights, year])
+
   const handleEditStart = (weight: WeightEntry) => {
-    setSelectedWeight(weight) // used only for the action sheet
+    setSelectedWeight(weight)
     setActionSheetOpen(true)
   }
 
   const handleEditSave = async () => {
+    if (!token) return
     if (!editWeight || !editInput.trim() || isNaN(Number(editInput))) return
     const parsed = Number(editInput)
     const valueInKg = weightUnit === 'lb' ? WeightUtil.lbsToKg(parsed) : parsed
 
     try {
-      const updated = await updateWeightEntry(token!, editWeight.id, valueInKg)
+      const updated = await updateWeightEntry(token, editWeight.id, valueInKg)
       setWeights(prev =>
         prev.map(w =>
           w.id === editWeight.id
@@ -98,8 +80,9 @@ export default function HistoryPage() {
   }
 
   const handleDelete = async (id: number) => {
+    if (!token) return
     try {
-      await deleteWeightEntry(token!, id)
+      await deleteWeightEntry(token, id)
       setWeights(prev => prev.filter(w => w.id !== id))
     } catch (err) {
       console.error('Delete failed:', err)
@@ -110,26 +93,18 @@ export default function HistoryPage() {
     <ScreenContainer>
       <YStack pt="$4" pb="$2">
         <ScreenHeader title="Weight History" />
-        <WeightFilterControls
-          years={years}
-          filter={filter}
-          setFilter={setFilter}
-          range={range}
-          setRange={setRange}
-          isDark={isDark}
-        />
+        <WeightFilterControls years={years} filter={year} setFilter={setYear} isDark={isDark} />
       </YStack>
 
       <Suspense fallback={<Fallback />}>
         <History
-          visible
-          onClose={router.back}
           weights={filteredWeights}
           setWeights={setWeights}
           onEdit={handleEditStart}
           onDelete={setConfirmId}
         />
       </Suspense>
+
       <EditWeightSheet
         open={!!editWeight}
         onOpenChange={() => {
@@ -157,6 +132,7 @@ export default function HistoryPage() {
         title="Delete Weight"
         message="Are you sure you want to delete this entry?"
       />
+
       <WeightActionSheet
         open={actionSheetOpen}
         onOpenChange={setActionSheetOpen}

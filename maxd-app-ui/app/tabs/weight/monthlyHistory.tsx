@@ -1,25 +1,15 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useEffect, lazy, Suspense } from 'react'
 import { fetchWeights } from '@/services/weightService'
 import { Fallback } from '@/components/Fallback'
+import { useFetch } from '@/hooks/useFetch'
 
 const MonthlyHistory = lazy(() => import('@/components/weights/MonthlyHistory'))
 export default function MonthlyHistoryPage() {
-  const { token } = useAuth()
-  const [weights, setWeights] = useState<{ id: number; value: number; created_at: string }[]>([])
+  const { data: weights = [], execute: loadWeights } = useFetch(fetchWeights, [])
+
   useEffect(() => {
-    if (!token) return
-    const loadWeights = async () => {
-      try {
-        const data = await fetchWeights(token)
-        setWeights(data)
-      } catch (err) {
-        console.error('Error fetching weights:', err)
-        setWeights([])
-      }
-    }
     loadWeights()
-  }, [token])
+  }, [loadWeights])
 
   return (
     <Suspense fallback={<Fallback />}>
