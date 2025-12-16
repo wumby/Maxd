@@ -4,12 +4,17 @@ import { useAuth } from '@/contexts/AuthContext'
 
 type TimeRange = 'all' | '3mo' | '30d'
 
-export function useWorkouts(initialRange: TimeRange = '3mo', initialYear: string | null = null) {
+export function useWorkouts(
+  initialRange: TimeRange = '3mo',
+  initialYear: string | null = null,
+  initialName: string | null = null
+) {
   const { token } = useAuth()
   const [workouts, setWorkouts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState<TimeRange>(initialRange)
   const [year, setYear] = useState<string | null>(initialYear)
+  const [workoutNameFilter, setWorkoutNameFilter] = useState<string | null>(initialName)
 
   const fetchWorkouts = useCallback(async () => {
     if (!token) return
@@ -18,8 +23,12 @@ export function useWorkouts(initialRange: TimeRange = '3mo', initialYear: string
       const query = new URLSearchParams()
       if (range !== 'all') query.append('range', range)
       if (year) query.append('year', year)
+      if (workoutNameFilter) query.append('name', workoutNameFilter)
 
-      const res = await fetch(`${API_URL}/workouts?${query.toString()}`, {
+      const queryString = query.toString()
+      const url = `${API_URL}/workouts${queryString ? `?${queryString}` : ''}`
+
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
@@ -29,7 +38,7 @@ export function useWorkouts(initialRange: TimeRange = '3mo', initialYear: string
     } finally {
       setLoading(false)
     }
-  }, [token, range, year])
+  }, [token, range, year, workoutNameFilter])
 
   useEffect(() => {
     fetchWorkouts()
@@ -44,5 +53,7 @@ export function useWorkouts(initialRange: TimeRange = '3mo', initialYear: string
     setRange,
     year,
     setYear,
+    workoutNameFilter,
+    setWorkoutNameFilter,
   }
 }

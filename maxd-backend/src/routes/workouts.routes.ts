@@ -93,6 +93,38 @@ router.post('/', requireAuth, async (req: Request<{}, {}, WorkoutCreateInput>, r
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const userId = req.user?.userId
+  const { range, year, name } = req.query as {
+    range?: string
+    year?: string
+    name?: string
+  }
+
+  const clauses = ['w.user_id = $1']
+  const params: any[] = [userId]
+  let paramIndex = 2
+
+  if (year && year !== 'All Years') {
+    clauses.push(`EXTRACT(YEAR FROM w.created_at) = $${paramIndex}`)
+    params.push(parseInt(year, 10))
+    paramIndex++
+  }
+
+  if (range && range !== 'all') {
+    const cutoff = new Date()
+    if (range === '30d') cutoff.setDate(cutoff.getDate() - 30)
+    if (range === '3mo') cutoff.setMonth(cutoff.getMonth() - 3)
+    clauses.push(`w.created_at >= $${paramIndex}`)
+    params.push(cutoff.toISOString())
+    paramIndex++
+  }
+
+  if (name) {
+    clauses.push(`LOWER(w.title) = LOWER($${paramIndex})`)
+    params.push(name)
+    paramIndex++
+  }
+
+  const whereClause = clauses.join(' AND ')
 
   try {
     const result = await db.query(
@@ -115,10 +147,10 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
                 )) FILTER (WHERE e.id IS NOT NULL), '[]') AS exercises
          FROM workouts w
          LEFT JOIN exercises e ON e.workout_id = w.id
-         WHERE w.user_id = $1
+         WHERE ${whereClause}
          GROUP BY w.id
          ORDER BY w.created_at DESC`,
-      [userId]
+      params
     )
 
     res.json(result.rows as WorkoutResponse[])

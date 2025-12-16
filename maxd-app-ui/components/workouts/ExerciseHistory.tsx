@@ -1,54 +1,71 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 import { YStack, Text, XStack, Card, Button, useTheme, useThemeName } from 'tamagui'
-import { ChevronLeft, ChevronDown, Trash2, Pencil } from '@tamagui/lucide-icons'
+import { ChevronLeft, ChevronDown, ChevronUp, Ellipsis } from '@tamagui/lucide-icons'
 import { Pressable, Modal, View, FlatList, ScrollView } from 'react-native'
 import { YearFilterItem } from '../weights/YearFilterItem'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
 import Animated, { FadeInUp } from 'react-native-reanimated'
 import { ScreenContainer } from '../ScreenContainer'
-import { ExerciseFilterSheet } from './ExerciseFilterSheet'
+import ExerciseFilterSheet from './ExerciseFilterSheet'
 import { deleteExercise } from '@/services/exerciseService'
 import { useAuth } from '@/contexts/AuthContext'
-import { useSavedExercises } from '@/hooks/useSavedExercises'
 import { createSavedExercise, deleteSavedExercise } from '@/services/savedExerciseService'
 import { useToast } from '@/contexts/ToastContextProvider'
 import { EditExercise } from './EditExercise'
+import { ExerciseActionSheet } from './ExerciseActionSheet'
+
+interface ExerciseHistoryProps {
+  exercises: any[]
+  onClose: () => void
+  setWorkouts: React.Dispatch<React.SetStateAction<any[]>>
+  savedExercises: any[]
+  setSavedExercises: React.Dispatch<React.SetStateAction<any[]>>
+  showHeader?: boolean
+  wrapInContainer?: boolean
+  onEditingChange?: (isEditing: boolean) => void
+  yearFilter?: string
+  onYearFilterChange?: (year: string) => void
+  rangeFilter?: 'all' | '30d' | '3mo'
+  onRangeFilterChange?: (range: 'all' | '30d' | '3mo') => void
+  onExerciseFilterChange?: (name: string | null) => void
+}
 
 export default function ExerciseHistory({
   exercises,
   onClose,
   setWorkouts,
-}: {
-  exercises: any[]
-  onClose: () => void
-  setWorkouts: React.Dispatch<React.SetStateAction<any[]>>
-}) {
+  savedExercises,
+  setSavedExercises,
+  showHeader = true,
+  wrapInContainer = true,
+  onEditingChange,
+  yearFilter,
+  onYearFilterChange,
+  rangeFilter = '3mo',
+  onRangeFilterChange,
+  onExerciseFilterChange,
+}: ExerciseHistoryProps) {
   const { weightUnit } = usePreferences()
   const theme = useTheme()
   const isDark = useThemeName() === 'dark'
   const { token } = useAuth()
 
-  const currentYear = new Date().getFullYear().toString()
-  const [filterYear, setFilterYear] = useState<'All Years' | string>(currentYear)
-  const [range, setRange] = useState<'all' | '30d' | '3mo'>('3mo')
-  const [filterExercise, setFilterExercise] = useState<string | null>(
-    exercises.length > 0 ? exercises[0].name.trim() : null
+  const [filterExercise, setFilterExercise] = useState<string | null>(null)
+  const [currentYearFilter, setCurrentYearFilter] = useState<'All Years' | string>(
+    yearFilter || 'All Years'
+  )
+  const [currentRangeFilter, setCurrentRangeFilter] = useState<'all' | '30d' | '3mo'>(
+    rangeFilter
   )
   const [showSheet, setShowSheet] = useState(false)
-  const [editMode, setEditMode] = useState(false)
   const [confirmId, setConfirmId] = useState<number | null>(null)
-  const { savedExercises, setSavedExercises } = useSavedExercises()
   const [editingExercise, setEditingExercise] = useState<any | null>(null)
   const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null)
   const [viewMode, setViewMode] = useState<'history' | 'edit'>('history')
+  const [expandedExercise, setExpandedExercise] = useState<number | null>(null)
+  const [actionExercise, setActionExercise] = useState<any | null>(null)
   const { showToast } = useToast()
-  useEffect(() => {
-    if (exercises.length > 0 && !filterExercise) {
-      setFilterExercise(exercises[0].name.trim())
-    }
-  }, [exercises])
-
   const isFavorited = (ex: any) =>
     savedExercises.some(saved => saved.name.toLowerCase() === ex.name.trim().toLowerCase())
   const toggleFavorite = async (ex: any) => {
@@ -90,31 +107,9 @@ export default function ExerciseHistory({
     return Array.from(names).sort()
   }, [exercises])
 
-  const rangeCutoff = useMemo(() => {
-    const selected = exercises.filter(e => {
-      const date = new Date(e.created_at)
-      return filterYear === 'All Years' || date.getFullYear().toString() === filterYear
-    })
-
-    if (selected.length === 0 || range === 'all') return null
-
-    const latestDate = new Date(Math.max(...selected.map(e => new Date(e.created_at).getTime())))
-    const cutoff = new Date(latestDate)
-    if (range === '30d') cutoff.setDate(cutoff.getDate() - 30)
-    else if (range === '3mo') cutoff.setMonth(cutoff.getMonth() - 3)
-
-    return cutoff
-  }, [exercises, filterYear, range])
-
   const filtered = useMemo(() => {
-    return exercises.filter(e => {
-      const date = new Date(e.created_at)
-      const matchYear = filterYear === 'All Years' || date.getFullYear().toString() === filterYear
-      const matchRange = !rangeCutoff || date >= rangeCutoff
-      const matchName = !filterExercise || e.name.trim() === filterExercise
-      return matchYear && matchRange && matchName
-    })
-  }, [exercises, filterYear, rangeCutoff, filterExercise])
+    return exercises.filter(e => !filterExercise || e.name.trim() === filterExercise)
+  }, [exercises, filterExercise])
 
   const handleDeleteExercise = async (exerciseId: number) => {
     try {
@@ -131,58 +126,95 @@ export default function ExerciseHistory({
     }
   }
 
+  const handleEditSelectedExercise = () => {
+    if (!actionExercise) return
+    const current = actionExercise
+    setEditingWorkoutId(current.workout_id)
+    setEditingExercise(current)
+    setViewMode('edit')
+    setActionExercise(null)
+  }
+
+  const handleDeleteSelectedExercise = () => {
+    if (!actionExercise) return
+    const current = actionExercise
+    setConfirmId(current.id)
+    setActionExercise(null)
+  }
+
+  const handleToggleFavoriteSelected = () => {
+    if (!actionExercise) return
+    const current = actionExercise
+    toggleFavorite(current).finally(() => setActionExercise(null))
+  }
+
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
       const ex = item
+      const isOpen = expandedExercise === ex.id
       const date = new Date(ex.created_at).toLocaleDateString()
       return (
         <Animated.View entering={FadeInUp.duration(300).delay(index * 20)}>
           <Card elevate bg="$color2" p="$4" gap="$3" br="$6" my="$2">
             <XStack jc="space-between" ai="center">
-              <YStack>
-                <Text fontSize="$6" fontWeight="700">
-                  {ex.name}
-                </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {date}
-                </Text>
-              </YStack>
+              <Pressable
+                onPress={() =>
+                  setExpandedExercise(prev => (prev === ex.id ? null : ex.id))
+                }
+                hitSlop={10}
+              >
+                <YStack>
+                  <XStack ai="center" gap="$2">
+                    <Text fontSize="$6" fontWeight="700">
+                      {ex.name}
+                    </Text>
+                    {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </XStack>
+                  <Text fontSize="$3" color="$gray10">
+                    {date}
+                  </Text>
+                </YStack>
+              </Pressable>
 
-              {editMode && (
-                <XStack gap="$6" ai="center">
-                  <Pressable onPress={() => toggleFavorite(ex)}>
-                    <Text fontSize="$7">{isFavorited(ex) ? '★' : '☆'}</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      setEditingWorkoutId(ex.workout_id)
-                      setEditingExercise(ex)
-                      setViewMode('edit')
-                    }}
-                    hitSlop={10}
-                  >
-                    <Pencil size={22} color={theme.color.val} />
-                  </Pressable>
-
-                  <Pressable onPress={() => setConfirmId(ex.id)}>
-                    <Trash2 size={22} color="red" />
-                  </Pressable>
-                </XStack>
-              )}
+              <Pressable onPress={() => setActionExercise(ex)} hitSlop={10}>
+                <Ellipsis size={26} color={theme.color.val} />
+              </Pressable>
             </XStack>
-            <YStack mt="$3" gap="$2">
-              {ex.sets?.map((set: any, j: number) => (
-                <Text key={j} fontSize="$4" color="$gray10">
-                  {renderSetLine(ex.type, set, weightUnit)}
-                </Text>
-              ))}
-            </YStack>
+
+            {isOpen && (
+              <YStack mt="$3" gap="$2">
+                {ex.sets?.map((set: any, j: number) => (
+                  <Text key={j} fontSize="$4" color="$gray10">
+                    {renderSetLine(ex.type, set, weightUnit)}
+                  </Text>
+                ))}
+              </YStack>
+            )}
           </Card>
         </Animated.View>
       )
     },
-    [editMode, weightUnit, savedExercises]
+    [expandedExercise, weightUnit, theme]
   )
+
+  useEffect(() => {
+    if (yearFilter && yearFilter !== currentYearFilter) {
+      setCurrentYearFilter(yearFilter)
+    }
+  }, [yearFilter])
+
+  useEffect(() => {
+    if (rangeFilter !== currentRangeFilter) {
+      setCurrentRangeFilter(rangeFilter)
+    }
+  }, [rangeFilter])
+
+  useEffect(() => {
+    onEditingChange?.(viewMode === 'edit')
+    return () => {
+      onEditingChange?.(false)
+    }
+  }, [viewMode, onEditingChange])
 
   if (viewMode === 'edit' && editingExercise) {
     return (
@@ -225,29 +257,32 @@ export default function ExerciseHistory({
     )
   }
 
-  return (
-    <ScreenContainer>
-      <YStack px="$4" pt="$4" pb="$2">
-        <XStack jc="space-between" ai="center" mb="$3">
-          <Pressable onPress={onClose} hitSlop={10}>
-            <XStack fd="row" ai="center" gap="$2">
-              <ChevronLeft size={20} color={theme.color.val} />
-              <Text fontSize="$5" fontWeight="600" color="$color">
-                Back
-              </Text>
-            </XStack>
-          </Pressable>
-
-          <Button fontSize="$5" size="$2" onPress={() => setEditMode(prev => !prev)} chromeless>
-            {editMode ? 'Done' : 'Edit'}
-          </Button>
+  const headerSection = showHeader ? (
+    <XStack jc="space-between" ai="center" mb="$3">
+      <Pressable onPress={onClose} hitSlop={10}>
+        <XStack fd="row" ai="center" gap="$2">
+          <ChevronLeft size={20} color={theme.color.val} />
+          <Text fontSize="$5" fontWeight="600" color="$color">
+            Back
+          </Text>
         </XStack>
+      </Pressable>
+      <YStack w={48} />
+    </XStack>
+  ) : (
+    <YStack h="$1" />
+  )
+
+  const content = (
+    <>
+      <YStack px="$4" pt={showHeader ? '$4' : '$2'} pb="$2">
+        {headerSection}
 
         <Animated.View entering={FadeInUp.duration(300)}>
           <Pressable onPress={() => setShowSheet(true)}>
             <XStack jc="center" ai="center" gap="$2">
               <Text fontSize="$9" fontWeight="900" ta="center" color="$color">
-                {filterExercise || 'Exercises'}
+                {filterExercise || 'All'}
               </Text>
               <ChevronDown size={20} color={theme.color.val} />
             </XStack>
@@ -261,8 +296,11 @@ export default function ExerciseHistory({
               <YearFilterItem
                 key={val}
                 val={val}
-                selected={filterYear === val}
-                onPress={() => setFilterYear(val)}
+                selected={currentYearFilter === val}
+                onPress={() => {
+                  setCurrentYearFilter(val)
+                  onYearFilterChange?.(val)
+                }}
                 isDark={isDark}
               />
             ))}
@@ -279,8 +317,12 @@ export default function ExerciseHistory({
               <YearFilterItem
                 key={opt.val}
                 val={opt.label}
-                selected={range === opt.val}
-                onPress={() => setRange(opt.val as any)}
+                selected={currentRangeFilter === opt.val}
+                onPress={() => {
+                  const newRange = opt.val as 'all' | '30d' | '3mo'
+                  setCurrentRangeFilter(newRange)
+                  onRangeFilterChange?.(newRange)
+                }}
                 isDark={isDark}
               />
             ))}
@@ -289,8 +331,12 @@ export default function ExerciseHistory({
 
         <Text fontSize="$2" color="$gray10" ta="center" mt="$1">
           Showing{' '}
-          {range === '30d' ? 'last 30 days' : range === '3mo' ? 'last 3 months' : 'all days'} of{' '}
-          {filterYear === 'All Years' ? 'all years' : filterYear}
+          {currentRangeFilter === '30d'
+            ? 'last 30 days'
+            : currentRangeFilter === '3mo'
+            ? 'last 3 months'
+            : 'all days'}{' '}
+          of {currentYearFilter === 'All Years' ? 'all years' : currentYearFilter}
         </Text>
       </YStack>
 
@@ -310,8 +356,23 @@ export default function ExerciseHistory({
         open={showSheet}
         onOpenChange={setShowSheet}
         selectedExercise={filterExercise}
-        onSelect={setFilterExercise}
+        onSelect={name => {
+          setFilterExercise(name)
+          onExerciseFilterChange?.(name)
+        }}
         exerciseNames={exerciseNames}
+      />
+
+      <ExerciseActionSheet
+        open={!!actionExercise}
+        onOpenChange={open => {
+          if (!open) setActionExercise(null)
+        }}
+        exerciseName={actionExercise?.name}
+        isFavorite={actionExercise ? isFavorited(actionExercise) : false}
+        onToggleFavorite={handleToggleFavoriteSelected}
+        onEdit={handleEditSelectedExercise}
+        onDelete={handleDeleteSelectedExercise}
       />
 
       {/* Confirm Delete Modal */}
@@ -346,8 +407,10 @@ export default function ExerciseHistory({
           </YStack>
         </View>
       </Modal>
-    </ScreenContainer>
+    </>
   )
+
+  return wrapInContainer ? <ScreenContainer>{content}</ScreenContainer> : content
 }
 
 function renderSetLine(type: string, set: any, unit: 'kg' | 'lb') {

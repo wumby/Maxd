@@ -1,5 +1,5 @@
-import { Animated, Pressable } from 'react-native'
-import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { Pressable } from 'react-native'
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { Card, Text } from 'tamagui'
 
 export function YearFilterItem({

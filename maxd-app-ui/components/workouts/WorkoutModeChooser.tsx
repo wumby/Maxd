@@ -12,10 +12,9 @@ export function WorkoutModeChooser({
 }) {
   return (
     <YStack gap="$5" ai="center" jc="center" p="$4" mt="$2">
-      <XStack gap="$4" w="100%">
+      <XStack gap="$4" ai="center" jc="center">
         <Button
           size="$5"
-          flex={1}
           paddingVertical="$3"
           icon={Plus}
           iconAfter={false}
@@ -25,7 +24,6 @@ export function WorkoutModeChooser({
         </Button>
         <Button
           size="$5"
-          flex={1}
           paddingVertical="$3"
           icon={Star}
           iconAfter={false}

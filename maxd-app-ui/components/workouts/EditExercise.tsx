@@ -128,9 +128,8 @@ export function EditExercise({
   }
 
   return (
-    <ScreenContainer>
-      <YStack pt="$4" gap="$4">
-        <XStack jc="space-between" ai="center" mb="$3">
+      <YStack pt="$2" gap="$4">
+        <XStack jc="space-between" ai="center" mb="$2">
           <Pressable onPress={onCancel} hitSlop={10}>
             <XStack fd="row" ai="center" gap="$2">
               <ChevronLeft size={20} />
@@ -170,6 +169,5 @@ export function EditExercise({
           </YStack>
         </ScrollView>
       </YStack>
-    </ScreenContainer>
   )
 }

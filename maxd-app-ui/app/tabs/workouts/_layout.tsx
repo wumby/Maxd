@@ -8,6 +8,11 @@ export default function WorkoutsStackLayout() {
         gestureEnabled: true,
         gestureDirection: 'horizontal',
       }}
-    />
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="newWorkout" />
+      <Stack.Screen name="workoutHistory" />
+      <Stack.Screen name="exercisesHistory" />
+    </Stack>
   )
 }

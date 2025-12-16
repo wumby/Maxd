@@ -2,10 +2,16 @@ import { Card, Text, XStack, YStack } from 'tamagui'
 import { Expand } from '@tamagui/lucide-icons'
 import { useMemo } from 'react'
 
+interface WorkoutPreview {
+  title?: string
+  created_at: string
+  exercises?: { name: string }[]
+}
+
 interface Props {
   onWorkoutsPress: () => void
   onExercisesPress: () => void
-  workouts?: { name?: string; created_at: string; exercises?: { name: string }[] }[]
+  workouts?: WorkoutPreview[]
 }
 
 export function WorkoutCardsBottom({ onWorkoutsPress, onExercisesPress, workouts = [] }: Props) {
@@ -67,7 +73,7 @@ export function WorkoutCardsBottom({ onWorkoutsPress, onExercisesPress, workouts
                   <XStack jc="space-between" key={i}>
                     <Text fontSize="$3">{date}</Text>
                     <Text fontSize="$3" numberOfLines={1}>
-                      {w.name || 'Workout'}
+                      {w.title || 'Workout'}
                     </Text>
                   </XStack>
                 )

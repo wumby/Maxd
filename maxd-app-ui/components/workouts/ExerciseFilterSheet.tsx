@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Button, Input, ScrollView, Text, XStack, YStack, Separator } from 'tamagui'
 import { X } from '@tamagui/lucide-icons'
 
-export function ExerciseFilterSheet({
+export default function ExerciseFilterSheet({
   open,
   onOpenChange,
   selectedExercise,

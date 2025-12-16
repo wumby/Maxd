@@ -16,7 +16,7 @@ export default function WorkoutsTab() {
   const { token } = useAuth()
   const { saved: savedWorkouts } = useSavedWorkouts()
   const { savedExercises } = useSavedExercises()
-  const { workouts, loading, refreshWorkouts } = useWorkouts()
+  const { workouts, loading, refreshWorkouts } = useWorkouts('all')
   const shouldRefresh = useRef(true)
 
   useFocusEffect(

@@ -32,8 +32,17 @@ export async function deleteWorkout(token: string | null, id: number) {
   if (!res.ok) throw new Error('Failed to delete workout')
 }
 
-export async function fetchWorkouts(token: string) {
-  const res = await fetch(`${API_URL}/workouts`, {
+export async function fetchWorkouts(
+  token: string,
+  params?: { range?: string; year?: string | null; name?: string | null }
+) {
+  const query = new URLSearchParams()
+  if (params?.range && params.range !== 'all') query.append('range', params.range)
+  if (params?.year) query.append('year', params.year)
+  if (params?.name) query.append('name', params.name)
+
+  const url = `${API_URL}/workouts${query.toString() ? `?${query.toString()}` : ''}`
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

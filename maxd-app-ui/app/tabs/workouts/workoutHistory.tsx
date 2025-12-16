@@ -23,16 +23,24 @@ export default function WorkoutHistoryScreen() {
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [selectedWorkoutName, setSelectedWorkoutName] = useState<string | null>(null)
   const { token } = useAuth()
   const { showToast } = useToast()
   const router = useRouter()
   const theme = useTheme()
-  const [range, setRange] = useState<'all' | '3mo' | '30d'>('3mo')
-  const [year, setYear] = useState<string | null>(null)
 
   const { saved: savedWorkouts, refreshSavedWorkouts } = useSavedWorkouts()
-  const { workouts, setWorkouts, loading, refreshWorkouts } = useWorkouts(range, year)
+  const {
+    workouts,
+    setWorkouts,
+    loading,
+    refreshWorkouts,
+    range,
+    setRange,
+    year,
+    setYear,
+    workoutNameFilter,
+    setWorkoutNameFilter,
+  } = useWorkouts('3mo', null)
 
   const shouldRefresh = useRef(false)
   const hasFetchedSaved = useRef(false)
@@ -53,8 +61,8 @@ export default function WorkoutHistoryScreen() {
   }, [])
 
   useEffect(() => {
-    setSelectedWorkoutName(null)
-  }, [tab])
+    setWorkoutNameFilter(null)
+  }, [tab, setWorkoutNameFilter])
 
   useEffect(() => {
     if (tab === 'favorites' && !hasFetchedSaved.current) {
@@ -100,13 +108,9 @@ export default function WorkoutHistoryScreen() {
     }
   }
 
-  const filteredWorkouts = useMemo(() => {
-    return workouts.filter(w => !selectedWorkoutName || w.title === selectedWorkoutName)
-  }, [workouts, selectedWorkoutName])
-
   const filteredFavorites = useMemo(() => {
-    return savedWorkouts.filter(w => !selectedWorkoutName || w.title === selectedWorkoutName)
-  }, [savedWorkouts, selectedWorkoutName])
+    return savedWorkouts.filter(w => !workoutNameFilter || w.title === workoutNameFilter)
+  }, [savedWorkouts, workoutNameFilter])
 
   return (
     <ScreenContainer>
@@ -154,7 +158,7 @@ export default function WorkoutHistoryScreen() {
         setYear={setYear}
         range={range}
         setRange={setRange}
-        selectedWorkoutName={selectedWorkoutName}
+        selectedWorkoutName={workoutNameFilter}
         onOpenNameFilter={() => setFilterSheetOpen(true)}
       />
 
@@ -162,7 +166,7 @@ export default function WorkoutHistoryScreen() {
         {tab === 'all' ? (
           <WorkoutHistory
             key="workouts"
-            workouts={filteredWorkouts}
+            workouts={workouts}
             onSelectWorkout={setSelectedWorkout}
           />
         ) : (
@@ -213,8 +217,8 @@ export default function WorkoutHistoryScreen() {
             ? [...new Set(workouts.map(w => w.title).filter(Boolean))]
             : [...new Set(savedWorkouts.map(w => w.title).filter(Boolean))]
         }
-        selectedName={selectedWorkoutName}
-        setSelectedName={setSelectedWorkoutName}
+        selectedName={workoutNameFilter}
+        setSelectedName={setWorkoutNameFilter}
       />
     </ScreenContainer>
   )

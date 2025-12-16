@@ -10,7 +10,7 @@ import { usePreferences } from '@/contexts/PreferencesContext'
 import WeightUtil from '@/util/weightConversion'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import * as MediaLibrary from 'expo-media-library'
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 import { Download } from '@tamagui/lucide-icons'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { ConfirmDeleteSheet } from '../ConfirmDeleteSheet'
@@ -201,8 +201,9 @@ export default function ChartWebView({
     const dataUrl = event.nativeEvent.data
     const base64 = dataUrl.replace(/^data:image\/png;base64,/, '')
     const fileUri = FileSystem.documentDirectory + 'weight-graph.png'
+    const base64Encoding = FileSystem.EncodingType?.Base64 ?? ('base64' as FileSystem.EncodingType)
     await FileSystem.writeAsStringAsync(fileUri, base64, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: base64Encoding,
     })
     const { status } = await MediaLibrary.requestPermissionsAsync()
     if (status !== 'granted') {
