@@ -5,8 +5,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ScreenContainer } from '@/components/ScreenContainer'
 import { WorkoutCardsBottom } from '@/components/workouts/WorkoutCardsBottom'
 import { WorkoutCardsTop } from '@/components/workouts/WorkoutCardsTop'
-import { useSavedWorkouts } from '@/hooks/useSavedWorkouts'
-import { useSavedExercises } from '@/hooks/useSavedExercises'
 import { TabTransitionWrapper } from '@/components/TabTransitionWrapper'
 import { useWorkouts } from '@/hooks/useWorkouts'
 import { Fallback } from '@/components/Fallback'
@@ -14,8 +12,6 @@ import { Fallback } from '@/components/Fallback'
 export default function WorkoutsTab() {
   const router = useRouter()
   const { token } = useAuth()
-  const { saved: savedWorkouts } = useSavedWorkouts()
-  const { savedExercises } = useSavedExercises()
   const { workouts, loading, refreshWorkouts } = useWorkouts('all')
   const shouldRefresh = useRef(true)
 
@@ -43,10 +39,8 @@ export default function WorkoutsTab() {
         <YStack f={1} jc="space-evenly" gap="$4">
           <WorkoutCardsTop
             workouts={workouts}
-            savedWorkoutsCount={savedWorkouts.length}
-            savedExercisesCount={savedExercises.length}
-            onFavoritesPress={() => {}}
-            onVolumePress={() => {}}
+            onVolumePress={() => router.push('/tabs/workouts/volume')}
+            onProgressPress={() => router.push('/tabs/workouts/progress')}
           />
 
           <YStack ai="center" gap="$6">

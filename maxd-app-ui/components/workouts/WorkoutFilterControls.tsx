@@ -43,7 +43,9 @@ export function WorkoutFilterControls({
           br="$6"
           px="$3"
         >
-          {selectedWorkoutName || 'All'}
+          <Text fontSize="$9" fontWeight="900">
+            {selectedWorkoutName || 'All'}
+          </Text>
         </Button>
       </XStack>
 

@@ -13,6 +13,8 @@ export default function WorkoutsStackLayout() {
       <Stack.Screen name="newWorkout" />
       <Stack.Screen name="workoutHistory" />
       <Stack.Screen name="exercisesHistory" />
+      <Stack.Screen name="volume" />
+      <Stack.Screen name="progress" />
     </Stack>
   )
 }
